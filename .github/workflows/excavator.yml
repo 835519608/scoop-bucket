@@ -1,0 +1,19 @@
+# 定时跑 checkver，自动更新 bucket 里所有 manifest 的版本与 hash
+# 参考: https://github.com/ScoopInstaller/GithubActions
+name: Excavator
+
+on:
+  schedule:
+    - cron: '0 21 * * *' # 每天 21:00 UTC = 北京时间次日 05:00
+  workflow_dispatch:
+
+jobs:
+  excavate:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Excavator
+        uses: ScoopInstaller/GithubActions@main
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SKIP_UPDATED: '1'
