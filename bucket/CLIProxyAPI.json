@@ -11,12 +11,14 @@
     },
     "bin": "cli-proxy-api.exe",
     "post_install": [
-        "$__import = Get-ChildItem (Join-Path $scoopdir 'buckets\\*\\bin\\import-utils.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1; if ($__import) { . $__import.FullName }",
+        "$__scoopBucket = if ($bucket) { $bucket } elseif (Test-Path (Join-Path (scoop prefix $app) 'install.json')) { (Get-Content (Join-Path (scoop prefix $app) 'install.json') -Raw | ConvertFrom-Json).bucket } else { (Get-ChildItem (Join-Path $scoopdir 'buckets\\*\\bin\\load-utils.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1).Directory.Parent.Name }",
+        ". (Join-Path $bucketsdir \"$__scoopBucket\\bin\\load-utils.ps1\")",
         "$cliProxyMappings = @(@{ Label = 'auth'; Source = 'UserProfile/.cli-proxy-api'; Target = '$persist_dir/auth'; EnsureTarget = $true })",
         "Install-PersistDataLinks -Mappings $cliProxyMappings"
     ],
     "pre_uninstall": [
-        "$__import = Get-ChildItem (Join-Path $scoopdir 'buckets\\*\\bin\\import-utils.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1; if ($__import) { . $__import.FullName }",
+        "$__scoopBucket = if ($bucket) { $bucket } elseif (Test-Path (Join-Path (scoop prefix $app) 'install.json')) { (Get-Content (Join-Path (scoop prefix $app) 'install.json') -Raw | ConvertFrom-Json).bucket } else { (Get-ChildItem (Join-Path $scoopdir 'buckets\\*\\bin\\load-utils.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1).Directory.Parent.Name }",
+        ". (Join-Path $bucketsdir \"$__scoopBucket\\bin\\load-utils.ps1\")",
         "$cliProxyMappings = @(@{ Label = 'auth'; Source = 'UserProfile/.cli-proxy-api'; Target = '$persist_dir/auth' })",
         "Uninstall-PersistDataLinks -Mappings $cliProxyMappings"
     ],

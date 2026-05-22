@@ -31,19 +31,21 @@
         }
     },
     "post_install": [
-        "$__import = Get-ChildItem (Join-Path $scoopdir 'buckets\\*\\bin\\import-utils.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1; if ($__import) { . $__import.FullName }",
+        "$__scoopBucket = if ($bucket) { $bucket } elseif (Test-Path (Join-Path (scoop prefix $app) 'install.json')) { (Get-Content (Join-Path (scoop prefix $app) 'install.json') -Raw | ConvertFrom-Json).bucket } else { (Get-ChildItem (Join-Path $scoopdir 'buckets\\*\\bin\\load-utils.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1).Directory.Parent.Name }",
+        ". (Join-Path $bucketsdir \"$__scoopBucket\\bin\\load-utils.ps1\")",
         "$mcpRouterMappings = @(@{ Label = 'roaming'; Source = 'AppData/MCP Router'; Target = '$persist_dir/roaming'; EnsureTarget = $true })",
         "Install-PersistDataLinks -Mappings $mcpRouterMappings -Log:$true",
         "$mcpRouterBlockerScript = Join-Path $persist_dir 'block-autostart.ps1'",
         "@(",
-        "    \"$__import = Get-ChildItem (Join-Path $scoopdir 'buckets\\*\\bin\\import-utils.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1; if ($__import) { . $__import.FullName }\"",
+        "    \". `\"$((Join-Path $bucketsdir \"$__scoopBucket\\bin\\load-utils.ps1\"))`\"\"",
         "    'Disable-LogonStartup -CommandFilter @(''*MCP Router*'', ''*mcp-router*'') -NameFilter @(''*MCP Router*'', ''*mcp-router*'')'",
         ") | Set-Content -Path $mcpRouterBlockerScript -Encoding UTF8",
         "Disable-LogonStartup -CommandFilter @('*MCP Router*', '*mcp-router*') -NameFilter @('*MCP Router*', '*mcp-router*')",
         "Register-LogonStartupBlocker -TaskName 'scoop-mcp-router-no-autostart' -ScriptPath $mcpRouterBlockerScript -DelaySeconds 60"
     ],
     "pre_uninstall": [
-        "$__import = Get-ChildItem (Join-Path $scoopdir 'buckets\\*\\bin\\import-utils.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1; if ($__import) { . $__import.FullName }",
+        "$__scoopBucket = if ($bucket) { $bucket } elseif (Test-Path (Join-Path (scoop prefix $app) 'install.json')) { (Get-Content (Join-Path (scoop prefix $app) 'install.json') -Raw | ConvertFrom-Json).bucket } else { (Get-ChildItem (Join-Path $scoopdir 'buckets\\*\\bin\\load-utils.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1).Directory.Parent.Name }",
+        ". (Join-Path $bucketsdir \"$__scoopBucket\\bin\\load-utils.ps1\")",
         "Unregister-LogonStartupBlocker -TaskName 'scoop-mcp-router-no-autostart'",
         "Disable-LogonStartup -CommandFilter @('*MCP Router*', '*mcp-router*') -NameFilter @('*MCP Router*', '*mcp-router*')",
         "$mcpRouterMappings = @(@{ Label = 'roaming'; Source = 'AppData/MCP Router'; Target = '$persist_dir/roaming' })",

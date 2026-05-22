@@ -53,8 +53,8 @@ scoop install scoop-bucket/CLIProxyAPI
 
 ```
 bucket/*.json              # manifest
-bin/import-utils.ps1       # manifest 中 dot-source 的入口（兼容卸载时 $bucket 为空）
-bin/utils.ps1              # 公共 PowerShell 函数（由 import-utils.ps1 加载）
+bin/load-utils.ps1         # manifest 入口：$bucket → install.json → 搜索（兼容 Scoop v0.5.3）
+bin/utils.ps1              # 公共 PowerShell 函数（由 load-utils.ps1 加载）
 .github/workflows/excavator.yml
 ```
 
