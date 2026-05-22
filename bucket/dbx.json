@@ -18,12 +18,20 @@
         "file": "uninstall.exe",
         "args": ["/S"]
     },
-    "notes": "便携模式：安装目录下 portable.dbx + persist/data（上游 data_dir.rs：dbx.db、plugins 等）。",
+    "notes": "Scoop 经 shim 启动时 portable.dbx 无效，需 DBX_DATA_DIR；plugins/dbx.db 在 persist/data；Tauri 缓存目录链接到 persist/roaming、persist/local。",
+    "env_set": {
+        "DBX_DATA_DIR": "$persist_dir\\data"
+    },
     "post_install": [
-        "if (-not (Test-Path \"$dir\\portable.dbx\")) { New-Item -ItemType File -Path \"$dir\\portable.dbx\" -Force | Out-Null }"
+        ". \"$bucketsdir\\$bucket\\bin\\utils.ps1\"",
+        "if (-not (Test-Path \"$dir\\portable.dbx\")) { New-Item -ItemType File -Path \"$dir\\portable.dbx\" -Force | Out-Null }",
+        "New-PersistDirectory \"$env:APPDATA\\com.dbx.app\" \"$persist_dir\\roaming\" -Migrate",
+        "New-PersistDirectory \"$env:LOCALAPPDATA\\com.dbx.app\" \"$persist_dir\\local\" -Migrate"
     ],
     "persist": [
-        "data"
+        "data",
+        "roaming",
+        "local"
     ],
     "checkver": "github",
     "autoupdate": {
