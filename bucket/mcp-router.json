@@ -18,7 +18,7 @@
             "MCP Router"
         ]
     ],
-    "notes": "Electron userData：%AppData%\\MCP Router 目录联接到 persist/roaming。",
+    "notes": "数据目录联接到 persist/roaming。应用内无「关闭开机启动」选项且每次运行会重新写入；本 manifest 安装时会禁用启动项并注册登录后自动清理任务（计划任务名 scoop-mcp-router-no-autostart）。若需开机自启，卸载后手动在任务管理器启用或删除该计划任务。",
     "checkver": "github",
     "autoupdate": {
         "architecture": {
@@ -33,10 +33,19 @@
     "post_install": [
         ". \"$bucketsdir\\$bucket\\bin\\utils.ps1\"",
         "$mcpRouterMappings = @(@{ Label = 'roaming'; Source = 'AppData/MCP Router'; Target = '$persist_dir/roaming'; EnsureTarget = $true })",
-        "Install-PersistDataLinks -Mappings $mcpRouterMappings -Log:$true"
+        "Install-PersistDataLinks -Mappings $mcpRouterMappings -Log:$true",
+        "$mcpRouterBlockerScript = Join-Path $persist_dir 'block-autostart.ps1'",
+        "@(",
+        "    \". `\"$bucketsdir\\$bucket\\bin\\utils.ps1`\"\"",
+        "    'Disable-LogonStartup -CommandFilter @(''*MCP Router*'', ''*mcp-router*'') -NameFilter @(''*MCP Router*'', ''*mcp-router*'')'",
+        ") | Set-Content -Path $mcpRouterBlockerScript -Encoding UTF8",
+        "Disable-LogonStartup -CommandFilter @('*MCP Router*', '*mcp-router*') -NameFilter @('*MCP Router*', '*mcp-router*')",
+        "Register-LogonStartupBlocker -TaskName 'scoop-mcp-router-no-autostart' -ScriptPath $mcpRouterBlockerScript -DelaySeconds 60"
     ],
     "pre_uninstall": [
         ". \"$bucketsdir\\$bucket\\bin\\utils.ps1\"",
+        "Unregister-LogonStartupBlocker -TaskName 'scoop-mcp-router-no-autostart'",
+        "Disable-LogonStartup -CommandFilter @('*MCP Router*', '*mcp-router*') -NameFilter @('*MCP Router*', '*mcp-router*')",
         "$mcpRouterMappings = @(@{ Label = 'roaming'; Source = 'AppData/MCP Router'; Target = '$persist_dir/roaming' })",
         "Uninstall-PersistDataLinks -Mappings $mcpRouterMappings -Log:$true"
     ]

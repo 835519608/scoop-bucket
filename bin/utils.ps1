@@ -7,6 +7,9 @@
 #   Link-FolderToPersist        - 单目录联接到 persist（-Migrate 可迁移已有文件）
 #   Clear-DesktopShortcuts      - 按通配符删除桌面快捷方式
 #   Clear-StartMenuShortcuts    - 按通配符删除开始菜单快捷方式
+#   Disable-LogonStartup        - 禁用/删除当前用户开机启动项（Run + StartupApproved）
+#   Register-LogonStartupBlocker   - 登录后定时再次禁用（对付应用再次写入）
+#   Unregister-LogonStartupBlocker - 移除上述计划任务
 #   Test-AdminElevation         - 当前是否以管理员运行
 #   Require-AdminElevation      - 非管理员则警告并 exit 1
 #
@@ -110,6 +113,76 @@ function Clear-StartMenuShortcuts {
         (Join-Path $env:APPDATA 'Microsoft\Windows\Start Menu\Programs')
         (Join-Path $env:ProgramData 'Microsoft\Windows\Start Menu\Programs')
     ) -Filter $Filter
+}
+
+#endregion
+
+#region 开机启动（HKCU Run）
+
+function Disable-LogonStartup {
+    <#
+        禁用匹配的开机启动项（等同任务管理器里关掉「启动」）：
+        - 在 StartupApproved\Run 标记为禁用
+        - 并删除 HKCU\...\Run 中对应项
+        Electron 应用下次运行可能再次写入，需配合 Register-LogonStartupBlocker 或手动再执行。
+    #>
+    param (
+        [string[]]$CommandFilter = @(),
+        [string[]]$NameFilter = @()
+    )
+    if ($CommandFilter.Count -eq 0 -and $NameFilter.Count -eq 0) { return @() }
+    $runPath = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Run'
+    $approvedPath = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\Run'
+    $disabledFlag = [byte[]](0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00)
+    $matched = [System.Collections.Generic.List[string]]::new()
+    if (-not (Test-Path $runPath)) { return @() }
+    if (-not (Test-Path $approvedPath)) {
+        New-Item -Path $approvedPath -Force | Out-Null
+    }
+    $props = Get-ItemProperty -Path $runPath
+    foreach ($prop in $props.PSObject.Properties) {
+        if ($prop.Name -match '^PS') { continue }
+        $hit = $false
+        foreach ($nf in $NameFilter) {
+            if ($prop.Name -like $nf) { $hit = $true; break }
+        }
+        if (-not $hit) {
+            $command = [string]$prop.Value
+            foreach ($cf in $CommandFilter) {
+                if ($command -like $cf) { $hit = $true; break }
+            }
+        }
+        if ($hit) {
+            Set-ItemProperty -Path $approvedPath -Name $prop.Name -Value $disabledFlag -Type Binary -ErrorAction SilentlyContinue
+            Remove-ItemProperty -Path $runPath -Name $prop.Name -ErrorAction SilentlyContinue
+            $matched.Add($prop.Name)
+        }
+    }
+    return $matched.ToArray()
+}
+
+function Register-LogonStartupBlocker {
+    <# 用户登录后延迟执行脚本，用于应用再次写入开机项后自动清除 #>
+    param (
+        [Parameter(Mandatory = $true)]
+        [string]$TaskName,
+        [Parameter(Mandatory = $true)]
+        [string]$ScriptPath,
+        [int]$DelaySeconds = 60
+    )
+    $minutes = [int]($DelaySeconds / 60)
+    $seconds = $DelaySeconds % 60
+    $delay = '{0:D4}:{1:D2}' -f $minutes, $seconds
+    $tr = "powershell.exe -NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File `"$ScriptPath`""
+    schtasks.exe /Create /TN $TaskName /TR $tr /SC ONLOGON /DELAY $delay /F | Out-Null
+}
+
+function Unregister-LogonStartupBlocker {
+    param (
+        [Parameter(Mandatory = $true)]
+        [string]$TaskName
+    )
+    schtasks.exe /Delete /TN $TaskName /F 2>$null | Out-Null
 }
 
 #endregion
