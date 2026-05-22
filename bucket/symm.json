@@ -6,7 +6,7 @@
     "notes": [
         "根目录 symm.exe 为 GUI；CLI 为 cli/symm-cli.exe（命令 symm-cli）。",
         "数据目录：persist/data（symm.db），SYMM_HOME=$dir\\data。",
-        "仅跟踪 GitHub 正式 Release（非 Pre-release、tag 不含 -test）。尚无正式版时请勿安装。"
+        "仅跟踪 GitHub 正式 Release（非 Pre-release）。尚无正式 Release 时 Excavator 会跳过更新；有正式 tag 后自动写入 hash。"
     ],
     "architecture": {
         "64bit": {

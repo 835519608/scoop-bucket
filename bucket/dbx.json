@@ -18,13 +18,14 @@
         "file": "uninstall.exe",
         "args": ["/S"]
     },
-    "checkver": {
-        "github": "https://github.com/t8y2/dbx"
-    },
+    "checkver": "github",
     "autoupdate": {
         "architecture": {
             "64bit": {
-                "url": "https://github.com/t8y2/dbx/releases/download/v$version/DBX_$version_x64-setup.exe"
+                "url": "https://github.com/t8y2/dbx/releases/download/v$version/DBX_$version_x64-setup.exe",
+                "hash": {
+                    "mode": "download"
+                }
             }
         }
     }

@@ -1,12 +1,18 @@
 {
-    "note": "本仓库 bucket/ 自维护的全部应用，统一使用 scoop-bucket/<app> 安装",
+    "note": "统一 scoop-bucket/<app> 安装；版本由 Excavator + checkver 维护",
     "apps": [
-        { "app": "pixpin", "origin": "pixpin.cn" },
-        { "app": "symm", "origin": "github.com/835519608/symm" },
-        { "app": "uuyc", "origin": "cmontage/scoopbucket-soup" },
-        { "app": "dbx", "origin": "t8y2/scoop-bucket" },
-        { "app": "xshellplus", "origin": "echoiron/echo-scoop" },
-        { "app": "mcp-router", "origin": "LaelLuo/scoop" },
-        { "app": "CLIProxyAPI", "origin": "YewFence/YewNursery" }
+        { "app": "pixpin", "checkver": "官网", "tier": "medium" },
+        { "app": "symm", "checkver": "github", "tier": "low", "requires": "正式 GitHub Release" },
+        { "app": "dbx", "checkver": "github", "tier": "low" },
+        { "app": "CLIProxyAPI", "checkver": "github", "tier": "low" },
+        { "app": "mcp-router", "checkver": "github", "tier": "low" },
+        { "app": "uuyc", "checkver": "网易 API", "tier": "high" }
+    ],
+    "removed": [
+        {
+            "app": "xshellplus",
+            "reason": "无 checkver、下载链不稳定",
+            "alternative": "scoop bucket add echoiron_echo-scoop https://github.com/echoiron/echo-scoop && scoop install echoiron_echo-scoop/xshellplus"
+        }
     ]
 }

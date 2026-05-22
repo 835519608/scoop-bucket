@@ -20,7 +20,10 @@
     "autoupdate": {
         "architecture": {
             "64bit": {
-                "url": "https://github.com/router-for-me/CLIProxyAPI/releases/download/v$version/CLIProxyAPI_$version_windows_amd64.zip"
+                "url": "https://github.com/router-for-me/CLIProxyAPI/releases/download/v$version/CLIProxyAPI_$version_windows_amd64.zip",
+                "hash": {
+                    "mode": "download"
+                }
             }
         }
     }
