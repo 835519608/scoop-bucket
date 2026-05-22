@@ -18,7 +18,7 @@
             "MCP Router"
         ]
     ],
-    "notes": "GitHub Release 无 checksums 文件，autoupdate 使用 hash.mode download。",
+    "notes": "运行时数据在 %AppData%\\MCP Router，安装时链接到 persist/roaming（Electron 本地存储，见 post_install）。",
     "checkver": "github",
     "autoupdate": {
         "architecture": {

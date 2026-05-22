@@ -18,7 +18,13 @@
         "file": "uninstall.exe",
         "args": ["/S"]
     },
-    "notes": "GitHub Release 无 checksums 文件，autoupdate 使用 hash.mode download。",
+    "notes": "便携模式：安装目录下 portable.dbx + persist/data（上游 data_dir.rs：dbx.db、plugins 等）。",
+    "post_install": [
+        "if (-not (Test-Path \"$dir\\portable.dbx\")) { New-Item -ItemType File -Path \"$dir\\portable.dbx\" -Force | Out-Null }"
+    ],
+    "persist": [
+        "data"
+    ],
     "checkver": "github",
     "autoupdate": {
         "architecture": {

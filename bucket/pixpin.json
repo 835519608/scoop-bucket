@@ -18,6 +18,7 @@
             "PixPin"
         ]
     ],
+    "notes": "便携 zip 在程序目录写入 Config / Data / History（官网便携版行为）。",
     "persist": [
         "Config",
         "Data",

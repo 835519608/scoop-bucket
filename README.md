@@ -57,4 +57,14 @@ bin/utils.ps1              # uuyc 安装脚本依赖
 .github/workflows/excavator.yml
 ```
 
-`persist` 数据位于 `scoop\persist\<app>\`，重装前可自行备份。
+### 运行时数据（persist）
+
+| 应用 | 持久化位置 |
+|------|------------|
+| pixpin | `Config`、`Data`、`History`（程序目录） |
+| dbx | `data/`（需 `portable.dbx` 标记，含 `dbx.db` 等） |
+| CLIProxyAPI | `config.yaml`、`logs/`；`%USERPROFILE%\.cli-proxy-api` → `persist/auth` |
+| mcp-router | `%AppData%\MCP Router` → `persist/roaming` |
+| uuyc | `%LocalAppData%\GameViewer`、`%ProgramData%\Netease\GameViewer` → `persist/*` |
+
+数据在 `scoop\persist\<app>\`，升级或重装前可自行备份。

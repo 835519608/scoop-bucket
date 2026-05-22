@@ -10,13 +10,18 @@
         }
     },
     "bin": "cli-proxy-api.exe",
+    "post_install": [
+        ". \"$bucketsdir\\$bucket\\bin\\utils.ps1\"",
+        "New-PersistDirectory \"$env:USERPROFILE\\.cli-proxy-api\" \"$persist_dir\\auth\" -Migrate"
+    ],
     "persist": [
         [
             "config.example.yaml",
             "config.yaml"
-        ]
+        ],
+        "logs"
     ],
-    "notes": "hash 来自 Release 的 checksums.txt（GitHub 统一策略：有文件用文件）。",
+    "notes": "config.yaml 在程序目录；OAuth/令牌目录默认 ~/.cli-proxy-api，已链接到 persist/auth（config.example.yaml）。",
     "checkver": "github",
     "autoupdate": {
         "architecture": {
