@@ -19,6 +19,7 @@ scoop update *
 | dbx | 开源数据库管理工具 | GitHub Release |
 | mcp-router | MCP 服务器桌面管理 | GitHub Release |
 | moor | 本地 MCP 网关（Tauri） | GitHub Release |
+| symm | 跨平台软链接管理（CLI + GUI） | GitHub Release |
 | CLIProxyAPI | 多 CLI 代理为兼容 API 服务 | GitHub Release |
 
 ## 目录结构
@@ -48,6 +49,7 @@ Scoop 的 JSON 不能定义变量，每个 hook 用同一行模板，只改末�
 | CLIProxyAPI | Scoop `persist` + 目录联接：`UserProfile/.cli-proxy-api` → `auth` |
 | mcp-router | 目录联接：`AppData/MCP Router` → `roaming` |
 | moor | 目录联接：`AppData/com.snowautumn.moor`、`LocalAppData/com.snowautumn.moor` |
+| symm | Scoop `persist: data` + `SYMM_HOME`（`symm.db`、`settings.json`） |
 | uuyc | 目录联接：`LocalAppData/GameViewer`、`ProgramData/Netease/GameViewer` |
 
 `utils.ps1` 提供 `Install-PersistDataLinks`、`Clear-DesktopShortcuts`、`Assert-AdminElevation` 等，详见文件头注释。
