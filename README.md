@@ -53,7 +53,8 @@ scoop install scoop-bucket/CLIProxyAPI
 
 ```
 bucket/*.json              # manifest
-bin/utils.ps1              # 公共 PowerShell 函数（manifest 通过 glob 加载）
+bin/import-utils.ps1       # manifest 首行加载入口（内部 dot-source utils.ps1）
+bin/utils.ps1              # 公共 PowerShell 函数
 .github/workflows/excavator.yml
 ```
 

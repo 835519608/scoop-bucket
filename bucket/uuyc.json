@@ -10,8 +10,8 @@
     "hash": "af8106176ecf116c91e061098d83f92072554609fb412abbea7cef3df0db4bb2",
     "installer": {
         "script": [
-            ". (Get-ChildItem (Join-Path $scoopdir 'buckets\\*\\bin\\utils.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1).FullName",
-            "Require-AdminElevation -Message \"`nuuyc installation requires administrator privileges.`nPlease rerun Scoop in an elevated PowerShell.`n\"",
+            ". (Get-ChildItem (Join-Path $scoopdir 'buckets\\*\\bin\\import-utils.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1).FullName",
+            "Assert-AdminElevation -OnFailure Exit -Reason 'uuyc 安装需要管理员 PowerShell。'",
             "$uuycMappings = @(",
             "    @{ Label = 'local'; Source = 'LocalAppData/GameViewer'; Target = '$persist_dir/AppData'; EnsureTarget = $true }",
             "    @{ Label = 'programdata'; Source = 'ProgramData/Netease/GameViewer'; Target = '$persist_dir/ProgramData'; EnsureTarget = $true }",
@@ -28,8 +28,8 @@
     "pre_uninstall": "if (Get-Service -Name 'GameViewerService' -ErrorAction SilentlyContinue) { Stop-Service -Name 'GameViewerService' -Force -ErrorAction SilentlyContinue; sc.exe delete GameViewerService | Out-Null }",
     "uninstaller": {
         "script": [
-            ". (Get-ChildItem (Join-Path $scoopdir 'buckets\\*\\bin\\utils.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1).FullName",
-            "if (-not (Test-AdminElevation)) { Write-Warning \"`nuuyc uninstall cleanup requires administrator privileges.`nSkipping privileged cleanup.`n\"; return }",
+            ". (Get-ChildItem (Join-Path $scoopdir 'buckets\\*\\bin\\import-utils.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1).FullName",
+            "if (-not (Test-AdminElevationOrWarn 'uuyc 卸载清理需要管理员权限，已跳过特权清理。')) { return }",
             "$nativeUninstaller = Get-ChildItem \"$dir\" -Filter 'unins*.exe' -File -ErrorAction SilentlyContinue | Select-Object -First 1",
             "if ($nativeUninstaller) {",
             "    Start-Process -FilePath $nativeUninstaller.FullName -ArgumentList '/S' -Wait -ErrorAction SilentlyContinue",
@@ -41,13 +41,13 @@
         ]
     },
     "post_uninstall": [
-        ". (Get-ChildItem (Join-Path $scoopdir 'buckets\\*\\bin\\utils.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1).FullName",
+        ". (Get-ChildItem (Join-Path $scoopdir 'buckets\\*\\bin\\import-utils.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1).FullName",
         "$uuycMappings = @(",
         "    @{ Label = 'local'; Source = 'LocalAppData/GameViewer'; Target = '$persist_dir/AppData' }",
         "    @{ Label = 'programdata'; Source = 'ProgramData/Netease/GameViewer'; Target = '$persist_dir/ProgramData' }",
         ")",
         "Uninstall-PersistDataLinks -Mappings $uuycMappings",
-        "if (-not (Test-AdminElevation)) { Write-Warning \"`nuuyc post_uninstall cleanup requires administrator privileges.`nSkipping privileged cleanup.`n\"; return }",
+        "if (-not (Test-AdminElevationOrWarn 'uuyc 卸载后清理需要管理员权限，已跳过特权清理。')) { return }",
         "$sidRoots = Get-ChildItem Registry::HKEY_USERS | Where-Object { $_.PSChildName -match '^S-1-5-21-(\\d+-){3}\\d+$' } | ForEach-Object { $_.PSPath }",
         "foreach ($sid in $sidRoots) {",
         "    Remove-Item \"$sid\\SOFTWARE\\Netease\" -Force -Recurse -ErrorAction SilentlyContinue | Out-Null",

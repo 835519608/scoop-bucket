@@ -1,20 +1,16 @@
 # scoop-bucket 公共 PowerShell 库
 #
-# 对外 API（manifest 中直接调用）:
-#   Install-PersistDataLinks    - 将应用数据目录联接到 persist（安装 / 升级后）
-#   Uninstall-PersistDataLinks  - 拆除数据目录联接（卸载前，保留 persist 数据）
-#   Link-FolderToPersist        - 单目录联接到 persist（-Migrate 可迁移已有文件）
-#   Clear-DesktopShortcuts      - 按通配符删除桌面快捷方式
-#   Clear-StartMenuShortcuts    - 按通配符删除开始菜单快捷方式
-#   Disable-LogonStartup        - 禁用/删除当前用户开机启动项（Run + StartupApproved）
-#   Test-AdminElevation         - 当前是否以管理员运行
-#   Require-AdminElevation      - 非管理员则警告并 exit 1
-#   Assert-McpRouterAdminForInstall / Complete-McpRouterPostInstall / Remove-McpRouterAutostartWatcher
+# manifest 首行（统一）:
+#   . (Get-ChildItem (Join-Path $scoopdir 'buckets\*\bin\import-utils.ps1') -EA SilentlyContinue | Select-Object -First 1).FullName
 #
-# Mapping 字段: Label, Source, Target, EnsureTarget, TargetType；Strategy 可选（copy = 仅复制）
+# 对外 API:
+#   Install-PersistDataLinks / Uninstall-PersistDataLinks / Link-FolderToPersist
+#   Clear-DesktopShortcuts / Clear-StartMenuShortcuts
+#   Disable-LogonStartup
+#   Test-AdminElevation / Assert-AdminElevation / Require-AdminElevation / Test-AdminElevationOrWarn
+#   Install-AppProcessAutostartBlocker / Uninstall-AppProcessAutostartBlocker
 #
-# manifest 加载本库（一行）:
-#   . (Get-ChildItem (Join-Path $scoopdir 'buckets\*\bin\utils.ps1') -EA SilentlyContinue | Select-Object -First 1).FullName
+# Mapping: Label, Source, Target, EnsureTarget, TargetType；Strategy 可选（copy = 仅复制）
 
 #region 底层：目录联接
 
@@ -172,14 +168,46 @@ function Test-AdminElevation {
     )
 }
 
+function Assert-AdminElevation {
+    <#
+        -OnFailure Exit         : exit 1（安装脚本内硬中断）
+        -OnFailure SkipInstall  : abort 跳过当前应用，不阻断 scoop install 其它包
+    #>
+    param (
+        [ValidateSet('Exit', 'SkipInstall')]
+        [string]$OnFailure = 'Exit',
+        [string]$Reason,
+        [string]$InstallHint
+    )
+    if (Test-AdminElevation) { return }
+    $appName = if ($app) { [string]$app } else { 'this app' }
+    $hint = if ($InstallHint) { $InstallHint } else { "scoop install $appName" }
+    $reasonText = if ($Reason) { $Reason } else { '需要管理员 PowerShell。' }
+    Write-Warning @"
+
+${appName} 已跳过：${reasonText}
+请在「以管理员身份运行」的 PowerShell 中执行：
+  ${hint}
+
+"@
+    if ($OnFailure -eq 'SkipInstall') {
+        abort "${appName}: skipped (administrator privileges required)."
+    }
+    exit 1
+}
+
 function Require-AdminElevation {
     param (
-        [string]$Message = "`nThis operation requires administrator privileges.`nPlease rerun Scoop in an elevated PowerShell.`n"
+        [string]$Message = '需要管理员 PowerShell，请在提升的终端中重试。'
     )
-    if (-not (Test-AdminElevation)) {
-        Write-Warning $Message
-        exit 1
-    }
+    Assert-AdminElevation -OnFailure Exit -Reason $Message
+}
+
+function Test-AdminElevationOrWarn {
+    param ([string]$Message)
+    if (Test-AdminElevation) { return $true }
+    Write-Warning $Message
+    return $false
 }
 
 #endregion
@@ -353,75 +381,37 @@ function Uninstall-PersistDataLinks {
 
 #endregion
 
-#region MCP Router
+#region 进程启动监听 + 开机启动（通用）
 
-function Get-McpRouterLogonStartupFilters {
-    return @{
-        CommandFilter = @('*MCP Router*', '*mcp-router*')
-        NameFilter    = @('*MCP Router*', '*mcp-router*')
-    }
-}
-
-function Disable-McpRouterLogonStartup {
-    $filters = Get-McpRouterLogonStartupFilters
-    Disable-LogonStartup -CommandFilter $filters.CommandFilter -NameFilter $filters.NameFilter
-}
-
-function Get-McpRouterPersistMappings {
-    param ([switch]$EnsureTarget)
-    $mapping = @{
-        Label  = 'roaming'
-        Source = 'AppData/MCP Router'
-        Target = '$persist_dir/roaming'
-    }
-    if ($EnsureTarget) { $mapping.EnsureTarget = $true }
-    return @($mapping)
-}
-
-function Remove-McpRouterLegacyScheduledTask {
-    schtasks.exe /Delete /TN scoop-mcp-router-no-autostart /F 2>$null | Out-Null
-}
-
-function Get-McpRouterBlockerScriptPath {
-    param ([string]$PersistDirectory)
-    if (-not $PersistDirectory) { $PersistDirectory = $persist_dir }
-    return (Join-Path $PersistDirectory 'block-autostart.ps1')
-}
-
-function Write-McpRouterBlockerScript {
-    param ([string]$PersistDirectory)
-    if (-not $PersistDirectory) { $PersistDirectory = $persist_dir }
-    $utilsPath = (Get-ChildItem -Path (Join-Path $scoopdir 'buckets\*\bin\utils.ps1') -ErrorAction SilentlyContinue |
+function Get-ScoopBucketUtilsPath {
+    (Get-ChildItem -Path (Join-Path $scoopdir 'buckets\*\bin\utils.ps1') -ErrorAction SilentlyContinue |
         Select-Object -First 1).FullName
-    if (-not $utilsPath) {
-        throw 'utils.ps1 not found in scoop buckets.'
-    }
-    New-Item -ItemType Directory -Path $PersistDirectory -Force -ErrorAction SilentlyContinue | Out-Null
-    $blockerScript = Get-McpRouterBlockerScriptPath -PersistDirectory $PersistDirectory
-    # 进程启动后等待应用写入 Run 键，再清除开机启动
-    @(
-        'Start-Sleep -Seconds 3'
-        ". `"$utilsPath`""
-        'Disable-McpRouterLogonStartup'
-    ) | Set-Content -Path $blockerScript -Encoding UTF8
-    return $blockerScript
 }
 
-function Remove-McpRouterLaunchArtifacts {
-    param ([string]$AppDirectory)
+function Remove-LaunchArtifacts {
+    param (
+        [string[]]$Names,
+        [string]$AppDirectory
+    )
     if (-not $AppDirectory) { $AppDirectory = $dir }
-    foreach ($name in @('mcp-router.vbs', 'mcp-router.cmd', 'mcp-router-launch.ps1')) {
+    foreach ($name in $Names) {
         Remove-Item -LiteralPath (Join-Path $AppDirectory $name) -Force -ErrorAction SilentlyContinue
     }
 }
 
-function Remove-McpRouterAutostartWatcher {
-    # 清理旧版可能残留的 WMI 订阅（普通用户下创建常会失败）
-    $filterName = 'Scoop_McpRouter_ProcessStart'
-    $consumerName = 'Scoop_McpRouter_DisableAutostart'
+function Remove-ScheduledTaskByName {
+    param ([Parameter(Mandatory = $true)][string]$TaskName)
+    schtasks.exe /Delete /TN $TaskName /F 2>$null | Out-Null
+}
+
+function Remove-ProcessStartWatcher {
+    param (
+        [Parameter(Mandatory = $true)][string]$FilterName,
+        [Parameter(Mandatory = $true)][string]$ConsumerName
+    )
     $ns = 'root\subscription'
-    $filter = Get-WmiObject -Namespace $ns -Class __EventFilter -Filter "Name='$filterName'" -ErrorAction SilentlyContinue
-    $consumer = Get-WmiObject -Namespace $ns -Class CommandLineEventConsumer -Filter "Name='$consumerName'" -ErrorAction SilentlyContinue
+    $filter = Get-WmiObject -Namespace $ns -Class __EventFilter -Filter "Name='$FilterName'" -ErrorAction SilentlyContinue
+    $consumer = Get-WmiObject -Namespace $ns -Class CommandLineEventConsumer -Filter "Name='$ConsumerName'" -ErrorAction SilentlyContinue
     if ($filter -and $consumer) {
         Get-WmiObject -Namespace $ns -Class __FilterToConsumerBinding -ErrorAction SilentlyContinue |
             Where-Object { $_.Filter -eq $filter.__RELPATH -and $_.Consumer -eq $consumer.__RELPATH } |
@@ -431,27 +421,50 @@ function Remove-McpRouterAutostartWatcher {
     }
 }
 
-function Install-McpRouterAutostartWatcher {
-    param ([string]$PersistDirectory)
+function Write-ProcessStartBlockerScript {
+    param (
+        [string]$PersistDirectory,
+        [string]$ScriptFileName = 'process-autostart-blocker.ps1',
+        [int]$DelaySeconds = 3,
+        [Parameter(Mandatory = $true)][string]$AfterLoadCommand
+    )
     if (-not $PersistDirectory) { $PersistDirectory = $persist_dir }
-    $blockerScript = Write-McpRouterBlockerScript -PersistDirectory $PersistDirectory
-    Remove-McpRouterAutostartWatcher
-    $filterName = 'Scoop_McpRouter_ProcessStart'
-    $consumerName = 'Scoop_McpRouter_DisableAutostart'
+    $utilsPath = Get-ScoopBucketUtilsPath
+    if (-not $utilsPath) { throw 'utils.ps1 not found in scoop buckets.' }
+    New-Item -ItemType Directory -Path $PersistDirectory -Force -ErrorAction SilentlyContinue | Out-Null
+    $blockerScript = Join-Path $PersistDirectory $ScriptFileName
+    @(
+        "Start-Sleep -Seconds $DelaySeconds"
+        ". `"$utilsPath`""
+        $AfterLoadCommand
+    ) | Set-Content -Path $blockerScript -Encoding UTF8
+    return $blockerScript
+}
+
+function Install-ProcessStartWatcher {
+    param (
+        [Parameter(Mandatory = $true)][string]$ProcessName,
+        [Parameter(Mandatory = $true)][string]$FilterName,
+        [Parameter(Mandatory = $true)][string]$ConsumerName,
+        [Parameter(Mandatory = $true)][string]$BlockerScriptPath,
+        [int]$WithinSeconds = 5
+    )
+    Remove-ProcessStartWatcher -FilterName $FilterName -ConsumerName $ConsumerName
     $ns = 'root\subscription'
+    $escapedProcess = $ProcessName.Replace("'", "''")
     $query = @"
-SELECT * FROM __InstanceCreationEvent WITHIN 5
-WHERE TargetInstance ISA 'Win32_Process' AND TargetInstance.Name = 'MCP Router.exe'
+SELECT * FROM __InstanceCreationEvent WITHIN $WithinSeconds
+WHERE TargetInstance ISA 'Win32_Process' AND TargetInstance.Name = '$escapedProcess'
 "@
     $filter = Set-WmiInstance -Namespace $ns -Class __EventFilter -Arguments @{
-        Name           = $filterName
+        Name           = $FilterName
         EventNameSpace = 'root\cimv2'
         QueryLanguage  = 'WQL'
         Query          = $query
     }
     $consumer = Set-WmiInstance -Namespace $ns -Class CommandLineEventConsumer -Arguments @{
-        Name                = $consumerName
-        CommandLineTemplate = "powershell.exe -NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File `"$blockerScript`""
+        Name                = $ConsumerName
+        CommandLineTemplate = "powershell.exe -NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File `"$BlockerScriptPath`""
     }
     Set-WmiInstance -Namespace $ns -Class __FilterToConsumerBinding -Arguments @{
         Filter   = $filter
@@ -459,31 +472,56 @@ WHERE TargetInstance ISA 'Win32_Process' AND TargetInstance.Name = 'MCP Router.e
     } | Out-Null
 }
 
-function Assert-McpRouterAdminForInstall {
-    if (Test-AdminElevation) { return }
-    Write-Warning @"
-
-mcp-router 已跳过：需要管理员 PowerShell 才能安装（WMI 进程监听）。
-请右键「以管理员身份运行」PowerShell 后执行：
-  scoop install scoop-bucket/mcp-router
-
-若曾以普通用户装过，请先执行：scoop uninstall mcp-router
-
-"@
-    abort 'mcp-router: skipped (administrator privileges required).'
+function Install-AppProcessAutostartBlocker {
+    param (
+        [Parameter(Mandatory = $true)][string]$ProcessName,
+        [Parameter(Mandatory = $true)][string]$WatcherFilterName,
+        [Parameter(Mandatory = $true)][string]$WatcherConsumerName,
+        [string[]]$LogonStartupCommandFilter = @(),
+        [string[]]$LogonStartupNameFilter = @(),
+        [string]$PersistDirectory,
+        [string]$BlockerScriptFileName = 'process-autostart-blocker.ps1',
+        [int]$BlockerDelaySeconds = 3,
+        [string[]]$RemoveLaunchArtifactNames = @(),
+        [string]$LegacyScheduledTaskName,
+        [string]$AppDirectory,
+        [string]$SuccessMessage
+    )
+    if (-not $AppDirectory) { $AppDirectory = $dir }
+    $cf = ($LogonStartupCommandFilter | ForEach-Object { "'$_'" }) -join ', '
+    $nf = ($LogonStartupNameFilter | ForEach-Object { "'$_'" }) -join ', '
+    $afterLoad = "Disable-LogonStartup -CommandFilter @($cf) -NameFilter @($nf)"
+    $blockerScript = Write-ProcessStartBlockerScript -PersistDirectory $PersistDirectory `
+        -ScriptFileName $BlockerScriptFileName -DelaySeconds $BlockerDelaySeconds -AfterLoadCommand $afterLoad
+    Install-ProcessStartWatcher -ProcessName $ProcessName -FilterName $WatcherFilterName `
+        -ConsumerName $WatcherConsumerName -BlockerScriptPath $blockerScript
+    Disable-LogonStartup -CommandFilter $LogonStartupCommandFilter -NameFilter $LogonStartupNameFilter | Out-Null
+    if ($LegacyScheduledTaskName) { Remove-ScheduledTaskByName -TaskName $LegacyScheduledTaskName }
+    if ($RemoveLaunchArtifactNames.Count -gt 0) {
+        Remove-LaunchArtifacts -Names $RemoveLaunchArtifactNames -AppDirectory $AppDirectory
+    }
+    if ($SuccessMessage) {
+        Write-Host $SuccessMessage -ForegroundColor Green
+    }
 }
 
-function Complete-McpRouterPostInstall {
-    param ([string]$AppDirectory)
+function Uninstall-AppProcessAutostartBlocker {
+    param (
+        [Parameter(Mandatory = $true)][string]$WatcherFilterName,
+        [Parameter(Mandatory = $true)][string]$WatcherConsumerName,
+        [string[]]$LogonStartupCommandFilter = @(),
+        [string[]]$LogonStartupNameFilter = @(),
+        [string[]]$RemoveLaunchArtifactNames = @(),
+        [string]$LegacyScheduledTaskName,
+        [string]$AppDirectory
+    )
     if (-not $AppDirectory) { $AppDirectory = $dir }
-    try {
-        Install-McpRouterAutostartWatcher
-        Disable-McpRouterLogonStartup | Out-Null
-        Write-Host 'mcp-router: 已注册进程监听，应用启动后将自动关闭开机启动。' -ForegroundColor Green
-    } catch {
-        Write-Warning "mcp-router: 注册进程监听失败: $_"
+    Remove-ProcessStartWatcher -FilterName $WatcherFilterName -ConsumerName $WatcherConsumerName
+    if ($LegacyScheduledTaskName) { Remove-ScheduledTaskByName -TaskName $LegacyScheduledTaskName }
+    if ($RemoveLaunchArtifactNames.Count -gt 0) {
+        Remove-LaunchArtifacts -Names $RemoveLaunchArtifactNames -AppDirectory $AppDirectory
     }
-    Remove-McpRouterLaunchArtifacts -AppDirectory $AppDirectory
+    Disable-LogonStartup -CommandFilter $LogonStartupCommandFilter -NameFilter $LogonStartupNameFilter | Out-Null
 }
 
 #endregion
