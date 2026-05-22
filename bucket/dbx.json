@@ -18,6 +18,7 @@
         "file": "uninstall.exe",
         "args": ["/S"]
     },
+    "notes": "GitHub Release 无 checksums 文件，autoupdate 使用 hash.mode download。",
     "checkver": "github",
     "autoupdate": {
         "architecture": {

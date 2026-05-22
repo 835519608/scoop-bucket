@@ -16,13 +16,15 @@
             "config.yaml"
         ]
     ],
+    "notes": "hash 来自 Release 的 checksums.txt（GitHub 统一策略：有文件用文件）。",
     "checkver": "github",
     "autoupdate": {
         "architecture": {
             "64bit": {
                 "url": "https://github.com/router-for-me/CLIProxyAPI/releases/download/v$version/CLIProxyAPI_$version_windows_amd64.zip",
                 "hash": {
-                    "mode": "download"
+                    "url": "https://github.com/router-for-me/CLIProxyAPI/releases/download/v$version/checksums.txt",
+                    "find": "CLIProxyAPI_$version_windows_amd64.zip"
                 }
             }
         }
