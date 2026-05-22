@@ -406,12 +406,16 @@ function Install-McpRouterLaunchArtifacts {
     $launcherPath = Join-Path $AppDirectory 'mcp-router-launch.ps1'
     (Get-Content -LiteralPath $launchTemplate -Raw).Replace('{{BLOCKER_SCRIPT}}', $blockerScript) |
         Set-Content -LiteralPath $launcherPath -Encoding UTF8
-    # .cmd 供 Scoop shim / 开始菜单使用；直接指向 .ps1 会被 Windows 用记事本打开
-    $cmdPath = Join-Path $AppDirectory 'mcp-router.cmd'
+    # .vbs 无控制台窗口；直接 shim/快捷方式指向 .ps1 会被记事本打开
+    Remove-Item -LiteralPath (Join-Path $AppDirectory 'mcp-router.cmd') -Force -ErrorAction SilentlyContinue
+    $vbsPath = Join-Path $AppDirectory 'mcp-router.vbs'
     @(
-        '@echo off'
-        'powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0mcp-router-launch.ps1"'
-    ) | Set-Content -Path $cmdPath -Encoding ASCII
+        'Set fso = CreateObject("Scripting.FileSystemObject")'
+        'appDir = fso.GetParentFolderName(WScript.ScriptFullName)'
+        'ps1 = fso.BuildPath(appDir, "mcp-router-launch.ps1")'
+        'cmd = "powershell.exe -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File """ & ps1 & """"'
+        'CreateObject("Wscript.Shell").Run cmd, 0, False'
+    ) | Set-Content -Path $vbsPath -Encoding ASCII
 }
 
 #endregion
