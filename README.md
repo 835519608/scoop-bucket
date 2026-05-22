@@ -10,9 +10,11 @@ scoop bucket add scoop-bucket "$(Resolve-Path .)"
 scoop bucket add scoop-bucket https://github.com/835519608/scoop-bucket
 ```
 
-### 一键添加本机非 main 软件源
+### 一键添加社区 bucket 源
 
-仓库根目录 [`buckets.json`](buckets.json) 收录 Windows 宿主机上除 `main` 外的全部 bucket 地址（含 extras、社区 bucket 等）。在 **WSL** 中通过 `win-pwsh` 调用宿主 Scoop：
+此处「非官方」指 **不在 [scoop.sh](https://scoop.sh/) / [Scoop 内置 buckets.json](https://github.com/ScoopInstaller/Scoop/blob/master/buckets.json)** 中的仓库（如 `extras`、`versions` 等官方扩展库**不算**，无需写入本文件）。
+
+仓库根目录 [`buckets.json`](buckets.json) 仅收录需手动 `scoop bucket add <名> <url>` 的**社区 bucket**。在 **WSL** 中通过 `win-pwsh` 调用宿主 Scoop：
 
 ```bash
 ./scripts/add-buckets.sh
@@ -30,7 +32,7 @@ scoop bucket add scoop-bucket https://github.com/835519608/scoop-bucket
 win-pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/export-from-windows.ps1
 ```
 
-生成/更新 `buckets.json` 与 [`catalog/installed-non-main.json`](catalog/installed-non-main.json)（已安装且非 `main` 的应用）。
+生成/更新 `buckets.json` 与 [`catalog/installed-community.json`](catalog/installed-community.json)（已安装且来自社区 bucket 的应用）。
 
 ## 安装应用
 
@@ -128,14 +130,16 @@ scoop update pixpin symm
 | pixpin | 截图 / 贴图 / 长截图 / OCR   |
 | symm   | 软链接管理（仅正式 Release） |
 
-### 外部源应用（见 `catalog/installed-non-main.json`）
+### 社区 bucket 应用（见 `catalog/installed-community.json`）
 
-通过 `buckets.json` 添加对应 bucket 后安装，例如：
+先 `./scripts/add-buckets.sh` 添加社区源，再安装，例如：
 
 ```powershell
-scoop install extras/vscode
 scoop install echoiron_echo-scoop/xshellplus
 scoop install cmontage_scoopbucket-soup/uuyc
+scoop install YewFence_YewNursery/CLIProxyAPI
 ```
 
-完整列表以 `catalog/installed-non-main.json` 为准（由 `export-from-windows.ps1` 同步）。
+`extras/vscode` 等属于 [Scoop 官方库](https://github.com/ScoopInstaller/Scoop/blob/master/buckets.json)，用 `scoop bucket add extras` 即可，不在本仓库 `buckets.json` 中。
+
+完整社区应用列表以 `catalog/installed-community.json` 为准（由 `export-from-windows.ps1` 同步）。

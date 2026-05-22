@@ -1,4 +1,4 @@
-# 根据仓库根目录 buckets.json 添加全部非 main 软件源。
+# 根据仓库根目录 buckets.json 添加全部社区 bucket（非 scoop.sh 官方库）。
 # WSL: win-pwsh -File scripts/add-buckets.ps1
 param(
     [string]$RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path,
@@ -20,7 +20,7 @@ scoop bucket list | Select-Object -Skip 2 | ForEach-Object {
 foreach ($prop in $map.PSObject.Properties) {
     $name = $prop.Name
     $url = [string]$prop.Value
-    if ($name -eq "main") { continue }
+    # buckets.json 仅含社区源，不含 main / extras 等官方库
     if ($SkipExisting -and $existing.ContainsKey($name)) {
         Write-Host "skip (exists): $name"
         continue

@@ -1,5 +1,5 @@
 # 在 WSL 中通过 win-pwsh 调用，或于 Windows PowerShell 直接运行。
-# 从 Windows 宿主机 Scoop 导出非 main bucket 源与本机已安装的非 main 应用列表。
+# 从 Windows 宿主机 Scoop 导出「非 scoop.sh 官方库」的社区 bucket 源与本机已安装应用。
 param(
     [string]$ScoopRoot = "D:\Program\Scoop",
     [string]$RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
@@ -11,26 +11,54 @@ if (-not (Test-Path $ScoopRoot)) {
     throw "Scoop 根目录不存在: $ScoopRoot"
 }
 
+function Normalize-RepoUrl {
+    param([string]$Url)
+    if (-not $Url) { return "" }
+    $u = $Url.Trim().TrimEnd('/').ToLower()
+    $u = $u -replace '\.git$', ''
+    $u = $u -replace '^https://scoop\.201704\.xyz/', 'https://'
+    return $u
+}
+
+$officialFile = Join-Path $PSScriptRoot "official-buckets.json"
+$officialMap = Get-Content $officialFile -Raw | ConvertFrom-Json
+$officialUrls = @{}
+foreach ($prop in $officialMap.buckets.PSObject.Properties) {
+    $officialUrls[(Normalize-RepoUrl $prop.Value)] = $true
+}
+
+function Test-IsOfficialBucketUrl {
+    param([string]$Url)
+    return $officialUrls.ContainsKey((Normalize-RepoUrl $Url))
+}
+
 $bucketsDir = Join-Path $ScoopRoot "buckets"
 $appsDir = Join-Path $ScoopRoot "apps"
 
-# 收集 bucket 源（排除 main、本仓库自身、已弃用的 symm 独立 bucket）
-$skipBuckets = @("main", "scoop-bucket", "symm")
+# 本仓库自身、已弃用的 symm 独立 bucket 不写入 buckets.json
+$skipBucketNames = @("scoop-bucket", "symm")
 $buckets = @{}
+$bucketUrlByName = @{}
+
 Get-ChildItem $bucketsDir -Directory | ForEach-Object {
     $name = $_.Name
-    if ($name -in $skipBuckets) { return }
+    if ($name -in $skipBucketNames) { return }
     $url = ""
     if (Test-Path (Join-Path $_.FullName ".git")) {
         $url = git -C $_.FullName remote get-url origin 2>$null
     }
-    if ($url) { $buckets[$name] = $url }
+    if (-not $url) { return }
+    $bucketUrlByName[$name] = $url
+    if (Test-IsOfficialBucketUrl $url) { return }
+    $buckets[$name] = $url
 }
 
 $bucketsPath = Join-Path $RepoRoot "buckets.json"
-$buckets | ConvertTo-Json | Set-Content -Path $bucketsPath -Encoding utf8
+$sorted = [ordered]@{}
+$buckets.GetEnumerator() | Sort-Object Name | ForEach-Object { $sorted[$_.Key] = $_.Value }
+$sorted | ConvertTo-Json | Set-Content -Path $bucketsPath -Encoding utf8
 
-# 已安装且 bucket != main
+# 已安装且来自社区 bucket 的应用
 $apps = @()
 if (Test-Path $appsDir) {
     Get-ChildItem $appsDir -Directory | ForEach-Object {
@@ -38,25 +66,33 @@ if (Test-Path $appsDir) {
         if (-not (Test-Path $installJson)) { return }
         $j = Get-Content $installJson -Raw | ConvertFrom-Json
         $bucket = $j.bucket
-        if (-not $bucket -or $bucket -eq "main") { return }
-        $entry = [ordered]@{ app = $_.Name; bucket = $bucket }
+        if (-not $bucket) { return }
+        $bucketUrl = $bucketUrlByName[$bucket]
+        # symm 独立 bucket 已弃用，仍记录到 catalog 便于迁移
         if ($_.Name -eq "symm" -and $bucket -eq "symm") {
-            $entry["migrate"] = "scoop-bucket/symm"
+            $apps += [ordered]@{ app = "symm"; bucket = "symm"; migrate = "scoop-bucket/symm" }
+            return
         }
-        $apps += $entry
+        if (-not $bucketUrl -or (Test-IsOfficialBucketUrl $bucketUrl)) { return }
+        $apps += [ordered]@{ app = $_.Name; bucket = $bucket }
     }
 }
 
 $catalog = [ordered]@{
-    generated   = (Get-Date -Format "yyyy-MM-dd")
-    scoop_root  = $ScoopRoot
-    note        = "本机已安装且 bucket 非 main 的应用；由 scripts/export-from-windows.ps1 生成"
-    apps        = @($apps | Sort-Object { $_.bucket }, { $_.app })
+    generated  = (Get-Date -Format "yyyy-MM-dd")
+    scoop_root = $ScoopRoot
+    note       = "本机已安装且来自社区 bucket（非 Scoop 官方库，需 scoop bucket add）的应用"
+    apps       = @($apps | Sort-Object { $_.bucket }, { $_.app })
 }
 
 $catalogDir = Join-Path $RepoRoot "catalog"
 if (-not (Test-Path $catalogDir)) { New-Item -ItemType Directory -Path $catalogDir | Out-Null }
-$catalog | ConvertTo-Json -Depth 5 | Set-Content -Path (Join-Path $catalogDir "installed-non-main.json") -Encoding utf8
+$catalogPath = Join-Path $catalogDir "installed-community.json"
+$catalog | ConvertTo-Json -Depth 5 | Set-Content -Path $catalogPath -Encoding utf8
 
-Write-Host "Wrote $($buckets.Count) buckets -> buckets.json"
-Write-Host "Wrote $($apps.Count) apps -> catalog/installed-non-main.json"
+# 移除旧文件名
+$legacyCatalog = Join-Path $catalogDir "installed-non-main.json"
+if (Test-Path $legacyCatalog) { Remove-Item $legacyCatalog -Force }
+
+Write-Host "Wrote $($buckets.Count) community buckets -> buckets.json"
+Write-Host "Wrote $($apps.Count) apps -> catalog/installed-community.json"
