@@ -9,8 +9,6 @@
 #   Clear-DesktopShortcuts      - 按通配符删除桌面快捷方式
 #   Clear-StartMenuShortcuts    - 按通配符删除开始菜单快捷方式
 #   Disable-LogonStartup        - 禁用/删除当前用户开机启动项（Run + StartupApproved）
-#   Register-LogonStartupBlocker   - 登录后定时再次禁用（对付应用再次写入）
-#   Unregister-LogonStartupBlocker - 移除上述计划任务
 #   Test-AdminElevation         - 当前是否以管理员运行
 #   Require-AdminElevation      - 非管理员则警告并 exit 1
 #
@@ -125,7 +123,7 @@ function Disable-LogonStartup {
         禁用匹配的开机启动项（等同任务管理器里关掉「启动」）：
         - 在 StartupApproved\Run 标记为禁用
         - 并删除 HKCU\...\Run 中对应项
-        Electron 应用下次运行可能再次写入，需配合 Register-LogonStartupBlocker 或手动再执行。
+        Electron 应用下次运行可能再次写入，需在启动后再次调用或走启动器脚本。
     #>
     param (
         [string[]]$CommandFilter = @(),
@@ -160,30 +158,6 @@ function Disable-LogonStartup {
         }
     }
     return $matched.ToArray()
-}
-
-function Register-LogonStartupBlocker {
-    <# 用户登录后延迟执行脚本，用于应用再次写入开机项后自动清除 #>
-    param (
-        [Parameter(Mandatory = $true)]
-        [string]$TaskName,
-        [Parameter(Mandatory = $true)]
-        [string]$ScriptPath,
-        [int]$DelaySeconds = 60
-    )
-    $minutes = [int]($DelaySeconds / 60)
-    $seconds = $DelaySeconds % 60
-    $delay = '{0:D4}:{1:D2}' -f $minutes, $seconds
-    $tr = "powershell.exe -NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File `"$ScriptPath`""
-    schtasks.exe /Create /TN $TaskName /TR $tr /SC ONLOGON /DELAY $delay /F | Out-Null
-}
-
-function Unregister-LogonStartupBlocker {
-    param (
-        [Parameter(Mandatory = $true)]
-        [string]$TaskName
-    )
-    schtasks.exe /Delete /TN $TaskName /F 2>$null | Out-Null
 }
 
 #endregion

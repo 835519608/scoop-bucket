@@ -12,13 +12,19 @@
             "hash": "71121b15c1cb89b782695415bf98d88441188a313bc8c66c296fadeae3d5b0c1"
         }
     },
+    "bin": [
+        [
+            "mcp-router-launch.ps1",
+            "mcp-router"
+        ]
+    ],
     "shortcuts": [
         [
-            "MCP Router.exe",
+            "mcp-router-launch.ps1",
             "MCP Router"
         ]
     ],
-    "notes": "数据目录联接到 persist/roaming。应用内无「关闭开机启动」选项且每次运行会重新写入；本 manifest 安装时会禁用启动项并注册登录后自动清理任务（计划任务名 scoop-mcp-router-no-autostart）。若需开机自启，卸载后手动在任务管理器启用或删除该计划任务。",
+    "notes": "数据目录联接到 persist/roaming。请用开始菜单或 scoop 命令 mcp-router 启动；约 12 秒后自动关闭开机启动。直接双击 MCP Router.exe 不会禁用开机启动。",
     "checkver": "github",
     "autoupdate": {
         "architecture": {
@@ -36,17 +42,19 @@
         "$mcpRouterMappings = @(@{ Label = 'roaming'; Source = 'AppData/MCP Router'; Target = '$persist_dir/roaming'; EnsureTarget = $true })",
         "Install-PersistDataLinks -Mappings $mcpRouterMappings -Log:$true",
         "$mcpRouterBlockerScript = Join-Path $persist_dir 'block-autostart.ps1'",
+        "$mcpRouterLoadUtils = Join-Path $bucketsdir \"$__scoopBucket\\bin\\load-utils.ps1\"",
         "@(",
-        "    \". `\"$((Join-Path $bucketsdir \"$__scoopBucket\\bin\\load-utils.ps1\"))`\"\"",
+        "    'Start-Sleep -Seconds 12'",
+        "    \". `\"$mcpRouterLoadUtils`\"\"",
         "    'Disable-LogonStartup -CommandFilter @(''*MCP Router*'', ''*mcp-router*'') -NameFilter @(''*MCP Router*'', ''*mcp-router*'')'",
         ") | Set-Content -Path $mcpRouterBlockerScript -Encoding UTF8",
-        "Disable-LogonStartup -CommandFilter @('*MCP Router*', '*mcp-router*') -NameFilter @('*MCP Router*', '*mcp-router*')",
-        "Register-LogonStartupBlocker -TaskName 'scoop-mcp-router-no-autostart' -ScriptPath $mcpRouterBlockerScript -DelaySeconds 60"
+        "$mcpRouterLaunchTpl = Join-Path $bucketsdir \"$__scoopBucket\\scripts\\mcp-router-launch.ps1\"",
+        "(Get-Content -LiteralPath $mcpRouterLaunchTpl -Raw).Replace('{{BLOCKER_SCRIPT}}', $mcpRouterBlockerScript) | Set-Content -LiteralPath (Join-Path $dir 'mcp-router-launch.ps1') -Encoding UTF8"
     ],
     "pre_uninstall": [
         "$__scoopBucket = if ($bucket) { $bucket } elseif (Test-Path (Join-Path (scoop prefix $app) 'install.json')) { (Get-Content (Join-Path (scoop prefix $app) 'install.json') -Raw | ConvertFrom-Json).bucket } else { (Get-ChildItem (Join-Path $scoopdir 'buckets\\*\\bin\\load-utils.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1).Directory.Parent.Name }",
         ". (Join-Path $bucketsdir \"$__scoopBucket\\bin\\load-utils.ps1\")",
-        "Unregister-LogonStartupBlocker -TaskName 'scoop-mcp-router-no-autostart'",
+        "schtasks.exe /Delete /TN scoop-mcp-router-no-autostart /F 2>$null | Out-Null",
         "Disable-LogonStartup -CommandFilter @('*MCP Router*', '*mcp-router*') -NameFilter @('*MCP Router*', '*mcp-router*')",
         "$mcpRouterMappings = @(@{ Label = 'roaming'; Source = 'AppData/MCP Router'; Target = '$persist_dir/roaming' })",
         "Uninstall-PersistDataLinks -Mappings $mcpRouterMappings -Log:$true"
