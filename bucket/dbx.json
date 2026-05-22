@@ -12,13 +12,13 @@
     "bin": "dbx.exe",
     "innosetup": false,
     "installer": {
-        "args": ["/S", "/D=$dir"]
+        "args": ["/S", "/NS", "/D=$dir"]
     },
     "uninstaller": {
         "file": "uninstall.exe",
         "args": ["/S"]
     },
-    "notes": "仅靠 post_install 联接默认路径到 scoop\\persist\\dbx：Roaming/Local 的 com.dbx.app（dbx.db、plugins）、%USERPROFILE%\\.dbx（JRE、Agent 驱动）。",
+    "notes": "安装包为 Tauri NSIS，/S 静默会建桌面快捷方式，须加 /NS；无 Scoop shortcuts。数据目录见 post_install 联接。",
     "post_install": [
         ". \"$bucketsdir\\$bucket\\bin\\utils.ps1\"",
         "New-PersistDirectory \"$env:APPDATA\\com.dbx.app\" \"$persist_dir\\roaming\" -Migrate",
