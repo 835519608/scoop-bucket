@@ -1,145 +1,77 @@
-# scoopBucket
+# scoop-bucket
 
-个人 Scoop bucket，用于通过 [Scoop](https://scoop.sh/) 安装常用软件。
+个人 Scoop bucket：manifest 均在 `bucket/` **自维护**，不再依赖社区 bucket 源。
 
 ## 添加 bucket
 
 ```powershell
-scoop bucket add scoop-bucket "$(Resolve-Path .)"
-# 或远程
 scoop bucket add scoop-bucket https://github.com/835519608/scoop-bucket
+# 或本地
+scoop bucket add scoop-bucket "$(Resolve-Path .)"
 ```
-
-### 一键添加社区 bucket 源
-
-此处「非官方」指 **不在 [scoop.sh](https://scoop.sh/) / [Scoop 内置 buckets.json](https://github.com/ScoopInstaller/Scoop/blob/master/buckets.json)** 中的仓库（如 `extras`、`versions` 等官方扩展库**不算**，无需写入本文件）。
-
-仓库根目录 [`buckets.json`](buckets.json) 仅收录需手动 `scoop bucket add <名> <url>` 的**社区 bucket**。在 **WSL** 中通过 `win-pwsh` 调用宿主 Scoop：
-
-```bash
-./scripts/add-buckets.sh
-```
-
-或在 Windows PowerShell：
-
-```powershell
-.\scripts\add-buckets.ps1
-```
-
-重新从本机 Scoop 导出源与应用清单：
-
-```bash
-win-pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/export-from-windows.ps1
-```
-
-生成/更新 `buckets.json` 与 [`catalog/installed-community.json`](catalog/installed-community.json)（已安装且来自社区 bucket 的应用）。
 
 ## 安装应用
 
 ```powershell
-scoop install scoop-bucket/pixpin   # 截图 / 贴图 / OCR
-scoop install scoop-bucket/symm     # 需已有 GitHub 正式 Release（见下方）
+scoop install scoop-bucket/pixpin
+scoop install scoop-bucket/symm
+scoop install scoop-bucket/uuyc
+scoop install scoop-bucket/dbx
+scoop install scoop-bucket/xshellplus
+scoop install scoop-bucket/mcp-router
+scoop install scoop-bucket/CLIProxyAPI
 ```
 
-### PixPin
+## 从旧社区 bucket 迁移
 
-[PixPin](https://pixpin.cn/) 是一款免费的截图、贴图、长截图与 OCR 工具（Windows）。安装后可通过 `pixpin` 命令或开始菜单快捷方式启动。
-
-### 配置与数据持久化（Scoop）
-
-官方 zip 版把运行时数据放在 **与 `PixPin.exe` 同目录** 的 `Config`、`Data`、`History` 下。manifest 里已配置 `persist`，升级 `scoop update pixpin` 时这些目录会保留。
-
-| 程序目录下的文件夹 | Scoop 实际存放位置（示例） |
-| ------------------ | -------------------------- |
-| `Config` | `%USERPROFILE%\scoop\persist\pixpin\Config` |
-| `Data` | `%USERPROFILE%\scoop\persist\pixpin\Data` |
-| `History` | `%USERPROFILE%\scoop\persist\pixpin\History` |
-
-安装后，版本目录里上述三项是 **目录联接（junction）** 指向 `persist`，不是复制一份。
-
-查看路径：
+若曾用 `cmontage_scoopbucket-soup`、`echoiron_echo-scoop` 等安装，可改为本 bucket：
 
 ```powershell
-scoop prefix pixpin          # 当前版本程序目录（…\apps\pixpin\current）
-scoop prefix -p pixpin       # persist 根目录
+# 示例：uuyc
+scoop uninstall uuyc
+scoop bucket rm cmontage_scoopbucket-soup   # 可选，不再使用
+scoop bucket update scoop-bucket
+scoop install scoop-bucket/uuyc
 ```
 
-若你以前用安装包装过、数据在 `%AppData%\PixPin`，需要**手动复制**到 `scoop\persist\pixpin\` 对应子目录（结构不一致时以 zip 版首次运行后生成的目录为准），再 `scoop reset pixpin` 重建联接。
+`symm` 同理：`scoop uninstall symm` → `scoop bucket rm symm` → `scoop install scoop-bucket/symm`。
 
-### symm
+数据一般在 `scoop\persist\<app>\`，重装前备份对应目录。
 
-[symm](https://github.com/835519608/symm) 是跨平台软链接管理工具。manifest 使用 `"checkver": "github"`，**只跟正式 Release**（不含 Pre-release、不含 `v*-test*` tag）。
+## 应用说明
 
-| 命令 / 文件 | 说明 |
-| ----------- | ---- |
-| `symm` | GUI（`symm.exe`） |
-| `symm-cli` | CLI（`cli/symm-cli.exe`） |
-| `persist/data` | SQLite 库 `symm.db`，`SYMM_HOME` 已指向此处 |
+| 应用 | 说明 | 原社区源 |
+|------|------|----------|
+| pixpin | 截图 / 贴图 / OCR | 官网 |
+| symm | 软链接管理（仅正式 Release） | 835519608/symm |
+| uuyc | 网易 UU 远程 | cmontage/scoopbucket-soup |
+| dbx | 数据库管理 | t8y2/scoop-bucket |
+| xshellplus | Xshell Plus | echoiron/echo-scoop |
+| mcp-router | MCP 路由桌面端 | LaelLuo/scoop |
+| CLIProxyAPI | CLI 代理 API | YewFence/YewNursery |
 
-若 GitHub 上尚无正式 Release，`scoop install` 会失败；在 symm 推送正式 tag（如 `v0.2.0`）后，Excavator 或 `scoop checkver symm -u` 会写入正确 version/hash 再安装。
+`uuyc` 依赖本仓库 [`bin/utils.ps1`](bin/utils.ps1)（`New-PersistDirectory`）。
 
 ## 版本与自动更新
 
-**策略**：本 bucket 只跟正式/stable 渠道（PixPin 官网稳定版、GitHub 非 Pre-release），不跟测试 tag 或 Pre-release。
-
-Scoop **安装时**必须知道确切的 `version`、`url`、`hash`（保证可复现、可校验），manifest 里写的版本是「当前已验证的快照」，不是让你每次手改。
-
-真正跟官网走版本的是每个 app 里的 **`checkver` + `autoupdate`**（PixPin 已配置）。你平时不用手改版本号，只需：
-
-```powershell
-# 本地一次更新 bucket 里所有 app
-scoop checkver * -u
-```
-
-仓库已配置 [Excavator](https://github.com/ScoopInstaller/GithubActions) 工作流（`.github/workflows/excavator.yml`），**每天北京时间 05:00**（UTC 21:00）在 GitHub 的 Windows  runner 上自动跑一遍；也可在 Actions 页手动点 **Run workflow**。
-
-### Excavator 怎么更新 manifest
-
-1. **检出**当前仓库（你的 `bucket/*.json`）。
-2. 在 runner 上装好 Scoop，对 bucket 里**每个**带 `checkver` 的 app 执行 `checkver`：
-   - 按 manifest 里的规则访问官网 / GitHub 等，解析**最新版本号**；
-   - 若比 manifest 里新，用 `autoupdate` 规则生成新 `url`，下载安装包并算 **SHA256**，写入 `version`、`url`、`hash`。
-3. 若有变更，用 `GITHUB_TOKEN` **直接 commit 到默认分支**（一般是 `main`），commit 信息类似 `chore: automatic update via Excavator`。
-4. 若没有新版本，则不改文件、不提交（`SKIP_UPDATED: '1'` 只减少日志噪音）。
-
-你在 Windows 上升级已装软件时，先拉 bucket 再更新 app：
+- 各 app 的 `checkver` / `autoupdate` 写在对应 `bucket/*.json` 中。
+- 本地更新：`scoop checkver * -u`（在 bucket 目录或已 add 的 repo 上）。
+- CI：[Excavator](https://github.com/ScoopInstaller/GithubActions) 每天北京时间 05:00 自动检查并提交 manifest 更新。
 
 ```powershell
 scoop bucket update scoop-bucket
-scoop update pixpin symm
+scoop update pixpin symm uuyc dbx xshellplus mcp-router CLIProxyAPI
 ```
 
-**注意**：Excavator 只维护 **GitHub 仓库里的 manifest**；本机已安装版本不会自动变，需要你自己 `scoop update`。
+**策略**：仅跟踪正式/stable 版本（PixPin 官网稳定版、GitHub 非 Pre-release）。
 
-### 以后加新软件怎么省事
+## 目录结构
 
-| 软件发布方式 | manifest 里 checkver 怎么写 |
-| ------------ | --------------------------- |
-| GitHub Releases | `"checkver": "github"` + `homepage` 指向仓库即可 |
-| 官网固定规则（如 PixPin 带版本号的 zip） | 为该 app 写一段 `checkver` / `autoupdate`（无法省略，但只写一次） |
-| 有 `latest` 直链 | 仍建议用 checkver 解析版本并更新 hash |
-
-**每个 app 都要有自己的版本发现规则**（这是 Scoop 的设计），麻烦的是「维护」，用 `checkver * -u` 或 Excavator **批量**处理即可，不必逐个手改。
-
-## 软件列表
-
-### 本 bucket 自有 manifest（`bucket/`）
-
-| 应用   | 说明                         |
-| ------ | ---------------------------- |
-| pixpin | 截图 / 贴图 / 长截图 / OCR   |
-| symm   | 软链接管理（仅正式 Release） |
-
-### 社区 bucket 应用（见 `catalog/installed-community.json`）
-
-先 `./scripts/add-buckets.sh` 添加社区源，再安装，例如：
-
-```powershell
-scoop install echoiron_echo-scoop/xshellplus
-scoop install cmontage_scoopbucket-soup/uuyc
-scoop install YewFence_YewNursery/CLIProxyAPI
+```
+bucket/          # 应用 manifest（自维护）
+bin/utils.ps1    # uuyc 安装脚本依赖
+catalog/apps.json
+.github/workflows/excavator.yml
 ```
 
-`extras/vscode` 等属于 [Scoop 官方库](https://github.com/ScoopInstaller/Scoop/blob/master/buckets.json)，用 `scoop bucket add extras` 即可，不在本仓库 `buckets.json` 中。
-
-完整社区应用列表以 `catalog/installed-community.json` 为准（由 `export-from-windows.ps1` 同步）。
+应用清单见 [`catalog/apps.json`](catalog/apps.json)。

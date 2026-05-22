@@ -1,0 +1,12 @@
+{
+    "note": "本仓库 bucket/ 自维护的全部应用，统一使用 scoop-bucket/<app> 安装",
+    "apps": [
+        { "app": "pixpin", "origin": "pixpin.cn" },
+        { "app": "symm", "origin": "github.com/835519608/symm" },
+        { "app": "uuyc", "origin": "cmontage/scoopbucket-soup" },
+        { "app": "dbx", "origin": "t8y2/scoop-bucket" },
+        { "app": "xshellplus", "origin": "echoiron/echo-scoop" },
+        { "app": "mcp-router", "origin": "LaelLuo/scoop" },
+        { "app": "CLIProxyAPI", "origin": "YewFence/YewNursery" }
+    ]
+}
