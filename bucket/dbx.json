@@ -12,15 +12,17 @@
     "bin": "dbx.exe",
     "innosetup": false,
     "installer": {
-        "args": ["/S", "/NS", "/D=$dir"]
+        "args": ["/S", "/D=$dir"]
     },
     "uninstaller": {
         "file": "uninstall.exe",
         "args": ["/S"]
     },
-    "notes": "安装包为 Tauri NSIS，/S 静默会建桌面快捷方式，须加 /NS；无 Scoop shortcuts。数据目录见 post_install 联接。",
+    "notes": "Tauri NSIS 静默安装会建开始菜单快捷方式；post_install 仅删除桌面 .lnk。数据目录见联接。",
     "post_install": [
         ". \"$bucketsdir\\$bucket\\bin\\utils.ps1\"",
+        "Get-ChildItem \"$env:USERPROFILE\\Desktop\" -Filter '*DBX*.lnk' -ErrorAction SilentlyContinue | Remove-Item -Force -ErrorAction SilentlyContinue",
+        "Get-ChildItem \"$env:PUBLIC\\Desktop\" -Filter '*DBX*.lnk' -ErrorAction SilentlyContinue | Remove-Item -Force -ErrorAction SilentlyContinue",
         "New-PersistDirectory \"$env:APPDATA\\com.dbx.app\" \"$persist_dir\\roaming\" -Migrate",
         "New-PersistDirectory \"$env:LOCALAPPDATA\\com.dbx.app\" \"$persist_dir\\local\" -Migrate",
         "New-PersistDirectory \"$env:USERPROFILE\\.dbx\" \"$persist_dir\\.dbx\" -Migrate"
