@@ -1,5 +1,8 @@
 # manifest 统一入口：解析 bucket 后加载 utils.ps1
 # 优先级: $bucket（安装时）> install.json（卸载时 v0.5.3 等）> 搜索 buckets\*\bin\utils.ps1
+#
+# manifest 中一行加载:
+#   . (Get-ChildItem (Join-Path $scoopdir 'buckets\*\bin\load-utils.ps1') -EA SilentlyContinue | Select-Object -First 1).FullName
 
 function Resolve-ScoopBucketName {
     if ($bucket) {

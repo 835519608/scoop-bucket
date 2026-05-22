@@ -11,8 +11,12 @@
 #   Disable-LogonStartup        - 禁用/删除当前用户开机启动项（Run + StartupApproved）
 #   Test-AdminElevation         - 当前是否以管理员运行
 #   Require-AdminElevation      - 非管理员则警告并 exit 1
+#   Install-McpRouterLaunchArtifacts / Disable-McpRouterLogonStartup / Get-McpRouterPersistMappings
 #
 # Mapping 字段: Label, Source, Target, EnsureTarget, TargetType；Strategy 可选（copy = 仅复制）
+#
+# manifest 加载本库（一行）:
+#   . (Get-ChildItem (Join-Path $scoopdir 'buckets\*\bin\load-utils.ps1') -EA SilentlyContinue | Select-Object -First 1).FullName
 
 #region 底层：目录联接
 
@@ -347,6 +351,63 @@ function Uninstall-PersistDataLinks {
     if (-not $AppDir) { $AppDir = $dir }
     if (-not $PersistDir) { $PersistDir = $persist_dir }
     Set-PersistDataLinks -Mode Uninstall -Mappings $Mappings -AppDir $AppDir -PersistDir $PersistDir -Log:$Log
+}
+
+#endregion
+
+#region MCP Router
+
+function Get-McpRouterLogonStartupFilters {
+    return @{
+        CommandFilter = @('*MCP Router*', '*mcp-router*')
+        NameFilter    = @('*MCP Router*', '*mcp-router*')
+    }
+}
+
+function Disable-McpRouterLogonStartup {
+    $filters = Get-McpRouterLogonStartupFilters
+    Disable-LogonStartup -CommandFilter $filters.CommandFilter -NameFilter $filters.NameFilter
+}
+
+function Get-McpRouterPersistMappings {
+    param ([switch]$EnsureTarget)
+    $mapping = @{
+        Label  = 'roaming'
+        Source = 'AppData/MCP Router'
+        Target = '$persist_dir/roaming'
+    }
+    if ($EnsureTarget) { $mapping.EnsureTarget = $true }
+    return @($mapping)
+}
+
+function Remove-McpRouterLegacyScheduledTask {
+    schtasks.exe /Delete /TN scoop-mcp-router-no-autostart /F 2>$null | Out-Null
+}
+
+function Install-McpRouterLaunchArtifacts {
+    param (
+        [string]$AppDirectory,
+        [string]$PersistDirectory
+    )
+    if (-not $AppDirectory) { $AppDirectory = $dir }
+    if (-not $PersistDirectory) { $PersistDirectory = $persist_dir }
+    $loadUtilsPath = (Get-ChildItem -Path (Join-Path $scoopdir 'buckets\*\bin\load-utils.ps1') -ErrorAction SilentlyContinue |
+        Select-Object -First 1).FullName
+    $launchTemplate = (Get-ChildItem -Path (Join-Path $scoopdir 'buckets\*\scripts\mcp-router-launch.ps1') -ErrorAction SilentlyContinue |
+        Select-Object -First 1).FullName
+    if (-not $loadUtilsPath -or -not $launchTemplate) {
+        throw 'MCP Router bucket scripts not found (load-utils.ps1 / mcp-router-launch.ps1).'
+    }
+    New-Item -ItemType Directory -Path $PersistDirectory -Force -ErrorAction SilentlyContinue | Out-Null
+    $blockerScript = Join-Path $PersistDirectory 'block-autostart.ps1'
+    @(
+        'Start-Sleep -Seconds 12'
+        ". `"$loadUtilsPath`""
+        'Disable-McpRouterLogonStartup'
+    ) | Set-Content -Path $blockerScript -Encoding UTF8
+    $launcherPath = Join-Path $AppDirectory 'mcp-router-launch.ps1'
+    (Get-Content -LiteralPath $launchTemplate -Raw).Replace('{{BLOCKER_SCRIPT}}', $blockerScript) |
+        Set-Content -LiteralPath $launcherPath -Encoding UTF8
 }
 
 #endregion

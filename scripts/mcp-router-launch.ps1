@@ -1,4 +1,4 @@
-# 由 post_install 写入应用目录；启动 MCP Router 并在后台延迟禁用开机启动
+# 由 pre_install 写入应用目录（须在 create_shims 之前）；启动 MCP Router 并延迟禁用开机启动
 $AppDir = $PSScriptRoot
 $ExePath = Join-Path $AppDir 'MCP Router.exe'
 if (-not (Test-Path -LiteralPath $ExePath)) {
