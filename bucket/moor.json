@@ -1,0 +1,40 @@
+{
+    "version": "0.5.3",
+    "description": "本地 MCP 网关：聚合多个 MCP 服务器、按 Profile 过滤工具、审计与托盘常驻。",
+    "homepage": "https://github.com/varandrew/moor",
+    "license": "Apache-2.0",
+    "architecture": {
+        "64bit": {
+            "url": "https://github.com/varandrew/moor/releases/download/v0.5.3/Moor_0.5.3_x64-setup.exe",
+            "hash": "ea1743a29d422e7e3644b9a43c82ee3dc4858c63a11ca6c09d78cbbd128cc9da"
+        }
+    },
+    "bin": [
+        ["Moor.exe", "moor"]
+    ],
+    "shortcuts": [
+        ["Moor.exe", "Moor"]
+    ],
+    "innosetup": false,
+    "installer": {
+        "args": ["/S", "/D=$dir"]
+    },
+    "uninstaller": {
+        "file": "uninstall.exe",
+        "args": ["/S"]
+    },
+    "notes": "数据与运行时文件（moor.db、settings.json、port、pid）位于 %AppData%\\com.snowautumn.moor；%LocalAppData%\\com.snowautumn.moor 为 Tauri data_dir（见 src-tauri/lib.rs）。",
+    "post_install": "& ((Get-ChildItem (Join-Path $scoopdir 'buckets\\*\\bin\\hook.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1).FullName) 'hooks/moor/post_install.ps1'",
+    "pre_uninstall": "& ((Get-ChildItem (Join-Path $scoopdir 'buckets\\*\\bin\\hook.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1).FullName) 'hooks/moor/pre_uninstall.ps1'",
+    "checkver": "github",
+    "autoupdate": {
+        "architecture": {
+            "64bit": {
+                "url": "https://github.com/varandrew/moor/releases/download/v$version/Moor_$version_x64-setup.exe",
+                "hash": {
+                    "mode": "download"
+                }
+            }
+        }
+    }
+}

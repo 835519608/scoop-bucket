@@ -7,7 +7,7 @@
 ```powershell
 scoop bucket add scoop-bucket https://github.com/835519608/scoop-bucket
 scoop install scoop-bucket/pixpin
-scoop update *    # 升级已安装应用（会拉取 bucket 最新 manifest）
+scoop update *
 ```
 
 ## 应用
@@ -15,68 +15,39 @@ scoop update *    # 升级已安装应用（会拉取 bucket 最新 manifest）
 | 应用 | 说明 | 版本检测 |
 |------|------|----------|
 | pixpin | 截图 / 贴图 / OCR | 官网稳定版文档 |
-| uuyc | 网易 UU 远程 | 网易发布 API（安装需管理员 PowerShell） |
+| uuyc | 网易 UU 远程（安装需管理员 PowerShell） | 网易发布 API |
 | dbx | 开源数据库管理工具 | GitHub Release |
 | mcp-router | MCP 服务器桌面管理 | GitHub Release |
+| moor | 本地 MCP 网关（Tauri） | GitHub Release |
 | CLIProxyAPI | 多 CLI 代理为兼容 API 服务 | GitHub Release |
-
-```powershell
-scoop install scoop-bucket/pixpin
-scoop install scoop-bucket/uuyc
-scoop install scoop-bucket/dbx
-scoop install scoop-bucket/mcp-router
-scoop install scoop-bucket/CLIProxyAPI
-```
-
-## 自动更新
-
-| 环节 | 说明 |
-|------|------|
-| GitHub | 每天北京时间约 05:00，Excavator 对全部 manifest 跑 `checkver` 并提交 |
-| 本机 | `scoop update <app>` 或 `scoop update *`，无需本地跑 checkver |
-| 监控 | 偶尔查看仓库 Actions → Excavator 是否成功 |
-
-### 设计约定
-
-- **仅正式版**：例如 PixPin 跟官网 `official-log` 稳定版，不跟 beta 频道。
-- **GitHub hash**：Release 有 `checksums.txt` / `SHA256SUMS` 则从文件读取；否则 `autoupdate.hash.mode: download`。
-- **不可自动检测的包不收录**，避免 manifest 长期失效。
-
-| 应用 | Release 校验文件 | autoupdate |
-|------|------------------|------------|
-| CLIProxyAPI | `checksums.txt` | 读文件 |
-| dbx | 无 | download |
-| mcp-router | 无 | download |
-| pixpin / uuyc | — | 各自 checkver 配置 |
 
 ## 目录结构
 
 ```
-bucket/*.json              # manifest
-bin/hook.ps1               # manifest hook 统一入口（加载 utils + 执行 hooks/）
-bin/scoop-path.ps1         # 解析 bucket 内脚本路径
-bin/import-utils.ps1       # 由 hook.ps1 调用，加载 utils.ps1
-bin/utils.ps1              # 公共 PowerShell 函数
-hooks/<app>/               # 各应用 install/post_install/pre_uninstall 脚本
+bucket/*.json       # manifest
+bin/hook.ps1        # hook 入口（加载 utils + 执行 hooks/）
+bin/utils.ps1       # 公共函数
+hooks/<app>/        # 各应用的 post_install / pre_uninstall 等脚本
 .github/workflows/excavator.yml
 ```
 
-### 运行时数据（persist）
+### manifest hook 写法
 
-manifest 通过 `Install-PersistDataLinks` / `Uninstall-PersistDataLinks`（目录联接，与 Scoop persist 一致）或 Scoop 自带 `persist` 保留数据；逻辑在 `hooks/<app>/`，入口见 `bin/hook.ps1`。
-
-manifest hook 统一一行（仅改末尾 hook 路径）：
+Scoop 的 JSON 不能定义变量，每个 hook 用同一行模板，只改末尾路径：
 
 ```powershell
 & ((Get-ChildItem (Join-Path $scoopdir 'buckets\*\bin\hook.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1).FullName) 'hooks/<app>/post_install.ps1'
 ```
 
+### 运行时数据（persist）
+
 | 应用 | 持久化方式 |
 |------|------------|
 | pixpin | Scoop `persist`：`Config`、`Data`、`History` |
-| dbx | 自动链接：`AppData/com.dbx.app`、`LocalAppData/com.dbx.app`、`UserProfile/.dbx` |
-| CLIProxyAPI | Scoop `persist` + 自动链接：`UserProfile/.cli-proxy-api` → `auth` |
-| mcp-router | 自动链接：`AppData/MCP Router` → `roaming`；**仅**管理员 PowerShell 可 install；无权限时安装失败 |
-| uuyc | 自动链接：`LocalAppData/GameViewer`、`ProgramData/Netease/GameViewer` |
+| dbx | 目录联接：`AppData/com.dbx.app`、`LocalAppData/com.dbx.app`、`UserProfile/.dbx` |
+| CLIProxyAPI | Scoop `persist` + 目录联接：`UserProfile/.cli-proxy-api` → `auth` |
+| mcp-router | 目录联接：`AppData/MCP Router` → `roaming` |
+| moor | 目录联接：`AppData/com.snowautumn.moor`、`LocalAppData/com.snowautumn.moor` |
+| uuyc | 目录联接：`LocalAppData/GameViewer`、`ProgramData/Netease/GameViewer` |
 
-数据在 `scoop\persist\<app>\`，`pre_uninstall` 会拆除联接、保留 persist 目录；升级前可自行备份。
+`utils.ps1` 提供 `Install-PersistDataLinks`、`Clear-DesktopShortcuts`、`Assert-AdminElevation` 等，详见文件头注释。

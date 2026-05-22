@@ -1,2 +1,2 @@
-Uninstall-AppProcessAutostartBlocker -WatcherFilterName 'Scoop_McpRouter_ProcessStart' -WatcherConsumerName 'Scoop_McpRouter_DisableAutostart' -LogonStartupCommandFilter @('*MCP Router*', '*mcp-router*') -LogonStartupNameFilter @('*MCP Router*', '*mcp-router*') -LegacyScheduledTaskName 'scoop-mcp-router-no-autostart' -RemoveLaunchArtifactNames @('mcp-router.vbs', 'mcp-router.cmd', 'mcp-router-launch.ps1')
-Uninstall-PersistDataLinks -Mappings @(@{ Label = 'roaming'; Source = 'AppData/MCP Router'; Target = '$persist_dir/roaming' }) -Log:$true
+$mcpMappings = @(@{ Label = 'roaming'; Source = 'AppData/MCP Router'; Target = '$persist_dir/roaming' })
+Uninstall-PersistDataLinks -Mappings $mcpMappings -Log:$true

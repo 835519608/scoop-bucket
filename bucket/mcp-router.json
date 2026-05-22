@@ -18,7 +18,7 @@
     "shortcuts": [
         ["MCP Router.exe", "MCP Router"]
     ],
-    "notes": "须在管理员 PowerShell 中 scoop install；无管理员权限时安装会失败。已半成品安装请先 scoop uninstall mcp-router 再重装。",
+    "notes": "数据目录联接到 persist/roaming。应用默认会开启开机启动，可在任务管理器 → 启动 中手动关闭。",
     "checkver": "github",
     "autoupdate": {
         "architecture": {
@@ -30,7 +30,6 @@
             }
         }
     },
-    "pre_install": "& ((Get-ChildItem (Join-Path $scoopdir 'buckets\\*\\bin\\hook.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1).FullName) 'hooks/mcp-router/pre_install.ps1'",
     "post_install": "& ((Get-ChildItem (Join-Path $scoopdir 'buckets\\*\\bin\\hook.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1).FullName) 'hooks/mcp-router/post_install.ps1'",
     "pre_uninstall": "& ((Get-ChildItem (Join-Path $scoopdir 'buckets\\*\\bin\\hook.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1).FullName) 'hooks/mcp-router/pre_uninstall.ps1'"
 }

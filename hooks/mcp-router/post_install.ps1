@@ -1,4 +1,20 @@
-Assert-AdminElevation -OnFailure SkipInstall -Reason 'WMI 进程监听（启动后自动关闭开机启动）' -InstallHint 'scoop install scoop-bucket/mcp-router'
 $mcpMappings = @(@{ Label = 'roaming'; Source = 'AppData/MCP Router'; Target = '$persist_dir/roaming'; EnsureTarget = $true })
 Install-PersistDataLinks -Mappings $mcpMappings -Log:$true
-Install-AppProcessAutostartBlocker -ProcessName 'MCP Router.exe' -WatcherFilterName 'Scoop_McpRouter_ProcessStart' -WatcherConsumerName 'Scoop_McpRouter_DisableAutostart' -LogonStartupCommandFilter @('*MCP Router*', '*mcp-router*') -LogonStartupNameFilter @('*MCP Router*', '*mcp-router*') -LegacyScheduledTaskName 'scoop-mcp-router-no-autostart' -RemoveLaunchArtifactNames @('mcp-router.vbs', 'mcp-router.cmd', 'mcp-router-launch.ps1') -SuccessMessage 'mcp-router: 已注册进程监听，应用启动后将自动关闭开机启动。'
+
+# 清理旧版 bucket 可能留下的启动器 / WMI / 计划任务
+foreach ($name in @('mcp-router.vbs', 'mcp-router.cmd', 'mcp-router-launch.ps1')) {
+    Remove-Item -LiteralPath (Join-Path $dir $name) -Force -ErrorAction SilentlyContinue
+}
+schtasks.exe /Delete /TN scoop-mcp-router-no-autostart /F 2>$null | Out-Null
+$wmiFilter = 'Scoop_McpRouter_ProcessStart'
+$wmiConsumer = 'Scoop_McpRouter_DisableAutostart'
+$wmiNs = 'root\subscription'
+$filter = Get-WmiObject -Namespace $wmiNs -Class __EventFilter -Filter "Name='$wmiFilter'" -ErrorAction SilentlyContinue
+$consumer = Get-WmiObject -Namespace $wmiNs -Class CommandLineEventConsumer -Filter "Name='$wmiConsumer'" -ErrorAction SilentlyContinue
+if ($filter -and $consumer) {
+    Get-WmiObject -Namespace $wmiNs -Class __FilterToConsumerBinding -ErrorAction SilentlyContinue |
+        Where-Object { $_.Filter -eq $filter.__RELPATH -and $_.Consumer -eq $consumer.__RELPATH } |
+        ForEach-Object { $_.Delete() }
+    $filter.Delete()
+    $consumer.Delete()
+}

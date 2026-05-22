@@ -1,4 +1,4 @@
-Assert-AdminElevation -OnFailure Exit -Reason 'uuyc 安装需要管理员 PowerShell。'
+Assert-AdminElevation -Reason 'uuyc 安装需要管理员 PowerShell。'
 $uuycMappings = @(
     @{ Label = 'local'; Source = 'LocalAppData/GameViewer'; Target = '$persist_dir/AppData'; EnsureTarget = $true }
     @{ Label = 'programdata'; Source = 'ProgramData/Netease/GameViewer'; Target = '$persist_dir/ProgramData'; EnsureTarget = $true }

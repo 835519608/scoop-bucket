@@ -1,11 +1,9 @@
-# scoop-bucket 公共 PowerShell 库（由 bin/import-utils.ps1 加载，manifest 请用 bin/hook.ps1）
+# scoop-bucket 公共 PowerShell 库（由 bin/hook.ps1 加载）
 #
 # 对外 API:
 #   Install-PersistDataLinks / Uninstall-PersistDataLinks / Link-FolderToPersist
 #   Clear-DesktopShortcuts / Clear-StartMenuShortcuts
-#   Disable-LogonStartup
-#   Test-AdminElevation / Assert-AdminElevation / Require-AdminElevation / Test-AdminElevationOrWarn
-#   Install-AppProcessAutostartBlocker / Uninstall-AppProcessAutostartBlocker
+#   Test-AdminElevation / Assert-AdminElevation / Test-AdminElevationOrWarn
 #
 # Mapping: Label, Source, Target, EnsureTarget, TargetType；Strategy 可选（copy = 仅复制）
 
@@ -111,52 +109,6 @@ function Clear-StartMenuShortcuts {
 
 #endregion
 
-#region 开机启动（HKCU Run）
-
-function Disable-LogonStartup {
-    <#
-        禁用匹配的开机启动项（等同任务管理器里关掉「启动」）：
-        - 在 StartupApproved\Run 标记为禁用
-        - 并删除 HKCU\...\Run 中对应项
-        Electron 应用下次运行可能再次写入，需在启动后再次调用或走启动器脚本。
-    #>
-    param (
-        [string[]]$CommandFilter = @(),
-        [string[]]$NameFilter = @()
-    )
-    if ($CommandFilter.Count -eq 0 -and $NameFilter.Count -eq 0) { return @() }
-    $runPath = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Run'
-    $approvedPath = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\Run'
-    $disabledFlag = [byte[]](0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00)
-    $matched = [System.Collections.Generic.List[string]]::new()
-    if (-not (Test-Path $runPath)) { return @() }
-    if (-not (Test-Path $approvedPath)) {
-        New-Item -Path $approvedPath -Force | Out-Null
-    }
-    $props = Get-ItemProperty -Path $runPath
-    foreach ($prop in $props.PSObject.Properties) {
-        if ($prop.Name -match '^PS') { continue }
-        $hit = $false
-        foreach ($nf in $NameFilter) {
-            if ($prop.Name -like $nf) { $hit = $true; break }
-        }
-        if (-not $hit) {
-            $command = [string]$prop.Value
-            foreach ($cf in $CommandFilter) {
-                if ($command -like $cf) { $hit = $true; break }
-            }
-        }
-        if ($hit) {
-            Set-ItemProperty -Path $approvedPath -Name $prop.Name -Value $disabledFlag -Type Binary -ErrorAction SilentlyContinue
-            Remove-ItemProperty -Path $runPath -Name $prop.Name -ErrorAction SilentlyContinue
-            $matched.Add($prop.Name)
-        }
-    }
-    return $matched.ToArray()
-}
-
-#endregion
-
 #region 管理员检查
 
 function Test-AdminElevation {
@@ -166,14 +118,7 @@ function Test-AdminElevation {
 }
 
 function Assert-AdminElevation {
-    <#
-        Scoop 在 Invoke-Command 中执行 hook，abort/exit 无法中断安装，须用 throw。
-        -OnFailure SkipInstall : 中止当前应用安装（manifest pre_install）
-        -OnFailure Exit         : 同上，用于 installer 等脚本
-    #>
     param (
-        [ValidateSet('Exit', 'SkipInstall')]
-        [string]$OnFailure = 'Exit',
         [string]$Reason,
         [string]$InstallHint
     )
@@ -181,14 +126,13 @@ function Assert-AdminElevation {
     $appName = if ($app) { [string]$app } else { 'this app' }
     $hint = if ($InstallHint) { $InstallHint } else { "scoop install $appName" }
     $reasonText = if ($Reason) { $Reason } else { '需要管理员 PowerShell。' }
-    $message = @"
+    Write-Warning @"
 
 ${appName} 安装已中止：${reasonText}
 请在「以管理员身份运行」的 PowerShell 中执行：
   ${hint}
 
 "@
-    Write-Warning $message
     throw "${appName}: administrator privileges required."
 }
 
@@ -196,7 +140,7 @@ function Require-AdminElevation {
     param (
         [string]$Message = '需要管理员 PowerShell，请在提升的终端中重试。'
     )
-    Assert-AdminElevation -OnFailure Exit -Reason $Message
+    Assert-AdminElevation -Reason $Message
 }
 
 function Test-AdminElevationOrWarn {
@@ -346,10 +290,6 @@ function Set-PersistDataLinks {
 #region 数据目录映射（对外）
 
 function Install-PersistDataLinks {
-    <#
-        将 Mapping 中的 Source（如 AppData/foo）目录联接到 persist 下的 Target。
-        未传 -AppDir / -PersistDir 时使用 Scoop 脚本变量 $dir、$persist_dir。
-    #>
     param (
         [Parameter(Mandatory = $true)]
         [array]$Mappings,
@@ -373,175 +313,6 @@ function Uninstall-PersistDataLinks {
     if (-not $AppDir) { $AppDir = $dir }
     if (-not $PersistDir) { $PersistDir = $persist_dir }
     Set-PersistDataLinks -Mode Uninstall -Mappings $Mappings -AppDir $AppDir -PersistDir $PersistDir -Log:$Log
-}
-
-#endregion
-
-#region Scoop bucket 路径
-
-function Resolve-ScoopBucketHookPath {
-    param (
-        [Parameter(Mandatory = $true)]
-        [string]$RelativePath
-    )
-    . (Join-Path $PSScriptRoot 'scoop-path.ps1')
-    Resolve-ScoopBucketScriptPath -RelativePath $RelativePath
-}
-
-function Get-ScoopBucketUtilsPath {
-    if ($PSScriptRoot -and (Test-Path -LiteralPath (Join-Path $PSScriptRoot 'utils.ps1'))) {
-        return (Join-Path $PSScriptRoot 'utils.ps1')
-    }
-    . (Join-Path $PSScriptRoot 'scoop-path.ps1')
-    Resolve-ScoopBucketScriptPath -RelativePath 'bin\utils.ps1'
-}
-
-#endregion
-
-#region 进程启动监听 + 开机启动（通用）
-
-function Remove-LaunchArtifacts {
-    param (
-        [string[]]$Names,
-        [string]$AppDirectory
-    )
-    if (-not $AppDirectory) { $AppDirectory = $dir }
-    foreach ($name in $Names) {
-        Remove-Item -LiteralPath (Join-Path $AppDirectory $name) -Force -ErrorAction SilentlyContinue
-    }
-}
-
-function Remove-ScheduledTaskByName {
-    param ([Parameter(Mandatory = $true)][string]$TaskName)
-    schtasks.exe /Delete /TN $TaskName /F 2>$null | Out-Null
-}
-
-function Remove-ProcessStartWatcher {
-    param (
-        [Parameter(Mandatory = $true)][string]$FilterName,
-        [Parameter(Mandatory = $true)][string]$ConsumerName
-    )
-    $ns = 'root\subscription'
-    $filter = Get-WmiObject -Namespace $ns -Class __EventFilter -Filter "Name='$FilterName'" -ErrorAction SilentlyContinue
-    $consumer = Get-WmiObject -Namespace $ns -Class CommandLineEventConsumer -Filter "Name='$ConsumerName'" -ErrorAction SilentlyContinue
-    if ($filter -and $consumer) {
-        Get-WmiObject -Namespace $ns -Class __FilterToConsumerBinding -ErrorAction SilentlyContinue |
-            Where-Object { $_.Filter -eq $filter.__RELPATH -and $_.Consumer -eq $consumer.__RELPATH } |
-            ForEach-Object { $_.Delete() }
-        $filter.Delete()
-        $consumer.Delete()
-    }
-}
-
-function Write-ProcessStartBlockerScript {
-    param (
-        [string]$PersistDirectory,
-        [string]$ScriptFileName = 'process-autostart-blocker.ps1',
-        [int]$DelaySeconds = 3,
-        [Parameter(Mandatory = $true)][string]$AfterLoadCommand
-    )
-    if (-not $PersistDirectory) { $PersistDirectory = $persist_dir }
-    $utilsPath = Get-ScoopBucketUtilsPath
-    if (-not $utilsPath) { throw 'utils.ps1 not found in scoop buckets.' }
-    New-Item -ItemType Directory -Path $PersistDirectory -Force -ErrorAction SilentlyContinue | Out-Null
-    $blockerScript = Join-Path $PersistDirectory $ScriptFileName
-    @(
-        "Start-Sleep -Seconds $DelaySeconds"
-        ". `"$utilsPath`""
-        $AfterLoadCommand
-    ) | Set-Content -Path $blockerScript -Encoding UTF8
-    return $blockerScript
-}
-
-function Install-ProcessStartWatcher {
-    param (
-        [Parameter(Mandatory = $true)][string]$ProcessName,
-        [Parameter(Mandatory = $true)][string]$FilterName,
-        [Parameter(Mandatory = $true)][string]$ConsumerName,
-        [Parameter(Mandatory = $true)][string]$BlockerScriptPath,
-        [int]$WithinSeconds = 5
-    )
-    Remove-ProcessStartWatcher -FilterName $FilterName -ConsumerName $ConsumerName
-    $ns = 'root\subscription'
-    $escapedProcess = $ProcessName.Replace("'", "''")
-    $query = @"
-SELECT * FROM __InstanceCreationEvent WITHIN $WithinSeconds
-WHERE TargetInstance ISA 'Win32_Process' AND TargetInstance.Name = '$escapedProcess'
-"@
-    $filter = Set-WmiInstance -Namespace $ns -Class __EventFilter -Arguments @{
-        Name           = $FilterName
-        EventNameSpace = 'root\cimv2'
-        QueryLanguage  = 'WQL'
-        Query          = $query
-    }
-    $consumer = Set-WmiInstance -Namespace $ns -Class CommandLineEventConsumer -Arguments @{
-        Name                = $ConsumerName
-        CommandLineTemplate = "powershell.exe -NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File `"$BlockerScriptPath`""
-    }
-    Set-WmiInstance -Namespace $ns -Class __FilterToConsumerBinding -Arguments @{
-        Filter   = $filter
-        Consumer = $consumer
-    } | Out-Null
-}
-
-function Install-AppProcessAutostartBlocker {
-    param (
-        [Parameter(Mandatory = $true)][string]$ProcessName,
-        [Parameter(Mandatory = $true)][string]$WatcherFilterName,
-        [Parameter(Mandatory = $true)][string]$WatcherConsumerName,
-        [string[]]$LogonStartupCommandFilter = @(),
-        [string[]]$LogonStartupNameFilter = @(),
-        [string]$PersistDirectory,
-        [string]$BlockerScriptFileName = 'process-autostart-blocker.ps1',
-        [int]$BlockerDelaySeconds = 3,
-        [string[]]$RemoveLaunchArtifactNames = @(),
-        [string]$LegacyScheduledTaskName,
-        [string]$AppDirectory,
-        [string]$SuccessMessage
-    )
-    if (-not $AppDirectory) { $AppDirectory = $dir }
-    if (-not (Test-AdminElevation)) {
-        throw 'Install-AppProcessAutostartBlocker requires administrator PowerShell.'
-    }
-    try {
-        $cf = ($LogonStartupCommandFilter | ForEach-Object { "'$_'" }) -join ', '
-        $nf = ($LogonStartupNameFilter | ForEach-Object { "'$_'" }) -join ', '
-        $afterLoad = "Disable-LogonStartup -CommandFilter @($cf) -NameFilter @($nf)"
-        $blockerScript = Write-ProcessStartBlockerScript -PersistDirectory $PersistDirectory `
-            -ScriptFileName $BlockerScriptFileName -DelaySeconds $BlockerDelaySeconds -AfterLoadCommand $afterLoad
-        Install-ProcessStartWatcher -ProcessName $ProcessName -FilterName $WatcherFilterName `
-            -ConsumerName $WatcherConsumerName -BlockerScriptPath $blockerScript
-        Disable-LogonStartup -CommandFilter $LogonStartupCommandFilter -NameFilter $LogonStartupNameFilter | Out-Null
-        if ($LegacyScheduledTaskName) { Remove-ScheduledTaskByName -TaskName $LegacyScheduledTaskName }
-        if ($RemoveLaunchArtifactNames.Count -gt 0) {
-            Remove-LaunchArtifacts -Names $RemoveLaunchArtifactNames -AppDirectory $AppDirectory
-        }
-        if ($SuccessMessage) {
-            Write-Host $SuccessMessage -ForegroundColor Green
-        }
-    } catch {
-        Write-Warning "注册进程监听失败: $_"
-        throw
-    }
-}
-
-function Uninstall-AppProcessAutostartBlocker {
-    param (
-        [Parameter(Mandatory = $true)][string]$WatcherFilterName,
-        [Parameter(Mandatory = $true)][string]$WatcherConsumerName,
-        [string[]]$LogonStartupCommandFilter = @(),
-        [string[]]$LogonStartupNameFilter = @(),
-        [string[]]$RemoveLaunchArtifactNames = @(),
-        [string]$LegacyScheduledTaskName,
-        [string]$AppDirectory
-    )
-    if (-not $AppDirectory) { $AppDirectory = $dir }
-    Remove-ProcessStartWatcher -FilterName $WatcherFilterName -ConsumerName $WatcherConsumerName
-    if ($LegacyScheduledTaskName) { Remove-ScheduledTaskByName -TaskName $LegacyScheduledTaskName }
-    if ($RemoveLaunchArtifactNames.Count -gt 0) {
-        Remove-LaunchArtifacts -Names $RemoveLaunchArtifactNames -AppDirectory $AppDirectory
-    }
-    Disable-LogonStartup -CommandFilter $LogonStartupCommandFilter -NameFilter $LogonStartupNameFilter | Out-Null
 }
 
 #endregion
