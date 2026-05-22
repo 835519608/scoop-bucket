@@ -20,7 +20,7 @@
     },
     "notes": "Tauri NSIS 静默安装会建开始菜单快捷方式；post_install 仅删桌面 .lnk。%AppData%\\com.dbx.app、%LocalAppData%\\com.dbx.app、%USERPROFILE%\\.dbx 目录联接到 persist。",
     "post_install": [
-        ". \"$bucketsdir\\$bucket\\bin\\utils.ps1\"",
+        "$__import = Get-ChildItem (Join-Path $scoopdir 'buckets\\*\\bin\\import-utils.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1; if ($__import) { . $__import.FullName }",
         "Clear-DesktopShortcuts -Filter '*DBX*.lnk'",
         "$dbxMappings = @(",
         "    @{ Label = 'roaming'; Source = 'AppData/com.dbx.app'; Target = '$persist_dir/roaming'; EnsureTarget = $true }",
@@ -30,7 +30,7 @@
         "Install-PersistDataLinks -Mappings $dbxMappings"
     ],
     "pre_uninstall": [
-        ". \"$bucketsdir\\$bucket\\bin\\utils.ps1\"",
+        "$__import = Get-ChildItem (Join-Path $scoopdir 'buckets\\*\\bin\\import-utils.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1; if ($__import) { . $__import.FullName }",
         "$dbxMappings = @(",
         "    @{ Label = 'roaming'; Source = 'AppData/com.dbx.app'; Target = '$persist_dir/roaming' }",
         "    @{ Label = 'local'; Source = 'LocalAppData/com.dbx.app'; Target = '$persist_dir/local' }",

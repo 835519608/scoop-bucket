@@ -31,19 +31,19 @@
         }
     },
     "post_install": [
-        ". \"$bucketsdir\\$bucket\\bin\\utils.ps1\"",
+        "$__import = Get-ChildItem (Join-Path $scoopdir 'buckets\\*\\bin\\import-utils.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1; if ($__import) { . $__import.FullName }",
         "$mcpRouterMappings = @(@{ Label = 'roaming'; Source = 'AppData/MCP Router'; Target = '$persist_dir/roaming'; EnsureTarget = $true })",
         "Install-PersistDataLinks -Mappings $mcpRouterMappings -Log:$true",
         "$mcpRouterBlockerScript = Join-Path $persist_dir 'block-autostart.ps1'",
         "@(",
-        "    \". `\"$bucketsdir\\$bucket\\bin\\utils.ps1`\"\"",
+        "    \"$__import = Get-ChildItem (Join-Path $scoopdir 'buckets\\*\\bin\\import-utils.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1; if ($__import) { . $__import.FullName }\"",
         "    'Disable-LogonStartup -CommandFilter @(''*MCP Router*'', ''*mcp-router*'') -NameFilter @(''*MCP Router*'', ''*mcp-router*'')'",
         ") | Set-Content -Path $mcpRouterBlockerScript -Encoding UTF8",
         "Disable-LogonStartup -CommandFilter @('*MCP Router*', '*mcp-router*') -NameFilter @('*MCP Router*', '*mcp-router*')",
         "Register-LogonStartupBlocker -TaskName 'scoop-mcp-router-no-autostart' -ScriptPath $mcpRouterBlockerScript -DelaySeconds 60"
     ],
     "pre_uninstall": [
-        ". \"$bucketsdir\\$bucket\\bin\\utils.ps1\"",
+        "$__import = Get-ChildItem (Join-Path $scoopdir 'buckets\\*\\bin\\import-utils.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1; if ($__import) { . $__import.FullName }",
         "Unregister-LogonStartupBlocker -TaskName 'scoop-mcp-router-no-autostart'",
         "Disable-LogonStartup -CommandFilter @('*MCP Router*', '*mcp-router*') -NameFilter @('*MCP Router*', '*mcp-router*')",
         "$mcpRouterMappings = @(@{ Label = 'roaming'; Source = 'AppData/MCP Router'; Target = '$persist_dir/roaming' })",

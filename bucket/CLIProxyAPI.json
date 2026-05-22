@@ -11,12 +11,12 @@
     },
     "bin": "cli-proxy-api.exe",
     "post_install": [
-        ". \"$bucketsdir\\$bucket\\bin\\utils.ps1\"",
+        "$__import = Get-ChildItem (Join-Path $scoopdir 'buckets\\*\\bin\\import-utils.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1; if ($__import) { . $__import.FullName }",
         "$cliProxyMappings = @(@{ Label = 'auth'; Source = 'UserProfile/.cli-proxy-api'; Target = '$persist_dir/auth'; EnsureTarget = $true })",
         "Install-PersistDataLinks -Mappings $cliProxyMappings"
     ],
     "pre_uninstall": [
-        ". \"$bucketsdir\\$bucket\\bin\\utils.ps1\"",
+        "$__import = Get-ChildItem (Join-Path $scoopdir 'buckets\\*\\bin\\import-utils.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1; if ($__import) { . $__import.FullName }",
         "$cliProxyMappings = @(@{ Label = 'auth'; Source = 'UserProfile/.cli-proxy-api'; Target = '$persist_dir/auth' })",
         "Uninstall-PersistDataLinks -Mappings $cliProxyMappings"
     ],

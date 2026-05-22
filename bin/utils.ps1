@@ -1,5 +1,6 @@
 # scoop-bucket 公共 PowerShell 库
-# 用法: . "$bucketsdir\$bucket\bin\utils.ps1"
+# 用法: . (Get-ChildItem (Join-Path $scoopdir 'buckets\*\bin\import-utils.ps1') | Select-Object -First 1).FullName
+# 勿用 $bucketsdir\$bucket：pre_uninstall 时 $bucket 常为空
 #
 # 对外 API（manifest 中直接调用）:
 #   Install-PersistDataLinks    - 将应用数据目录联接到 persist（安装 / 升级后）
