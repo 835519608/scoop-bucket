@@ -13,23 +13,20 @@
             ". \"$bucketsdir\\$bucket\\bin\\utils.ps1\"",
             "New-PersistDirectory \"$env:LOCALAPPDATA\\GameViewer\" \"$persist_dir\\AppData\" -Migrate",
             "New-PersistDirectory \"$env:PROGRAMDATA\\Netease\\GameViewer\" \"$persist_dir\\ProgramData\" -Migrate",
-            "$isAdmin = ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)",
-            "if (-not $isAdmin) { Write-Warning \"`nuuyc installation requires administrator privileges.`nPlease rerun Scoop in an elevated PowerShell.`n\"; exit 1 }",
+            "Assert-Administrator -Message \"`nuuyc installation requires administrator privileges.`nPlease rerun Scoop in an elevated PowerShell.`n\"",
             "$installer = Get-ChildItem \"$dir\\*.exe\" | Select-Object -First 1",
             "Start-Process -FilePath $installer.FullName -ArgumentList \"/S /D=$dir\" -Wait",
             "Remove-Item 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\GameViewer' -Force -Recurse -ErrorAction SilentlyContinue | Out-Null",
             "Remove-ItemProperty 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Run' -Name 'GameViewer' -ErrorAction SilentlyContinue",
-            "Get-ChildItem \"$env:USERPROFILE\\Desktop\" -Filter '*UU*.lnk' -ErrorAction SilentlyContinue | Remove-Item -Force -ErrorAction SilentlyContinue",
-            "Get-ChildItem \"$env:PUBLIC\\Desktop\" -Filter '*UU*.lnk' -ErrorAction SilentlyContinue | Remove-Item -Force -ErrorAction SilentlyContinue",
-            "Get-ChildItem \"$env:APPDATA\\Microsoft\\Windows\\Start Menu\\Programs\" -Filter '*UU*.lnk' -ErrorAction SilentlyContinue | Remove-Item -Force -ErrorAction SilentlyContinue",
-            "Get-ChildItem \"$env:ProgramData\\Microsoft\\Windows\\Start Menu\\Programs\" -Filter '*UU*.lnk' -ErrorAction SilentlyContinue | Remove-Item -Force -ErrorAction SilentlyContinue"
+            "Remove-DesktopShortcuts -Filter '*UU*.lnk'",
+            "Remove-StartMenuShortcuts -Filter '*UU*.lnk'"
         ]
     },
     "pre_uninstall": "if (Get-Service -Name 'GameViewerService' -ErrorAction SilentlyContinue) { Stop-Service -Name 'GameViewerService' -Force -ErrorAction SilentlyContinue; sc.exe delete GameViewerService | Out-Null }",
     "uninstaller": {
         "script": [
-            "$isAdmin = ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)",
-            "if (-not $isAdmin) { Write-Warning \"`nuuyc uninstall cleanup requires administrator privileges.`nSkipping privileged cleanup.`n\"; return }",
+            ". \"$bucketsdir\\$bucket\\bin\\utils.ps1\"",
+            "if (-not (Test-IsAdministrator)) { Write-Warning \"`nuuyc uninstall cleanup requires administrator privileges.`nSkipping privileged cleanup.`n\"; return }",
             "$nativeUninstaller = Get-ChildItem \"$dir\" -Filter 'unins*.exe' -File -ErrorAction SilentlyContinue | Select-Object -First 1",
             "if ($nativeUninstaller) {",
             "    Start-Process -FilePath $nativeUninstaller.FullName -ArgumentList '/S' -Wait -ErrorAction SilentlyContinue",
@@ -41,8 +38,8 @@
         ]
     },
     "post_uninstall": [
-        "$isAdmin = ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)",
-        "if (-not $isAdmin) { Write-Warning \"`nuuyc post_uninstall cleanup requires administrator privileges.`nSkipping privileged cleanup.`n\"; return }",
+        ". \"$bucketsdir\\$bucket\\bin\\utils.ps1\"",
+        "if (-not (Test-IsAdministrator)) { Write-Warning \"`nuuyc post_uninstall cleanup requires administrator privileges.`nSkipping privileged cleanup.`n\"; return }",
         "$sidRoots = Get-ChildItem Registry::HKEY_USERS | Where-Object { $_.PSChildName -match '^S-1-5-21-(\\d+-){3}\\d+$' } | ForEach-Object { $_.PSPath }",
         "foreach ($sid in $sidRoots) {",
         "    Remove-Item \"$sid\\SOFTWARE\\Netease\" -Force -Recurse -ErrorAction SilentlyContinue | Out-Null",

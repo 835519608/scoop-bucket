@@ -21,8 +21,7 @@
     "notes": "Tauri NSIS 静默安装会建开始菜单快捷方式；post_install 仅删除桌面 .lnk。数据目录见联接。",
     "post_install": [
         ". \"$bucketsdir\\$bucket\\bin\\utils.ps1\"",
-        "Get-ChildItem \"$env:USERPROFILE\\Desktop\" -Filter '*DBX*.lnk' -ErrorAction SilentlyContinue | Remove-Item -Force -ErrorAction SilentlyContinue",
-        "Get-ChildItem \"$env:PUBLIC\\Desktop\" -Filter '*DBX*.lnk' -ErrorAction SilentlyContinue | Remove-Item -Force -ErrorAction SilentlyContinue",
+        "Remove-DesktopShortcuts -Filter '*DBX*.lnk'",
         "New-PersistDirectory \"$env:APPDATA\\com.dbx.app\" \"$persist_dir\\roaming\" -Migrate",
         "New-PersistDirectory \"$env:LOCALAPPDATA\\com.dbx.app\" \"$persist_dir\\local\" -Migrate",
         "New-PersistDirectory \"$env:USERPROFILE\\.dbx\" \"$persist_dir\\.dbx\" -Migrate"

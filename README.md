@@ -53,7 +53,7 @@ scoop install scoop-bucket/CLIProxyAPI
 
 ```
 bucket/*.json              # manifest
-bin/utils.ps1              # uuyc 安装脚本依赖
+bin/utils.ps1              # 公共 PowerShell（联接、快捷方式、便携映射、管理员检查）
 .github/workflows/excavator.yml
 ```
 
