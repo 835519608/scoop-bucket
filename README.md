@@ -62,9 +62,9 @@ bin/utils.ps1              # uuyc 安装脚本依赖
 | 应用 | 持久化位置 |
 |------|------------|
 | pixpin | `Config`、`Data`、`History`（程序目录） |
-| dbx | `persist/data`（`DBX_DATA_DIR`）；`%USERPROFILE%\.dbx\agents` → `persist/agents`（JRE/驱动）；`com.dbx.app` → `roaming`、`local` |
+| dbx | 默认路径联接：`com.dbx.app` → `roaming`/`local`（库、JDBC 插件）；`%USERPROFILE%\.dbx` → `.dbx`（JRE、驱动） |
 | CLIProxyAPI | `config.yaml`、`logs/`；`%USERPROFILE%\.cli-proxy-api` → `persist/auth` |
 | mcp-router | `%AppData%\MCP Router` → `persist/roaming` |
 | uuyc | `%LocalAppData%\GameViewer`、`%ProgramData%\Netease\GameViewer` → `persist/*` |
 
-数据在 `scoop\persist\<app>\`，升级或重装前可自行备份。
+数据在 `scoop\persist\<app>\`（dbx 无 `persist` 数组，整目录随 Scoop 保留），升级或重装前可自行备份。

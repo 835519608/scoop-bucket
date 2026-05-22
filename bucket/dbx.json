@@ -18,19 +18,12 @@
         "file": "uninstall.exe",
         "args": ["/S"]
     },
-    "notes": "DBX_DATA_DIR→persist/data；%USERPROFILE%\\.dbx\\agents→persist/agents（JRE、内置 Agent 驱动）；com.dbx.app→persist/roaming、local。",
-    "env_set": {
-        "DBX_DATA_DIR": "$persist_dir\\data"
-    },
+    "notes": "仅靠 post_install 联接默认路径到 scoop\\persist\\dbx：Roaming/Local 的 com.dbx.app（dbx.db、plugins）、%USERPROFILE%\\.dbx（JRE、Agent 驱动）。",
     "post_install": [
         ". \"$bucketsdir\\$bucket\\bin\\utils.ps1\"",
-        "if (-not (Test-Path \"$dir\\portable.dbx\")) { New-Item -ItemType File -Path \"$dir\\portable.dbx\" -Force | Out-Null }",
         "New-PersistDirectory \"$env:APPDATA\\com.dbx.app\" \"$persist_dir\\roaming\" -Migrate",
         "New-PersistDirectory \"$env:LOCALAPPDATA\\com.dbx.app\" \"$persist_dir\\local\" -Migrate",
         "New-PersistDirectory \"$env:USERPROFILE\\.dbx\" \"$persist_dir\\.dbx\" -Migrate"
-    ],
-    "persist": [
-        "data"
     ],
     "checkver": "github",
     "autoupdate": {
