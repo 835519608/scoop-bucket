@@ -27,7 +27,7 @@
         "if (-not (Test-Path \"$dir\\portable.dbx\")) { New-Item -ItemType File -Path \"$dir\\portable.dbx\" -Force | Out-Null }",
         "New-PersistDirectory \"$env:APPDATA\\com.dbx.app\" \"$persist_dir\\roaming\" -Migrate",
         "New-PersistDirectory \"$env:LOCALAPPDATA\\com.dbx.app\" \"$persist_dir\\local\" -Migrate",
-        "New-PersistDirectory \"$env:USERPROFILE\\.dbx\\agents\" \"$persist_dir\\agents\" -Migrate"
+        "New-PersistDirectory \"$env:USERPROFILE\\.dbx\" \"$persist_dir\\.dbx\" -Migrate"
     ],
     "persist": [
         "data"
