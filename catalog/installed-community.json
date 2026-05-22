@@ -20,6 +20,11 @@
       "bucket": "LaelLuo_scoop"
     },
     {
+      "app": "symm",
+      "bucket": "symm",
+      "migrate": "scoop-bucket/symm"
+    },
+    {
       "app": "CLIProxyAPI",
       "bucket": "YewFence_YewNursery"
     }
