@@ -9,7 +9,7 @@
 #   Disable-LogonStartup        - 禁用/删除当前用户开机启动项（Run + StartupApproved）
 #   Test-AdminElevation         - 当前是否以管理员运行
 #   Require-AdminElevation      - 非管理员则警告并 exit 1
-#   Install-McpRouterLaunchArtifacts / Disable-McpRouterLogonStartup / Get-McpRouterPersistMappings
+#   Install-McpRouterAutostartWatcher / Remove-McpRouterAutostartWatcher / Disable-McpRouterLogonStartup
 #
 # Mapping 字段: Label, Source, Target, EnsureTarget, TargetType；Strategy 可选（copy = 仅复制）
 #
@@ -382,40 +382,81 @@ function Remove-McpRouterLegacyScheduledTask {
     schtasks.exe /Delete /TN scoop-mcp-router-no-autostart /F 2>$null | Out-Null
 }
 
-function Install-McpRouterLaunchArtifacts {
-    param (
-        [string]$AppDirectory,
-        [string]$PersistDirectory
-    )
-    if (-not $AppDirectory) { $AppDirectory = $dir }
+function Get-McpRouterBlockerScriptPath {
+    param ([string]$PersistDirectory)
+    if (-not $PersistDirectory) { $PersistDirectory = $persist_dir }
+    return (Join-Path $PersistDirectory 'block-autostart.ps1')
+}
+
+function Write-McpRouterBlockerScript {
+    param ([string]$PersistDirectory)
     if (-not $PersistDirectory) { $PersistDirectory = $persist_dir }
     $utilsPath = (Get-ChildItem -Path (Join-Path $scoopdir 'buckets\*\bin\utils.ps1') -ErrorAction SilentlyContinue |
         Select-Object -First 1).FullName
-    $launchTemplate = (Get-ChildItem -Path (Join-Path $scoopdir 'buckets\*\scripts\mcp-router-launch.ps1') -ErrorAction SilentlyContinue |
-        Select-Object -First 1).FullName
-    if (-not $utilsPath -or -not $launchTemplate) {
-        throw 'MCP Router bucket scripts not found (utils.ps1 / mcp-router-launch.ps1).'
+    if (-not $utilsPath) {
+        throw 'utils.ps1 not found in scoop buckets.'
     }
     New-Item -ItemType Directory -Path $PersistDirectory -Force -ErrorAction SilentlyContinue | Out-Null
-    $blockerScript = Join-Path $PersistDirectory 'block-autostart.ps1'
+    $blockerScript = Get-McpRouterBlockerScriptPath -PersistDirectory $PersistDirectory
+    # 进程启动后等待应用写入 Run 键，再清除开机启动
     @(
-        'Start-Sleep -Seconds 12'
+        'Start-Sleep -Seconds 3'
         ". `"$utilsPath`""
         'Disable-McpRouterLogonStartup'
     ) | Set-Content -Path $blockerScript -Encoding UTF8
-    $launcherPath = Join-Path $AppDirectory 'mcp-router-launch.ps1'
-    (Get-Content -LiteralPath $launchTemplate -Raw).Replace('{{BLOCKER_SCRIPT}}', $blockerScript) |
-        Set-Content -LiteralPath $launcherPath -Encoding UTF8
-    # .vbs 无控制台窗口；直接 shim/快捷方式指向 .ps1 会被记事本打开
-    Remove-Item -LiteralPath (Join-Path $AppDirectory 'mcp-router.cmd') -Force -ErrorAction SilentlyContinue
-    $vbsPath = Join-Path $AppDirectory 'mcp-router.vbs'
-    @(
-        'Set fso = CreateObject("Scripting.FileSystemObject")'
-        'appDir = fso.GetParentFolderName(WScript.ScriptFullName)'
-        'ps1 = fso.BuildPath(appDir, "mcp-router-launch.ps1")'
-        'cmd = "powershell.exe -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File """ & ps1 & """"'
-        'CreateObject("Wscript.Shell").Run cmd, 0, False'
-    ) | Set-Content -Path $vbsPath -Encoding ASCII
+    return $blockerScript
+}
+
+function Remove-McpRouterLaunchArtifacts {
+    param ([string]$AppDirectory)
+    if (-not $AppDirectory) { $AppDirectory = $dir }
+    foreach ($name in @('mcp-router.vbs', 'mcp-router.cmd', 'mcp-router-launch.ps1')) {
+        Remove-Item -LiteralPath (Join-Path $AppDirectory $name) -Force -ErrorAction SilentlyContinue
+    }
+}
+
+function Remove-McpRouterAutostartWatcher {
+    $filterName = 'Scoop_McpRouter_ProcessStart'
+    $consumerName = 'Scoop_McpRouter_DisableAutostart'
+    $ns = 'root\subscription'
+    $filter = Get-WmiObject -Namespace $ns -Class __EventFilter -Filter "Name='$filterName'" -ErrorAction SilentlyContinue
+    $consumer = Get-WmiObject -Namespace $ns -Class CommandLineEventConsumer -Filter "Name='$consumerName'" -ErrorAction SilentlyContinue
+    if ($filter -and $consumer) {
+        Get-WmiObject -Namespace $ns -Class __FilterToConsumerBinding -ErrorAction SilentlyContinue |
+            Where-Object { $_.Filter -eq $filter.__RELPATH -and $_.Consumer -eq $consumer.__RELPATH } |
+            ForEach-Object { $_.Delete() }
+        $filter.Delete()
+        $consumer.Delete()
+    }
+}
+
+function Install-McpRouterAutostartWatcher {
+    param ([string]$PersistDirectory)
+    if (-not $PersistDirectory) { $PersistDirectory = $persist_dir }
+    $blockerScript = Write-McpRouterBlockerScript -PersistDirectory $PersistDirectory
+    Remove-McpRouterAutostartWatcher
+    $filterName = 'Scoop_McpRouter_ProcessStart'
+    $consumerName = 'Scoop_McpRouter_DisableAutostart'
+    $ns = 'root\subscription'
+    $query = @"
+SELECT * FROM __InstanceCreationEvent WITHIN 5
+WHERE TargetInstance ISA 'Win32_Process' AND TargetInstance.Name = 'MCP Router.exe'
+"@
+    $filter = Set-WmiInstance -Namespace $ns -Class __EventFilter -Arguments @{
+        Name           = $filterName
+        EventNameSpace = 'root\cimv2'
+        QueryLanguage  = 'WQL'
+        Query          = $query
+    }
+    $consumer = Set-WmiInstance -Namespace $ns -Class CommandLineEventConsumer -Arguments @{
+        Name                = $consumerName
+        CommandLineTemplate = "powershell.exe -NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File `"$blockerScript`""
+        RunInteractively    = $false
+    }
+    Set-WmiInstance -Namespace $ns -Class __FilterToConsumerBinding -Arguments @{
+        Filter   = $filter
+        Consumer = $consumer
+    } | Out-Null
 }
 
 #endregion

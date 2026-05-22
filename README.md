@@ -54,7 +54,6 @@ scoop install scoop-bucket/CLIProxyAPI
 ```
 bucket/*.json              # manifest
 bin/utils.ps1              # 公共 PowerShell 函数（manifest 通过 glob 加载）
-scripts/mcp-router-launch.ps1  # mcp-router 启动器模板（打开应用后延迟禁用开机启动）
 .github/workflows/excavator.yml
 ```
 
@@ -67,7 +66,7 @@ manifest 通过 `Install-PersistDataLinks` / `Uninstall-PersistDataLinks`（目�
 | pixpin | Scoop `persist`：`Config`、`Data`、`History` |
 | dbx | 自动链接：`AppData/com.dbx.app`、`LocalAppData/com.dbx.app`、`UserProfile/.dbx` |
 | CLIProxyAPI | Scoop `persist` + 自动链接：`UserProfile/.cli-proxy-api` → `auth` |
-| mcp-router | 自动链接：`AppData/MCP Router` → `roaming`；请用 `mcp-router` 或开始菜单启动（约 12s 后禁用开机启动） |
+| mcp-router | 自动链接：`AppData/MCP Router` → `roaming`；WMI 监听进程启动后自动禁用开机启动 |
 | uuyc | 自动链接：`LocalAppData/GameViewer`、`ProgramData/Netease/GameViewer` |
 
 数据在 `scoop\persist\<app>\`，`pre_uninstall` 会拆除联接、保留 persist 目录；升级前可自行备份。
