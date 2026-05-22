@@ -13,12 +13,12 @@
         }
     },
     "bin": [
-        ["mcp-router-launch.ps1", "mcp-router"]
+        ["mcp-router.cmd", "mcp-router"]
     ],
     "shortcuts": [
-        ["mcp-router-launch.ps1", "MCP Router"]
+        ["mcp-router.cmd", "MCP Router"]
     ],
-    "notes": "数据目录联接到 persist/roaming。请用开始菜单或 scoop 命令 mcp-router 启动；约 12 秒后自动关闭开机启动。直接双击 MCP Router.exe 不会禁用开机启动。",
+    "notes": "数据目录联接到 persist/roaming。请用开始菜单「MCP Router」或命令 mcp-router 启动（经 mcp-router.cmd，勿直接打开 .ps1）。约 12 秒后自动关闭开机启动。",
     "checkver": "github",
     "autoupdate": {
         "architecture": {

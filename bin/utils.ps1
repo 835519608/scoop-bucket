@@ -406,6 +406,12 @@ function Install-McpRouterLaunchArtifacts {
     $launcherPath = Join-Path $AppDirectory 'mcp-router-launch.ps1'
     (Get-Content -LiteralPath $launchTemplate -Raw).Replace('{{BLOCKER_SCRIPT}}', $blockerScript) |
         Set-Content -LiteralPath $launcherPath -Encoding UTF8
+    # .cmd 供 Scoop shim / 开始菜单使用；直接指向 .ps1 会被 Windows 用记事本打开
+    $cmdPath = Join-Path $AppDirectory 'mcp-router.cmd'
+    @(
+        '@echo off'
+        'powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0mcp-router-launch.ps1"'
+    ) | Set-Content -Path $cmdPath -Encoding ASCII
 }
 
 #endregion
