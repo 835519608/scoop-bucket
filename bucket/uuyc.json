@@ -9,65 +9,13 @@
     "url": "https://a56.gdl.netease.com/UURemote_Setup_4.25.0.8082_0521165302_gwqd.exe?key1=b65eaa074f0b8bebef3196bfb22bdc57&key2=6a0fd367&n=uuyc_4.25.0.exe",
     "hash": "af8106176ecf116c91e061098d83f92072554609fb412abbea7cef3df0db4bb2",
     "installer": {
-        "script": [
-            ". (Get-ChildItem (Join-Path $scoopdir 'buckets\\*\\bin\\import-utils.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1).FullName",
-            "Assert-AdminElevation -OnFailure Exit -Reason 'uuyc 安装需要管理员 PowerShell。'",
-            "$uuycMappings = @(",
-            "    @{ Label = 'local'; Source = 'LocalAppData/GameViewer'; Target = '$persist_dir/AppData'; EnsureTarget = $true }",
-            "    @{ Label = 'programdata'; Source = 'ProgramData/Netease/GameViewer'; Target = '$persist_dir/ProgramData'; EnsureTarget = $true }",
-            ")",
-            "Install-PersistDataLinks -Mappings $uuycMappings",
-            "$installer = Get-ChildItem \"$dir\\*.exe\" | Select-Object -First 1",
-            "Start-Process -FilePath $installer.FullName -ArgumentList \"/S /D=$dir\" -Wait",
-            "Remove-Item 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\GameViewer' -Force -Recurse -ErrorAction SilentlyContinue | Out-Null",
-            "Remove-ItemProperty 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Run' -Name 'GameViewer' -ErrorAction SilentlyContinue",
-            "Clear-DesktopShortcuts -Filter '*UU*.lnk'",
-            "Clear-StartMenuShortcuts -Filter '*UU*.lnk'"
-        ]
+        "script": "& ((Get-ChildItem (Join-Path $scoopdir 'buckets\\*\\bin\\hook.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1).FullName) 'hooks/uuyc/install.ps1'"
     },
     "pre_uninstall": "if (Get-Service -Name 'GameViewerService' -ErrorAction SilentlyContinue) { Stop-Service -Name 'GameViewerService' -Force -ErrorAction SilentlyContinue; sc.exe delete GameViewerService | Out-Null }",
     "uninstaller": {
-        "script": [
-            ". (Get-ChildItem (Join-Path $scoopdir 'buckets\\*\\bin\\import-utils.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1).FullName",
-            "if (-not (Test-AdminElevationOrWarn 'uuyc 卸载清理需要管理员权限，已跳过特权清理。')) { return }",
-            "$nativeUninstaller = Get-ChildItem \"$dir\" -Filter 'unins*.exe' -File -ErrorAction SilentlyContinue | Select-Object -First 1",
-            "if ($nativeUninstaller) {",
-            "    Start-Process -FilePath $nativeUninstaller.FullName -ArgumentList '/S' -Wait -ErrorAction SilentlyContinue",
-            "}",
-            "Remove-Item 'HKLM:\\SYSTEM\\CurrentControlSet\\Services\\GameViewerService' -Force -Recurse -ErrorAction SilentlyContinue | Out-Null",
-            "Remove-Item 'HKLM:\\SOFTWARE\\Netease' -Force -Recurse -ErrorAction SilentlyContinue | Out-Null",
-            "Get-ScheduledTask -TaskName '*GameViewer*' -ErrorAction SilentlyContinue | Unregister-ScheduledTask -Confirm:$false -ErrorAction SilentlyContinue",
-            "Get-ScheduledTask -TaskName '*UU*' -ErrorAction SilentlyContinue | Unregister-ScheduledTask -Confirm:$false -ErrorAction SilentlyContinue"
-        ]
+        "script": "& ((Get-ChildItem (Join-Path $scoopdir 'buckets\\*\\bin\\hook.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1).FullName) 'hooks/uuyc/uninstall.ps1'"
     },
-    "post_uninstall": [
-        ". (Get-ChildItem (Join-Path $scoopdir 'buckets\\*\\bin\\import-utils.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1).FullName",
-        "$uuycMappings = @(",
-        "    @{ Label = 'local'; Source = 'LocalAppData/GameViewer'; Target = '$persist_dir/AppData' }",
-        "    @{ Label = 'programdata'; Source = 'ProgramData/Netease/GameViewer'; Target = '$persist_dir/ProgramData' }",
-        ")",
-        "Uninstall-PersistDataLinks -Mappings $uuycMappings",
-        "if (-not (Test-AdminElevationOrWarn 'uuyc 卸载后清理需要管理员权限，已跳过特权清理。')) { return }",
-        "$sidRoots = Get-ChildItem Registry::HKEY_USERS | Where-Object { $_.PSChildName -match '^S-1-5-21-(\\d+-){3}\\d+$' } | ForEach-Object { $_.PSPath }",
-        "foreach ($sid in $sidRoots) {",
-        "    Remove-Item \"$sid\\SOFTWARE\\Netease\" -Force -Recurse -ErrorAction SilentlyContinue | Out-Null",
-        "    Remove-Item \"$sid\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\GameViewer\" -Force -Recurse -ErrorAction SilentlyContinue | Out-Null",
-        "    Remove-ItemProperty \"$sid\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run\" -Name 'GameViewer' -ErrorAction SilentlyContinue",
-        "    Remove-ItemProperty \"$sid\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\AppCompatFlags\\Compatibility Assistant\\Store\" -Name \"$dir\\GameViewer\\GameViewer.exe\" -ErrorAction SilentlyContinue",
-        "    Remove-ItemProperty \"$sid\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\AppCompatFlags\\Compatibility Assistant\\Store\" -Name 'D:\\Apps\\Software-NP\\Netease\\Gameviewer\\GameViewer.exe' -ErrorAction SilentlyContinue",
-        "    $ua = \"$sid\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\UserAssist\\{CEBFF5CD-ACE2-4F4F-9178-9926F41749EA}\\Count\"",
-        "    Remove-ItemProperty $ua -Name 'Q:\\Nccf\\Fbsgjner-AC\\Argrnfr\\Tnzrivrjre\\ova\\TnzrIvrjre.rkr' -ErrorAction SilentlyContinue",
-        "    Remove-ItemProperty $ua -Name 'Q:\\Nccf\\Fbsgjner-AC\\Argrnfr\\Tnzrivrjre\\TnzrIvrjre.rkr' -ErrorAction SilentlyContinue",
-        "}",
-        "Remove-Item 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\GameViewer' -Force -Recurse -ErrorAction SilentlyContinue | Out-Null",
-        "Remove-Item 'HKCU:\\Software\\Netease\\GameViewer' -Force -Recurse -ErrorAction SilentlyContinue | Out-Null",
-        "Remove-ItemProperty 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Run' -Name 'GameViewer' -ErrorAction SilentlyContinue",
-        "Write-Host (\"`nDeleting $env:LOCALAPPDATA\\GameViewer ... \") -f DarkGray -NoNewline",
-        "Write-Host (\"`nDeleting $env:PROGRAMDATA\\Netease\\GameViewer ... \") -f DarkGray -NoNewline",
-        "Remove-Item \"$env:WINDIR\\system32\\config\\systemprofile\\AppData\\Local\\GameViewer\" -Force -Recurse -ErrorAction SilentlyContinue | Out-Null",
-        "Remove-Item \"$env:LOCALAPPDATA\\GameViewer\" -Force -Recurse -ErrorAction SilentlyContinue | Out-Null",
-        "Remove-Item \"$env:PROGRAMDATA\\Netease\\GameViewer\" -Force -Recurse -ErrorAction SilentlyContinue | Out-Null"
-    ],
+    "post_uninstall": "& ((Get-ChildItem (Join-Path $scoopdir 'buckets\\*\\bin\\hook.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1).FullName) 'hooks/uuyc/post_uninstall.ps1'",
     "bin": "GameViewer\\GameViewer.exe",
     "shortcuts": [
         [

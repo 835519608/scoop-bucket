@@ -30,19 +30,7 @@
             }
         }
     },
-    "pre_install": [
-        ". (Get-ChildItem (Join-Path $scoopdir 'buckets\\*\\bin\\import-utils.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1).FullName",
-        "Assert-AdminElevation -OnFailure SkipInstall -Reason 'WMI 进程监听（启动后自动关闭开机启动）' -InstallHint 'scoop install scoop-bucket/mcp-router'"
-    ],
-    "post_install": [
-        ". (Get-ChildItem (Join-Path $scoopdir 'buckets\\*\\bin\\import-utils.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1).FullName",
-        "$mcpMappings = @(@{ Label = 'roaming'; Source = 'AppData/MCP Router'; Target = '$persist_dir/roaming'; EnsureTarget = $true })",
-        "Install-PersistDataLinks -Mappings $mcpMappings -Log:$true",
-        "Install-AppProcessAutostartBlocker -ProcessName 'MCP Router.exe' -WatcherFilterName 'Scoop_McpRouter_ProcessStart' -WatcherConsumerName 'Scoop_McpRouter_DisableAutostart' -LogonStartupCommandFilter @('*MCP Router*', '*mcp-router*') -LogonStartupNameFilter @('*MCP Router*', '*mcp-router*') -LegacyScheduledTaskName 'scoop-mcp-router-no-autostart' -RemoveLaunchArtifactNames @('mcp-router.vbs', 'mcp-router.cmd', 'mcp-router-launch.ps1') -SuccessMessage 'mcp-router: 已注册进程监听，应用启动后将自动关闭开机启动。'"
-    ],
-    "pre_uninstall": [
-        ". (Get-ChildItem (Join-Path $scoopdir 'buckets\\*\\bin\\import-utils.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1).FullName",
-        "Uninstall-AppProcessAutostartBlocker -WatcherFilterName 'Scoop_McpRouter_ProcessStart' -WatcherConsumerName 'Scoop_McpRouter_DisableAutostart' -LogonStartupCommandFilter @('*MCP Router*', '*mcp-router*') -LogonStartupNameFilter @('*MCP Router*', '*mcp-router*') -LegacyScheduledTaskName 'scoop-mcp-router-no-autostart' -RemoveLaunchArtifactNames @('mcp-router.vbs', 'mcp-router.cmd', 'mcp-router-launch.ps1')",
-        "Uninstall-PersistDataLinks -Mappings @(@{ Label = 'roaming'; Source = 'AppData/MCP Router'; Target = '$persist_dir/roaming' }) -Log:$true"
-    ]
+    "pre_install": "& ((Get-ChildItem (Join-Path $scoopdir 'buckets\\*\\bin\\hook.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1).FullName) 'hooks/mcp-router/pre_install.ps1'",
+    "post_install": "& ((Get-ChildItem (Join-Path $scoopdir 'buckets\\*\\bin\\hook.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1).FullName) 'hooks/mcp-router/post_install.ps1'",
+    "pre_uninstall": "& ((Get-ChildItem (Join-Path $scoopdir 'buckets\\*\\bin\\hook.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1).FullName) 'hooks/mcp-router/pre_uninstall.ps1'"
 }

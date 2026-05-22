@@ -10,16 +10,8 @@
         }
     },
     "bin": "cli-proxy-api.exe",
-    "post_install": [
-        ". (Get-ChildItem (Join-Path $scoopdir 'buckets\\*\\bin\\import-utils.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1).FullName",
-        "$cliProxyMappings = @(@{ Label = 'auth'; Source = 'UserProfile/.cli-proxy-api'; Target = '$persist_dir/auth'; EnsureTarget = $true })",
-        "Install-PersistDataLinks -Mappings $cliProxyMappings"
-    ],
-    "pre_uninstall": [
-        ". (Get-ChildItem (Join-Path $scoopdir 'buckets\\*\\bin\\import-utils.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1).FullName",
-        "$cliProxyMappings = @(@{ Label = 'auth'; Source = 'UserProfile/.cli-proxy-api'; Target = '$persist_dir/auth' })",
-        "Uninstall-PersistDataLinks -Mappings $cliProxyMappings"
-    ],
+    "post_install": "& ((Get-ChildItem (Join-Path $scoopdir 'buckets\\*\\bin\\hook.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1).FullName) 'hooks/CLIProxyAPI/post_install.ps1'",
+    "pre_uninstall": "& ((Get-ChildItem (Join-Path $scoopdir 'buckets\\*\\bin\\hook.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1).FullName) 'hooks/CLIProxyAPI/pre_uninstall.ps1'",
     "persist": [
         [
             "config.example.yaml",

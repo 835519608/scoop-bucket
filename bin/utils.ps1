@@ -1,7 +1,4 @@
-# scoop-bucket 公共 PowerShell 库
-#
-# manifest 首行（统一）:
-#   . (Get-ChildItem (Join-Path $scoopdir 'buckets\*\bin\import-utils.ps1') -EA SilentlyContinue | Select-Object -First 1).FullName
+# scoop-bucket 公共 PowerShell 库（由 bin/import-utils.ps1 加载，manifest 请用 bin/hook.ps1）
 #
 # 对外 API:
 #   Install-PersistDataLinks / Uninstall-PersistDataLinks / Link-FolderToPersist
@@ -381,12 +378,28 @@ function Uninstall-PersistDataLinks {
 
 #endregion
 
-#region 进程启动监听 + 开机启动（通用）
+#region Scoop bucket 路径
+
+function Resolve-ScoopBucketHookPath {
+    param (
+        [Parameter(Mandatory = $true)]
+        [string]$RelativePath
+    )
+    . (Join-Path $PSScriptRoot 'scoop-path.ps1')
+    Resolve-ScoopBucketScriptPath -RelativePath $RelativePath
+}
 
 function Get-ScoopBucketUtilsPath {
-    (Get-ChildItem -Path (Join-Path $scoopdir 'buckets\*\bin\utils.ps1') -ErrorAction SilentlyContinue |
-        Select-Object -First 1).FullName
+    if ($PSScriptRoot -and (Test-Path -LiteralPath (Join-Path $PSScriptRoot 'utils.ps1'))) {
+        return (Join-Path $PSScriptRoot 'utils.ps1')
+    }
+    . (Join-Path $PSScriptRoot 'scoop-path.ps1')
+    Resolve-ScoopBucketScriptPath -RelativePath 'bin\utils.ps1'
 }
+
+#endregion
+
+#region 进程启动监听 + 开机启动（通用）
 
 function Remove-LaunchArtifacts {
     param (

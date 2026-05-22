@@ -19,25 +19,8 @@
         "args": ["/S"]
     },
     "notes": "Tauri NSIS 静默安装会建开始菜单快捷方式；post_install 仅删桌面 .lnk。%AppData%\\com.dbx.app、%LocalAppData%\\com.dbx.app、%USERPROFILE%\\.dbx 目录联接到 persist。",
-    "post_install": [
-        ". (Get-ChildItem (Join-Path $scoopdir 'buckets\\*\\bin\\import-utils.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1).FullName",
-        "Clear-DesktopShortcuts -Filter '*DBX*.lnk'",
-        "$dbxMappings = @(",
-        "    @{ Label = 'roaming'; Source = 'AppData/com.dbx.app'; Target = '$persist_dir/roaming'; EnsureTarget = $true }",
-        "    @{ Label = 'local'; Source = 'LocalAppData/com.dbx.app'; Target = '$persist_dir/local'; EnsureTarget = $true }",
-        "    @{ Label = 'profile'; Source = 'UserProfile/.dbx'; Target = '$persist_dir/.dbx'; EnsureTarget = $true }",
-        ")",
-        "Install-PersistDataLinks -Mappings $dbxMappings"
-    ],
-    "pre_uninstall": [
-        ". (Get-ChildItem (Join-Path $scoopdir 'buckets\\*\\bin\\import-utils.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1).FullName",
-        "$dbxMappings = @(",
-        "    @{ Label = 'roaming'; Source = 'AppData/com.dbx.app'; Target = '$persist_dir/roaming' }",
-        "    @{ Label = 'local'; Source = 'LocalAppData/com.dbx.app'; Target = '$persist_dir/local' }",
-        "    @{ Label = 'profile'; Source = 'UserProfile/.dbx'; Target = '$persist_dir/.dbx' }",
-        ")",
-        "Uninstall-PersistDataLinks -Mappings $dbxMappings"
-    ],
+    "post_install": "& ((Get-ChildItem (Join-Path $scoopdir 'buckets\\*\\bin\\hook.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1).FullName) 'hooks/dbx/post_install.ps1'",
+    "pre_uninstall": "& ((Get-ChildItem (Join-Path $scoopdir 'buckets\\*\\bin\\hook.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1).FullName) 'hooks/dbx/pre_uninstall.ps1'",
     "checkver": "github",
     "autoupdate": {
         "architecture": {

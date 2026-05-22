@@ -53,14 +53,23 @@ scoop install scoop-bucket/CLIProxyAPI
 
 ```
 bucket/*.json              # manifest
-bin/import-utils.ps1       # manifest 首行加载入口（内部 dot-source utils.ps1）
+bin/hook.ps1               # manifest hook 统一入口（加载 utils + 执行 hooks/）
+bin/scoop-path.ps1         # 解析 bucket 内脚本路径
+bin/import-utils.ps1       # 由 hook.ps1 调用，加载 utils.ps1
 bin/utils.ps1              # 公共 PowerShell 函数
+hooks/<app>/               # 各应用 install/post_install/pre_uninstall 脚本
 .github/workflows/excavator.yml
 ```
 
 ### 运行时数据（persist）
 
-manifest 通过 `Install-PersistDataLinks` / `Uninstall-PersistDataLinks`（目录联接，与 Scoop persist 一致）或 Scoop 自带 `persist` 保留数据；API 见 `bin/utils.ps1` 文件头。
+manifest 通过 `Install-PersistDataLinks` / `Uninstall-PersistDataLinks`（目录联接，与 Scoop persist 一致）或 Scoop 自带 `persist` 保留数据；逻辑在 `hooks/<app>/`，入口见 `bin/hook.ps1`。
+
+manifest hook 统一一行（仅改末尾 hook 路径）：
+
+```powershell
+& ((Get-ChildItem (Join-Path $scoopdir 'buckets\*\bin\hook.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1).FullName) 'hooks/<app>/post_install.ps1'
+```
 
 | 应用 | 持久化方式 |
 |------|------------|
