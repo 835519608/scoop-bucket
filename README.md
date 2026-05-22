@@ -62,7 +62,7 @@ bin/utils.ps1              # uuyc 安装脚本依赖
 | 应用 | 持久化位置 |
 |------|------------|
 | pixpin | `Config`、`Data`、`History`（程序目录） |
-| dbx | `DBX_DATA_DIR` → `persist/data`（含 `plugins`、`dbx.db`；不经 `com.dbx.app`） |
+| dbx | `DBX_DATA_DIR` → `persist/data`（`plugins`、`dbx.db`）；`com.dbx.app` 联接 → `persist/roaming`、`local` |
 | CLIProxyAPI | `config.yaml`、`logs/`；`%USERPROFILE%\.cli-proxy-api` → `persist/auth` |
 | mcp-router | `%AppData%\MCP Router` → `persist/roaming` |
 | uuyc | `%LocalAppData%\GameViewer`、`%ProgramData%\Netease\GameViewer` → `persist/*` |

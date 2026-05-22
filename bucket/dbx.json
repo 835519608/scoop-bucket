@@ -18,12 +18,15 @@
         "file": "uninstall.exe",
         "args": ["/S"]
     },
-    "notes": "经 Scoop shim 启动时须用 DBX_DATA_DIR（见 data_dir.rs）；dbx.db、plugins 均在 persist/data，不经过 %AppData%\\com.dbx.app。",
+    "notes": "DBX_DATA_DIR→persist/data（dbx.db、plugins）；%AppData%/Local 下 com.dbx.app 联接至 persist/roaming、local（Tauri 缓存，非业务库）。",
     "env_set": {
         "DBX_DATA_DIR": "$persist_dir\\data"
     },
     "post_install": [
-        "if (-not (Test-Path \"$dir\\portable.dbx\")) { New-Item -ItemType File -Path \"$dir\\portable.dbx\" -Force | Out-Null }"
+        ". \"$bucketsdir\\$bucket\\bin\\utils.ps1\"",
+        "if (-not (Test-Path \"$dir\\portable.dbx\")) { New-Item -ItemType File -Path \"$dir\\portable.dbx\" -Force | Out-Null }",
+        "New-PersistDirectory \"$env:APPDATA\\com.dbx.app\" \"$persist_dir\\roaming\" -Migrate",
+        "New-PersistDirectory \"$env:LOCALAPPDATA\\com.dbx.app\" \"$persist_dir\\local\" -Migrate"
     ],
     "persist": [
         "data"
