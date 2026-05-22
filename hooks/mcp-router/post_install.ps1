@@ -1,3 +1,4 @@
+Assert-AdminElevation -OnFailure SkipInstall -Reason 'WMI 进程监听（启动后自动关闭开机启动）' -InstallHint 'scoop install scoop-bucket/mcp-router'
 $mcpMappings = @(@{ Label = 'roaming'; Source = 'AppData/MCP Router'; Target = '$persist_dir/roaming'; EnsureTarget = $true })
 Install-PersistDataLinks -Mappings $mcpMappings -Log:$true
 Install-AppProcessAutostartBlocker -ProcessName 'MCP Router.exe' -WatcherFilterName 'Scoop_McpRouter_ProcessStart' -WatcherConsumerName 'Scoop_McpRouter_DisableAutostart' -LogonStartupCommandFilter @('*MCP Router*', '*mcp-router*') -LogonStartupNameFilter @('*MCP Router*', '*mcp-router*') -LegacyScheduledTaskName 'scoop-mcp-router-no-autostart' -RemoveLaunchArtifactNames @('mcp-router.vbs', 'mcp-router.cmd', 'mcp-router-launch.ps1') -SuccessMessage 'mcp-router: 已注册进程监听，应用启动后将自动关闭开机启动。'

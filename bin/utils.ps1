@@ -167,8 +167,9 @@ function Test-AdminElevation {
 
 function Assert-AdminElevation {
     <#
-        -OnFailure Exit         : exit 1（安装脚本内硬中断）
-        -OnFailure SkipInstall  : abort 跳过当前应用，不阻断 scoop install 其它包
+        Scoop 在 Invoke-Command 中执行 hook，abort/exit 无法中断安装，须用 throw。
+        -OnFailure SkipInstall : 中止当前应用安装（manifest pre_install）
+        -OnFailure Exit         : 同上，用于 installer 等脚本
     #>
     param (
         [ValidateSet('Exit', 'SkipInstall')]
@@ -180,17 +181,15 @@ function Assert-AdminElevation {
     $appName = if ($app) { [string]$app } else { 'this app' }
     $hint = if ($InstallHint) { $InstallHint } else { "scoop install $appName" }
     $reasonText = if ($Reason) { $Reason } else { '需要管理员 PowerShell。' }
-    Write-Warning @"
+    $message = @"
 
-${appName} 已跳过：${reasonText}
+${appName} 安装已中止：${reasonText}
 请在「以管理员身份运行」的 PowerShell 中执行：
   ${hint}
 
 "@
-    if ($OnFailure -eq 'SkipInstall') {
-        abort "${appName}: skipped (administrator privileges required)."
-    }
-    exit 1
+    Write-Warning $message
+    throw "${appName}: administrator privileges required."
 }
 
 function Require-AdminElevation {
@@ -501,20 +500,28 @@ function Install-AppProcessAutostartBlocker {
         [string]$SuccessMessage
     )
     if (-not $AppDirectory) { $AppDirectory = $dir }
-    $cf = ($LogonStartupCommandFilter | ForEach-Object { "'$_'" }) -join ', '
-    $nf = ($LogonStartupNameFilter | ForEach-Object { "'$_'" }) -join ', '
-    $afterLoad = "Disable-LogonStartup -CommandFilter @($cf) -NameFilter @($nf)"
-    $blockerScript = Write-ProcessStartBlockerScript -PersistDirectory $PersistDirectory `
-        -ScriptFileName $BlockerScriptFileName -DelaySeconds $BlockerDelaySeconds -AfterLoadCommand $afterLoad
-    Install-ProcessStartWatcher -ProcessName $ProcessName -FilterName $WatcherFilterName `
-        -ConsumerName $WatcherConsumerName -BlockerScriptPath $blockerScript
-    Disable-LogonStartup -CommandFilter $LogonStartupCommandFilter -NameFilter $LogonStartupNameFilter | Out-Null
-    if ($LegacyScheduledTaskName) { Remove-ScheduledTaskByName -TaskName $LegacyScheduledTaskName }
-    if ($RemoveLaunchArtifactNames.Count -gt 0) {
-        Remove-LaunchArtifacts -Names $RemoveLaunchArtifactNames -AppDirectory $AppDirectory
+    if (-not (Test-AdminElevation)) {
+        throw 'Install-AppProcessAutostartBlocker requires administrator PowerShell.'
     }
-    if ($SuccessMessage) {
-        Write-Host $SuccessMessage -ForegroundColor Green
+    try {
+        $cf = ($LogonStartupCommandFilter | ForEach-Object { "'$_'" }) -join ', '
+        $nf = ($LogonStartupNameFilter | ForEach-Object { "'$_'" }) -join ', '
+        $afterLoad = "Disable-LogonStartup -CommandFilter @($cf) -NameFilter @($nf)"
+        $blockerScript = Write-ProcessStartBlockerScript -PersistDirectory $PersistDirectory `
+            -ScriptFileName $BlockerScriptFileName -DelaySeconds $BlockerDelaySeconds -AfterLoadCommand $afterLoad
+        Install-ProcessStartWatcher -ProcessName $ProcessName -FilterName $WatcherFilterName `
+            -ConsumerName $WatcherConsumerName -BlockerScriptPath $blockerScript
+        Disable-LogonStartup -CommandFilter $LogonStartupCommandFilter -NameFilter $LogonStartupNameFilter | Out-Null
+        if ($LegacyScheduledTaskName) { Remove-ScheduledTaskByName -TaskName $LegacyScheduledTaskName }
+        if ($RemoveLaunchArtifactNames.Count -gt 0) {
+            Remove-LaunchArtifacts -Names $RemoveLaunchArtifactNames -AppDirectory $AppDirectory
+        }
+        if ($SuccessMessage) {
+            Write-Host $SuccessMessage -ForegroundColor Green
+        }
+    } catch {
+        Write-Warning "注册进程监听失败: $_"
+        throw
     }
 }
 

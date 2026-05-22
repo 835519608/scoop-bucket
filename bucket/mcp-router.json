@@ -18,7 +18,7 @@
     "shortcuts": [
         ["MCP Router.exe", "MCP Router"]
     ],
-    "notes": "须在管理员 PowerShell 中 scoop install。已装但无 WMI 监听时，在管理员下执行 scoop reset mcp-router。",
+    "notes": "须在管理员 PowerShell 中 scoop install；无管理员权限时安装会失败。已半成品安装请先 scoop uninstall mcp-router 再重装。",
     "checkver": "github",
     "autoupdate": {
         "architecture": {

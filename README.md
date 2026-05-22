@@ -76,7 +76,7 @@ manifest hook 统一一行（仅改末尾 hook 路径）：
 | pixpin | Scoop `persist`：`Config`、`Data`、`History` |
 | dbx | 自动链接：`AppData/com.dbx.app`、`LocalAppData/com.dbx.app`、`UserProfile/.dbx` |
 | CLIProxyAPI | Scoop `persist` + 自动链接：`UserProfile/.cli-proxy-api` → `auth` |
-| mcp-router | 自动链接：`AppData/MCP Router` → `roaming`；**仅**管理员 PowerShell 可 install；无权限时跳过不阻断其它包 |
+| mcp-router | 自动链接：`AppData/MCP Router` → `roaming`；**仅**管理员 PowerShell 可 install；无权限时安装失败 |
 | uuyc | 自动链接：`LocalAppData/GameViewer`、`ProgramData/Netease/GameViewer` |
 
 数据在 `scoop\persist\<app>\`，`pre_uninstall` 会拆除联接、保留 persist 目录；升级前可自行备份。
