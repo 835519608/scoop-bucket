@@ -9,7 +9,7 @@
 #   Disable-LogonStartup        - 禁用/删除当前用户开机启动项（Run + StartupApproved）
 #   Test-AdminElevation         - 当前是否以管理员运行
 #   Require-AdminElevation      - 非管理员则警告并 exit 1
-#   Initialize-McpRouterAutostartProtection / Remove-McpRouterAutostartWatcher / Disable-McpRouterLogonStartup
+#   Assert-McpRouterAdminForInstall / Complete-McpRouterPostInstall / Remove-McpRouterAutostartWatcher
 #
 # Mapping 字段: Label, Source, Target, EnsureTarget, TargetType；Strategy 可选（copy = 仅复制）
 #
@@ -459,25 +459,31 @@ WHERE TargetInstance ISA 'Win32_Process' AND TargetInstance.Name = 'MCP Router.e
     } | Out-Null
 }
 
-function Initialize-McpRouterAutostartProtection {
-    Disable-McpRouterLogonStartup | Out-Null
-    if (-not (Test-AdminElevation)) {
-        Write-Warning @"
+function Assert-McpRouterAdminForInstall {
+    if (Test-AdminElevation) { return }
+    Write-Warning @"
 
-mcp-router: 自动关闭开机启动（WMI 进程监听）需要管理员权限。
-当前为普通用户，应用已安装，但不会注册进程监听。
-若需要该功能，请在「以管理员身份运行」的 PowerShell 中执行：
-  scoop update mcp-router
+mcp-router 已跳过：需要管理员 PowerShell 才能安装（WMI 进程监听）。
+请右键「以管理员身份运行」PowerShell 后执行：
+  scoop install scoop-bucket/mcp-router
+
+若曾以普通用户装过，请先执行：scoop uninstall mcp-router
 
 "@
-        return
-    }
+    abort 'mcp-router: skipped (administrator privileges required).'
+}
+
+function Complete-McpRouterPostInstall {
+    param ([string]$AppDirectory)
+    if (-not $AppDirectory) { $AppDirectory = $dir }
     try {
         Install-McpRouterAutostartWatcher
+        Disable-McpRouterLogonStartup | Out-Null
         Write-Host 'mcp-router: 已注册进程监听，应用启动后将自动关闭开机启动。' -ForegroundColor Green
     } catch {
-        Write-Warning "mcp-router: 注册进程监听失败: $_`n可尝试在管理员 PowerShell 中执行: scoop update mcp-router"
+        Write-Warning "mcp-router: 注册进程监听失败: $_"
     }
+    Remove-McpRouterLaunchArtifacts -AppDirectory $AppDirectory
 }
 
 #endregion

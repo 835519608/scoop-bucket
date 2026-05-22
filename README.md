@@ -66,7 +66,7 @@ manifest 通过 `Install-PersistDataLinks` / `Uninstall-PersistDataLinks`（目�
 | pixpin | Scoop `persist`：`Config`、`Data`、`History` |
 | dbx | 自动链接：`AppData/com.dbx.app`、`LocalAppData/com.dbx.app`、`UserProfile/.dbx` |
 | CLIProxyAPI | Scoop `persist` + 自动链接：`UserProfile/.cli-proxy-api` → `auth` |
-| mcp-router | 自动链接：`AppData/MCP Router` → `roaming`；WMI 监听需管理员 PowerShell 执行 install/update |
+| mcp-router | 自动链接：`AppData/MCP Router` → `roaming`；**仅**管理员 PowerShell 可 install；无权限时跳过不阻断其它包 |
 | uuyc | 自动链接：`LocalAppData/GameViewer`、`ProgramData/Netease/GameViewer` |
 
 数据在 `scoop\persist\<app>\`，`pre_uninstall` 会拆除联接、保留 persist 目录；升级前可自行备份。

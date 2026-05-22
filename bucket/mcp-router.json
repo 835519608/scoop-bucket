@@ -18,7 +18,7 @@
     "shortcuts": [
         ["MCP Router.exe", "MCP Router"]
     ],
-    "notes": "数据目录联接到 persist/roaming。进程监听（启动后自动关开机启动）需在管理员 PowerShell 中 install/update；普通用户可正常安装使用。",
+    "notes": "须在管理员 PowerShell 中 scoop install。已装但无 WMI 监听时，在管理员下执行 scoop reset mcp-router。",
     "checkver": "github",
     "autoupdate": {
         "architecture": {
@@ -30,11 +30,14 @@
             }
         }
     },
+    "pre_install": [
+        ". (Get-ChildItem (Join-Path $scoopdir 'buckets\\*\\bin\\utils.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1).FullName",
+        "Assert-McpRouterAdminForInstall"
+    ],
     "post_install": [
         ". (Get-ChildItem (Join-Path $scoopdir 'buckets\\*\\bin\\utils.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1).FullName",
         "Install-PersistDataLinks -Mappings (Get-McpRouterPersistMappings -EnsureTarget) -Log:$true",
-        "Initialize-McpRouterAutostartProtection",
-        "Remove-McpRouterLaunchArtifacts"
+        "Complete-McpRouterPostInstall"
     ],
     "pre_uninstall": [
         ". (Get-ChildItem (Join-Path $scoopdir 'buckets\\*\\bin\\utils.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1).FullName",
