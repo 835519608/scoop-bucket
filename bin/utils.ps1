@@ -1,8 +1,68 @@
-# Shared helpers for scoop-bucket manifests (dot-source: . "$bucketsdir\$bucket\bin\utils.ps1")
+# scoop-bucket 公共 PowerShell 库
+# 用法: . "$bucketsdir\$bucket\bin\utils.ps1"
+#
+# 对外 API（manifest 中直接调用）:
+#   Install-PersistDataLinks    - 将应用数据目录联接到 persist（安装 / 升级后）
+#   Uninstall-PersistDataLinks  - 拆除数据目录联接（卸载前，保留 persist 数据）
+#   Link-FolderToPersist        - 单目录联接到 persist（-Migrate 可迁移已有文件）
+#   Clear-DesktopShortcuts      - 按通配符删除桌面快捷方式
+#   Clear-StartMenuShortcuts    - 按通配符删除开始菜单快捷方式
+#   Test-AdminElevation         - 当前是否以管理员运行
+#   Require-AdminElevation      - 非管理员则警告并 exit 1
+#
+# Mapping 字段: Label, Source, Target, EnsureTarget, TargetType；Strategy 可选（copy = 仅复制）
 
-#region persist (junction)
+#region 底层：目录联接
 
-function New-PersistDirectory {
+function Remove-DirectoryLink {
+    param (
+        [Parameter(Mandatory = $true)]
+        [string]$LinkPath,
+        [switch]$Log
+    )
+    if (-not (Test-Path $LinkPath)) { return }
+    $item = Get-Item -Path $LinkPath -Force -ErrorAction SilentlyContinue
+    if ($item -and $item.LinkType) {
+        Remove-Item -LiteralPath $LinkPath -Force -ErrorAction SilentlyContinue
+        if ($Log) { info "[scoop-bucket] Removed $($item.LinkType): $LinkPath" }
+        return
+    }
+    Remove-Item -Path $LinkPath -Force -Recurse -ErrorAction SilentlyContinue
+}
+
+function New-DirectoryLink {
+    param (
+        [Parameter(Mandatory = $true)]
+        [string]$LinkPath,
+        [Parameter(Mandatory = $true)]
+        [string]$TargetPath,
+        [switch]$Migrate
+    )
+    New-Item -Path $TargetPath -ItemType Directory -Force -ErrorAction SilentlyContinue | Out-Null
+    if (Test-Path $LinkPath) {
+        $existing = Get-Item -Path $LinkPath -Force -ErrorAction SilentlyContinue
+        if ($existing.LinkType) {
+            try { $existing.Delete() } catch {
+                Remove-DirectoryLink -LinkPath $LinkPath
+            }
+        }
+        else {
+            if ($Migrate) {
+                Get-ChildItem -Path $LinkPath -Force -ErrorAction SilentlyContinue | ForEach-Object {
+                    Move-Item -LiteralPath $_.FullName -Destination $TargetPath -Force -ErrorAction SilentlyContinue | Out-Null
+                }
+            }
+            Remove-Item -Path $LinkPath -Force -Recurse -ErrorAction SilentlyContinue
+        }
+    }
+    New-Item -ItemType Junction -Path $LinkPath -Target $TargetPath -Force -ErrorAction Stop | Out-Null
+}
+
+#endregion
+
+#region 单目录联接（简写）
+
+function Link-FolderToPersist {
     param (
         [Parameter(Mandatory = $true, Position = 0)]
         [string]$DataPath,
@@ -10,71 +70,63 @@ function New-PersistDirectory {
         [string]$PersistPath,
         [switch]$Migrate
     )
-    New-Item $PersistPath -ItemType Directory -Force -ErrorAction SilentlyContinue | Out-Null
-    if (Test-Path $DataPath) {
-        $dataPathItem = Get-Item -Path $DataPath
-        if ($dataPathItem.LinkType -eq 'Junction') {
-            try { $dataPathItem.Delete() } catch {}
-        }
-        else {
-            if ($Migrate) {
-                Get-ChildItem $DataPath | ForEach-Object {
-                    Move-Item $_.FullName $PersistPath -Force -ErrorAction SilentlyContinue | Out-Null
-                }
-            }
-            Remove-Item $DataPath -Force -Recurse -ErrorAction SilentlyContinue | Out-Null
-        }
-    }
-    New-Item -ItemType Junction -Path $DataPath -Target $PersistPath | Out-Null
+    New-DirectoryLink -LinkPath $DataPath -TargetPath $PersistPath -Migrate:$Migrate
 }
 
 #endregion
 
-#region shortcuts
+#region 快捷方式清理
 
-function Remove-DesktopShortcuts {
+function Clear-ShortcutsInFolders {
+    param (
+        [Parameter(Mandatory = $true)]
+        [string[]]$SearchPaths,
+        [Parameter(Mandatory = $true)]
+        [string]$Filter
+    )
+    foreach ($searchPath in $SearchPaths) {
+        Get-ChildItem -Path $searchPath -Filter $Filter -ErrorAction SilentlyContinue |
+            Remove-Item -Force -ErrorAction SilentlyContinue
+    }
+}
+
+function Clear-DesktopShortcuts {
     param (
         [Parameter(Mandatory = $true)]
         [string]$Filter
     )
-    @(
+    Clear-ShortcutsInFolders -SearchPaths @(
         (Join-Path $env:USERPROFILE 'Desktop')
         (Join-Path $env:PUBLIC 'Desktop')
-    ) | ForEach-Object {
-        Get-ChildItem $_ -Filter $Filter -ErrorAction SilentlyContinue |
-            Remove-Item -Force -ErrorAction SilentlyContinue
-    }
+    ) -Filter $Filter
 }
 
-function Remove-StartMenuShortcuts {
+function Clear-StartMenuShortcuts {
     param (
         [Parameter(Mandatory = $true)]
         [string]$Filter
     )
-    @(
+    Clear-ShortcutsInFolders -SearchPaths @(
         (Join-Path $env:APPDATA 'Microsoft\Windows\Start Menu\Programs')
         (Join-Path $env:ProgramData 'Microsoft\Windows\Start Menu\Programs')
-    ) | ForEach-Object {
-        Get-ChildItem $_ -Filter $Filter -ErrorAction SilentlyContinue |
-            Remove-Item -Force -ErrorAction SilentlyContinue
-    }
+    ) -Filter $Filter
 }
 
 #endregion
 
-#region scoop admin
+#region 管理员检查
 
-function Test-IsAdministrator {
+function Test-AdminElevation {
     ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole(
         [Security.Principal.WindowsBuiltInRole]::Administrator
     )
 }
 
-function Assert-Administrator {
+function Require-AdminElevation {
     param (
         [string]$Message = "`nThis operation requires administrator privileges.`nPlease rerun Scoop in an elevated PowerShell.`n"
     )
-    if (-not (Test-IsAdministrator)) {
+    if (-not (Test-AdminElevation)) {
         Write-Warning $Message
         exit 1
     }
@@ -82,146 +134,171 @@ function Assert-Administrator {
 
 #endregion
 
-#region portable profile (AppData / symlink mappings)
+#region 数据目录映射（内部）
 
-function Resolve-PortablePath {
+function Expand-MappingPath {
     param (
+        [Parameter(Mandatory = $true)]
         [string]$Path,
-        [hashtable]$Context
+        [Parameter(Mandatory = $true)]
+        [string]$AppDir,
+        [Parameter(Mandatory = $true)]
+        [string]$PersistDir
     )
     if ($Path -match '^AppData/(.+)$') {
         return (Join-Path $env:AppData $matches[1])
     }
-    elseif ($Path -match '^LocalAppData/(.+)$') {
+    if ($Path -match '^LocalAppData/(.+)$') {
         return (Join-Path $env:LocalAppData $matches[1])
     }
-    elseif ($Path -match '^ProgramData/(.+)$') {
+    if ($Path -match '^ProgramData/(.+)$') {
         return (Join-Path $env:ProgramData $matches[1])
     }
-    elseif ($Path -match '^UserProfile/(.+)$') {
+    if ($Path -match '^UserProfile/(.+)$') {
         return (Join-Path $env:USERPROFILE $matches[1])
     }
-    elseif ($Path -match '^\$dir(?<rest>[/\\].*)?$') {
+    if ($Path -match '^\$dir(?<rest>[/\\].*)?$') {
         $suffix = $matches['rest']
         if ($suffix) {
-            $suffix = ($suffix -replace '^[/\\]+', '')
-            $suffix = $suffix.Replace('/', '\')
+            $suffix = ($suffix -replace '^[/\\]+', '') -replace '/', '\'
         }
-        return (Join-Path $Context.Dir $suffix)
+        return (Join-Path $AppDir $suffix)
     }
-    elseif ($Path -match '^\$persist_dir(?<rest>[/\\].*)?$') {
+    if ($Path -match '^\$persist_dir(?<rest>[/\\].*)?$') {
         $suffix = $matches['rest']
         if ($suffix) {
-            $suffix = ($suffix -replace '^[/\\]+', '')
-            $suffix = $suffix.Replace('/', '\')
+            $suffix = ($suffix -replace '^[/\\]+', '') -replace '/', '\'
         }
-        return (Join-Path $Context.PersistDir $suffix)
+        return (Join-Path $PersistDir $suffix)
     }
-    else {
-        return ($ExecutionContext.InvokeCommand.ExpandString($Path))
-    }
+    return ($ExecutionContext.InvokeCommand.ExpandString($Path))
 }
 
-function Ensure-PortableDirectory {
-    param ([string]$Path)
+function Ensure-FolderExists {
+    param ([Parameter(Mandatory = $true)][string]$Path)
     if (-not (Test-Path $Path)) {
         New-Item -ItemType Directory -Path $Path -Force | Out-Null
     }
 }
 
-function Ensure-PortableFile {
-    param ([string]$Path)
+function Ensure-FileExists {
+    param ([Parameter(Mandatory = $true)][string]$Path)
     $parent = Split-Path -Parent $Path
-    if ($parent) { Ensure-PortableDirectory $parent }
+    if ($parent) { Ensure-FolderExists -Path $parent }
     if (-not (Test-Path $Path)) {
         New-Item -ItemType File -Path $Path -Force | Out-Null
     }
 }
 
-function Copy-PortableData {
+function Copy-FolderContents {
     param (
+        [Parameter(Mandatory = $true)]
         [string]$Source,
+        [Parameter(Mandatory = $true)]
         [string]$Destination
     )
-    if (Test-Path $Source) {
-        Ensure-PortableDirectory $Destination
-        Copy-Item "$Source\*" $Destination -Force -Recurse -ErrorAction SilentlyContinue
-    }
+    if (-not (Test-Path $Source)) { return }
+    Ensure-FolderExists -Path $Destination
+    Copy-Item -Path "$Source\*" -Destination $Destination -Force -Recurse -ErrorAction SilentlyContinue
 }
 
-function New-PortableSymlink {
+function Move-FolderContentsToPersist {
     param (
-        [string]$Link,
-        [string]$Target
+        [Parameter(Mandatory = $true)]
+        [string]$Source,
+        [Parameter(Mandatory = $true)]
+        [string]$Destination
     )
-    if (Test-Path $Link) {
-        $item = Get-Item $Link -ErrorAction SilentlyContinue
-        if ($item -and $item.LinkType -and $item.Target -eq $Target) {
-            return
-        }
-        Remove-Item $Link -Recurse -Force -ErrorAction SilentlyContinue
-    }
-    New-Item -ItemType SymbolicLink -Path $Link -Target $Target -Force | Out-Null
+    if (-not (Test-Path $Source)) { return }
+    $item = Get-Item -Path $Source -Force -ErrorAction SilentlyContinue
+    if ($item.LinkType) { return }
+    Copy-FolderContents -Source $Source -Destination $Destination
+    Remove-Item -Path $Source -Force -Recurse -ErrorAction SilentlyContinue
 }
 
-function Remove-PortableLink {
-    param (
-        [string]$Link,
-        [switch]$Log
-    )
-    if (Test-Path $Link) {
-        $item = Get-Item $Link -ErrorAction SilentlyContinue
-        if ($item -and $item.LinkType) {
-            Remove-Item $Link -Force -ErrorAction SilentlyContinue
-            if ($Log) {
-                info "[Portable Mode] Removed symbolic link: $Link"
-            }
-        }
-    }
-}
-
-function Invoke-PortableMappings {
+function Set-PersistDataLinks {
     param (
         [ValidateSet('Install', 'Uninstall')]
-        [string]$Action,
-        [hashtable]$Context,
+        [Parameter(Mandatory = $true)]
+        [string]$Mode,
+        [Parameter(Mandatory = $true)]
         [array]$Mappings,
+        [Parameter(Mandatory = $true)]
+        [string]$AppDir,
+        [Parameter(Mandatory = $true)]
+        [string]$PersistDir,
         [switch]$Log
     )
     foreach ($mapping in $Mappings) {
-        $sourcePath = Resolve-PortablePath -Path $mapping.Source -Context $Context
-        $targetPath = Resolve-PortablePath -Path $mapping.Target -Context $Context
+        $sourcePath = Expand-MappingPath -Path $mapping.Source -AppDir $AppDir -PersistDir $PersistDir
+        $targetPath = Expand-MappingPath -Path $mapping.Target -AppDir $AppDir -PersistDir $PersistDir
         $targetType = if ($mapping.TargetType) { $mapping.TargetType } else { 'directory' }
-        if ($Action -eq 'Install') {
-            if ($mapping.EnsureTarget) {
-                if ($targetType -eq 'file') {
-                    Ensure-PortableFile $targetPath
-                }
-                else {
-                    Ensure-PortableDirectory $targetPath
-                }
-            }
-            if ($targetType -ne 'file') {
-                if ((Test-Path $sourcePath) -and -not (Get-Item $sourcePath -ErrorAction SilentlyContinue).LinkType) {
-                    Copy-PortableData -Source $sourcePath -Destination $targetPath
-                    Remove-Item $sourcePath -Recurse -Force -ErrorAction SilentlyContinue
-                }
-            }
-            elseif ((Test-Path $sourcePath) -and -not (Get-Item $sourcePath -ErrorAction SilentlyContinue).LinkType) {
-                Remove-Item $sourcePath -Recurse -Force -ErrorAction SilentlyContinue
-            }
-            switch ($mapping.Strategy) {
-                'symlink' { New-PortableSymlink -Link $sourcePath -Target $targetPath }
-                Default { Copy-PortableData -Source $sourcePath -Destination $targetPath }
-            }
+        $strategy = if ($mapping.Strategy) { $mapping.Strategy.ToLowerInvariant() } else { 'link' }
+
+        if ($Mode -eq 'Uninstall') {
+            Remove-DirectoryLink -LinkPath $sourcePath -Log:$Log
+            continue
+        }
+
+        if ($mapping.EnsureTarget) {
+            if ($targetType -eq 'file') { Ensure-FileExists -Path $targetPath }
+            else { Ensure-FolderExists -Path $targetPath }
+        }
+
+        if ($targetType -ne 'file') {
+            Move-FolderContentsToPersist -Source $sourcePath -Destination $targetPath
+        }
+        elseif ((Test-Path $sourcePath) -and -not (Get-Item $sourcePath -ErrorAction SilentlyContinue).LinkType) {
+            Remove-Item -Path $sourcePath -Force -Recurse -ErrorAction SilentlyContinue
+        }
+
+        if ($strategy -eq 'copy') {
+            Copy-FolderContents -Source $sourcePath -Destination $targetPath
             if ($Log) {
-                info "[Portable Mode] Linked $($mapping.Label) -> $targetPath"
+                info "[Persist] $($mapping.Label): $sourcePath -> $targetPath (copy)"
             }
         }
         else {
-            Remove-PortableLink -Link $sourcePath -Log:$Log
+            New-DirectoryLink -LinkPath $sourcePath -TargetPath $targetPath
+            if ($Log) {
+                info "[Persist] $($mapping.Label): $sourcePath -> $targetPath (Junction)"
+            }
         }
     }
+}
+
+#endregion
+
+#region 数据目录映射（对外）
+
+function Install-PersistDataLinks {
+    <#
+        将 Mapping 中的 Source（如 AppData/foo）目录联接到 persist 下的 Target。
+        未传 -AppDir / -PersistDir 时使用 Scoop 脚本变量 $dir、$persist_dir。
+    #>
+    param (
+        [Parameter(Mandatory = $true)]
+        [array]$Mappings,
+        [string]$AppDir,
+        [string]$PersistDir,
+        [switch]$Log
+    )
+    if (-not $AppDir) { $AppDir = $dir }
+    if (-not $PersistDir) { $PersistDir = $persist_dir }
+    Set-PersistDataLinks -Mode Install -Mappings $Mappings -AppDir $AppDir -PersistDir $PersistDir -Log:$Log
+}
+
+function Uninstall-PersistDataLinks {
+    param (
+        [Parameter(Mandatory = $true)]
+        [array]$Mappings,
+        [string]$AppDir,
+        [string]$PersistDir,
+        [switch]$Log
+    )
+    if (-not $AppDir) { $AppDir = $dir }
+    if (-not $PersistDir) { $PersistDir = $persist_dir }
+    Set-PersistDataLinks -Mode Uninstall -Mappings $Mappings -AppDir $AppDir -PersistDir $PersistDir -Log:$Log
 }
 
 #endregion

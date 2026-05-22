@@ -12,7 +12,13 @@
     "bin": "cli-proxy-api.exe",
     "post_install": [
         ". \"$bucketsdir\\$bucket\\bin\\utils.ps1\"",
-        "New-PersistDirectory \"$env:USERPROFILE\\.cli-proxy-api\" \"$persist_dir\\auth\" -Migrate"
+        "$cliProxyMappings = @(@{ Label = 'auth'; Source = 'UserProfile/.cli-proxy-api'; Target = '$persist_dir/auth'; EnsureTarget = $true })",
+        "Install-PersistDataLinks -Mappings $cliProxyMappings"
+    ],
+    "pre_uninstall": [
+        ". \"$bucketsdir\\$bucket\\bin\\utils.ps1\"",
+        "$cliProxyMappings = @(@{ Label = 'auth'; Source = 'UserProfile/.cli-proxy-api'; Target = '$persist_dir/auth' })",
+        "Uninstall-PersistDataLinks -Mappings $cliProxyMappings"
     ],
     "persist": [
         [
@@ -21,7 +27,7 @@
         ],
         "logs"
     ],
-    "notes": "config.yaml 在程序目录；OAuth/令牌目录默认 ~/.cli-proxy-api，已链接到 persist/auth（config.example.yaml）。",
+    "notes": "config.yaml 在程序目录（persist）；OAuth/令牌目录 ~/.cli-proxy-api 自动链接到 persist/auth。",
     "checkver": "github",
     "autoupdate": {
         "architecture": {

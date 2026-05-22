@@ -53,18 +53,20 @@ scoop install scoop-bucket/CLIProxyAPI
 
 ```
 bucket/*.json              # manifest
-bin/utils.ps1              # 公共 PowerShell（联接、快捷方式、便携映射、管理员检查）
+bin/utils.ps1              # 公共 PowerShell 入口（dot-source 后见文件头 API 列表）
 .github/workflows/excavator.yml
 ```
 
 ### 运行时数据（persist）
 
-| 应用 | 持久化位置 |
-|------|------------|
-| pixpin | `Config`、`Data`、`History`（程序目录） |
-| dbx | 默认路径联接：`com.dbx.app` → `roaming`/`local`（库、JDBC 插件）；`%USERPROFILE%\.dbx` → `.dbx`（JRE、驱动） |
-| CLIProxyAPI | `config.yaml`、`logs/`；`%USERPROFILE%\.cli-proxy-api` → `persist/auth` |
-| mcp-router | `%AppData%\MCP Router` → `persist/roaming` |
-| uuyc | `%LocalAppData%\GameViewer`、`%ProgramData%\Netease\GameViewer` → `persist/*` |
+manifest 通过 `Install-PersistDataLinks` / `Uninstall-PersistDataLinks`（目录联接，与 Scoop persist 一致）或 Scoop 自带 `persist` 保留数据；API 见 `bin/utils.ps1` 文件头。
 
-数据在 `scoop\persist\<app>\`（dbx 无 `persist` 数组，整目录随 Scoop 保留），升级或重装前可自行备份。
+| 应用 | 持久化方式 |
+|------|------------|
+| pixpin | Scoop `persist`：`Config`、`Data`、`History` |
+| dbx | 自动链接：`AppData/com.dbx.app`、`LocalAppData/com.dbx.app`、`UserProfile/.dbx` |
+| CLIProxyAPI | Scoop `persist` + 自动链接：`UserProfile/.cli-proxy-api` → `auth` |
+| mcp-router | 自动链接：`AppData/MCP Router` → `roaming` |
+| uuyc | 自动链接：`LocalAppData/GameViewer`、`ProgramData/Netease/GameViewer` |
+
+数据在 `scoop\persist\<app>\`，`pre_uninstall` 会拆除联接、保留 persist 目录；升级前可自行备份。

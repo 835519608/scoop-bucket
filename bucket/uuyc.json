@@ -11,22 +11,25 @@
     "installer": {
         "script": [
             ". \"$bucketsdir\\$bucket\\bin\\utils.ps1\"",
-            "New-PersistDirectory \"$env:LOCALAPPDATA\\GameViewer\" \"$persist_dir\\AppData\" -Migrate",
-            "New-PersistDirectory \"$env:PROGRAMDATA\\Netease\\GameViewer\" \"$persist_dir\\ProgramData\" -Migrate",
-            "Assert-Administrator -Message \"`nuuyc installation requires administrator privileges.`nPlease rerun Scoop in an elevated PowerShell.`n\"",
+            "Require-AdminElevation -Message \"`nuuyc installation requires administrator privileges.`nPlease rerun Scoop in an elevated PowerShell.`n\"",
+            "$uuycMappings = @(",
+            "    @{ Label = 'local'; Source = 'LocalAppData/GameViewer'; Target = '$persist_dir/AppData'; EnsureTarget = $true }",
+            "    @{ Label = 'programdata'; Source = 'ProgramData/Netease/GameViewer'; Target = '$persist_dir/ProgramData'; EnsureTarget = $true }",
+            ")",
+            "Install-PersistDataLinks -Mappings $uuycMappings",
             "$installer = Get-ChildItem \"$dir\\*.exe\" | Select-Object -First 1",
             "Start-Process -FilePath $installer.FullName -ArgumentList \"/S /D=$dir\" -Wait",
             "Remove-Item 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\GameViewer' -Force -Recurse -ErrorAction SilentlyContinue | Out-Null",
             "Remove-ItemProperty 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Run' -Name 'GameViewer' -ErrorAction SilentlyContinue",
-            "Remove-DesktopShortcuts -Filter '*UU*.lnk'",
-            "Remove-StartMenuShortcuts -Filter '*UU*.lnk'"
+            "Clear-DesktopShortcuts -Filter '*UU*.lnk'",
+            "Clear-StartMenuShortcuts -Filter '*UU*.lnk'"
         ]
     },
     "pre_uninstall": "if (Get-Service -Name 'GameViewerService' -ErrorAction SilentlyContinue) { Stop-Service -Name 'GameViewerService' -Force -ErrorAction SilentlyContinue; sc.exe delete GameViewerService | Out-Null }",
     "uninstaller": {
         "script": [
             ". \"$bucketsdir\\$bucket\\bin\\utils.ps1\"",
-            "if (-not (Test-IsAdministrator)) { Write-Warning \"`nuuyc uninstall cleanup requires administrator privileges.`nSkipping privileged cleanup.`n\"; return }",
+            "if (-not (Test-AdminElevation)) { Write-Warning \"`nuuyc uninstall cleanup requires administrator privileges.`nSkipping privileged cleanup.`n\"; return }",
             "$nativeUninstaller = Get-ChildItem \"$dir\" -Filter 'unins*.exe' -File -ErrorAction SilentlyContinue | Select-Object -First 1",
             "if ($nativeUninstaller) {",
             "    Start-Process -FilePath $nativeUninstaller.FullName -ArgumentList '/S' -Wait -ErrorAction SilentlyContinue",
@@ -39,7 +42,12 @@
     },
     "post_uninstall": [
         ". \"$bucketsdir\\$bucket\\bin\\utils.ps1\"",
-        "if (-not (Test-IsAdministrator)) { Write-Warning \"`nuuyc post_uninstall cleanup requires administrator privileges.`nSkipping privileged cleanup.`n\"; return }",
+        "$uuycMappings = @(",
+        "    @{ Label = 'local'; Source = 'LocalAppData/GameViewer'; Target = '$persist_dir/AppData' }",
+        "    @{ Label = 'programdata'; Source = 'ProgramData/Netease/GameViewer'; Target = '$persist_dir/ProgramData' }",
+        ")",
+        "Uninstall-PersistDataLinks -Mappings $uuycMappings",
+        "if (-not (Test-AdminElevation)) { Write-Warning \"`nuuyc post_uninstall cleanup requires administrator privileges.`nSkipping privileged cleanup.`n\"; return }",
         "$sidRoots = Get-ChildItem Registry::HKEY_USERS | Where-Object { $_.PSChildName -match '^S-1-5-21-(\\d+-){3}\\d+$' } | ForEach-Object { $_.PSPath }",
         "foreach ($sid in $sidRoots) {",
         "    Remove-Item \"$sid\\SOFTWARE\\Netease\" -Force -Recurse -ErrorAction SilentlyContinue | Out-Null",
@@ -86,7 +94,7 @@
         }
     },
     "notes": [
-        "运行时：%LOCALAPPDATA%\\GameViewer → persist/AppData；%PROGRAMDATA%\\Netease\\GameViewer → persist/ProgramData。",
+        "运行时：%LOCALAPPDATA%\\GameViewer → persist/AppData；%PROGRAMDATA%\\Netease\\GameViewer → persist/ProgramData（目录联接）。",
         "安装与卸载清理需管理员 PowerShell。"
     ]
 }

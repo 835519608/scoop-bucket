@@ -18,7 +18,7 @@
             "MCP Router"
         ]
     ],
-    "notes": "运行时数据在 %AppData%\\MCP Router，安装时链接到 persist/roaming（Electron 本地存储，见 post_install）。",
+    "notes": "Electron userData：%AppData%\\MCP Router 目录联接到 persist/roaming。",
     "checkver": "github",
     "autoupdate": {
         "architecture": {
@@ -32,12 +32,12 @@
     },
     "post_install": [
         ". \"$bucketsdir\\$bucket\\bin\\utils.ps1\"",
-        "$mcpRouterPortableMappings = @(@{ Label = 'roaming'; Source = 'AppData/MCP Router'; Target = \"$persist_dir/roaming\"; Strategy = 'symlink'; EnsureTarget = $true; TargetType = 'directory' })",
-        "Invoke-PortableMappings -Action Install -Context @{ Dir = $dir; PersistDir = $persist_dir } -Mappings $mcpRouterPortableMappings -Log:$true"
+        "$mcpRouterMappings = @(@{ Label = 'roaming'; Source = 'AppData/MCP Router'; Target = '$persist_dir/roaming'; EnsureTarget = $true })",
+        "Install-PersistDataLinks -Mappings $mcpRouterMappings -Log:$true"
     ],
     "pre_uninstall": [
         ". \"$bucketsdir\\$bucket\\bin\\utils.ps1\"",
-        "$mcpRouterPortableMappings = @(@{ Label = 'roaming'; Source = 'AppData/MCP Router'; Target = \"$persist_dir/roaming\"; Strategy = 'symlink'; EnsureTarget = $true; TargetType = 'directory' })",
-        "Invoke-PortableMappings -Action Uninstall -Context @{ Dir = $dir; PersistDir = $persist_dir } -Mappings $mcpRouterPortableMappings -Log:$true"
+        "$mcpRouterMappings = @(@{ Label = 'roaming'; Source = 'AppData/MCP Router'; Target = '$persist_dir/roaming' })",
+        "Uninstall-PersistDataLinks -Mappings $mcpRouterMappings -Log:$true"
     ]
 }
