@@ -53,8 +53,7 @@ scoop install scoop-bucket/CLIProxyAPI
 
 ```
 bucket/*.json              # manifest
-bin/load-utils.ps1         # manifest 入口：$bucket → install.json → 搜索（兼容 Scoop v0.5.3）
-bin/utils.ps1              # 公共 PowerShell 函数（由 load-utils.ps1 加载）
+bin/utils.ps1              # 公共 PowerShell 函数（manifest 通过 glob 加载）
 scripts/mcp-router-launch.ps1  # mcp-router 启动器模板（打开应用后延迟禁用开机启动）
 .github/workflows/excavator.yml
 ```

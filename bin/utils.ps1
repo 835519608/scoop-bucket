@@ -1,6 +1,4 @@
 # scoop-bucket 公共 PowerShell 库
-# 由 manifest dot-source bin/load-utils.ps1（勿直接引用本文件）
-# load-utils 解析 bucket：$bucket > install.json > 搜索 buckets（兼容 Scoop v0.5.3 卸载无 $bucket）
 #
 # 对外 API（manifest 中直接调用）:
 #   Install-PersistDataLinks    - 将应用数据目录联接到 persist（安装 / 升级后）
@@ -16,7 +14,7 @@
 # Mapping 字段: Label, Source, Target, EnsureTarget, TargetType；Strategy 可选（copy = 仅复制）
 #
 # manifest 加载本库（一行）:
-#   . (Get-ChildItem (Join-Path $scoopdir 'buckets\*\bin\load-utils.ps1') -EA SilentlyContinue | Select-Object -First 1).FullName
+#   . (Get-ChildItem (Join-Path $scoopdir 'buckets\*\bin\utils.ps1') -EA SilentlyContinue | Select-Object -First 1).FullName
 
 #region 底层：目录联接
 
@@ -391,18 +389,18 @@ function Install-McpRouterLaunchArtifacts {
     )
     if (-not $AppDirectory) { $AppDirectory = $dir }
     if (-not $PersistDirectory) { $PersistDirectory = $persist_dir }
-    $loadUtilsPath = (Get-ChildItem -Path (Join-Path $scoopdir 'buckets\*\bin\load-utils.ps1') -ErrorAction SilentlyContinue |
+    $utilsPath = (Get-ChildItem -Path (Join-Path $scoopdir 'buckets\*\bin\utils.ps1') -ErrorAction SilentlyContinue |
         Select-Object -First 1).FullName
     $launchTemplate = (Get-ChildItem -Path (Join-Path $scoopdir 'buckets\*\scripts\mcp-router-launch.ps1') -ErrorAction SilentlyContinue |
         Select-Object -First 1).FullName
-    if (-not $loadUtilsPath -or -not $launchTemplate) {
-        throw 'MCP Router bucket scripts not found (load-utils.ps1 / mcp-router-launch.ps1).'
+    if (-not $utilsPath -or -not $launchTemplate) {
+        throw 'MCP Router bucket scripts not found (utils.ps1 / mcp-router-launch.ps1).'
     }
     New-Item -ItemType Directory -Path $PersistDirectory -Force -ErrorAction SilentlyContinue | Out-Null
     $blockerScript = Join-Path $PersistDirectory 'block-autostart.ps1'
     @(
         'Start-Sleep -Seconds 12'
-        ". `"$loadUtilsPath`""
+        ". `"$utilsPath`""
         'Disable-McpRouterLogonStartup'
     ) | Set-Content -Path $blockerScript -Encoding UTF8
     $launcherPath = Join-Path $AppDirectory 'mcp-router-launch.ps1'

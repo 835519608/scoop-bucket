@@ -31,15 +31,15 @@
         }
     },
     "pre_install": [
-        ". (Get-ChildItem (Join-Path $scoopdir 'buckets\\*\\bin\\load-utils.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1).FullName",
+        ". (Get-ChildItem (Join-Path $scoopdir 'buckets\\*\\bin\\utils.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1).FullName",
         "Install-McpRouterLaunchArtifacts"
     ],
     "post_install": [
-        ". (Get-ChildItem (Join-Path $scoopdir 'buckets\\*\\bin\\load-utils.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1).FullName",
+        ". (Get-ChildItem (Join-Path $scoopdir 'buckets\\*\\bin\\utils.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1).FullName",
         "Install-PersistDataLinks -Mappings (Get-McpRouterPersistMappings -EnsureTarget) -Log:$true"
     ],
     "pre_uninstall": [
-        ". (Get-ChildItem (Join-Path $scoopdir 'buckets\\*\\bin\\load-utils.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1).FullName",
+        ". (Get-ChildItem (Join-Path $scoopdir 'buckets\\*\\bin\\utils.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1).FullName",
         "Remove-McpRouterLegacyScheduledTask",
         "Disable-McpRouterLogonStartup",
         "Uninstall-PersistDataLinks -Mappings (Get-McpRouterPersistMappings) -Log:$true"
