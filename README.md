@@ -18,7 +18,7 @@ scoop bucket add scoop-bucket https://github.com/835519608/scoop-bucket
 
 ```powershell
 scoop install scoop-bucket/pixpin   # 截图 / 贴图 / OCR
-scoop install scoop-bucket/symm     # 软链接管理 CLI + GUI
+scoop install scoop-bucket/symm     # 需已有 GitHub 正式 Release（见下方）
 ```
 
 ### PixPin
@@ -48,26 +48,19 @@ scoop prefix -p pixpin       # persist 根目录
 
 ### symm
 
-[symm](https://github.com/835519608/symm) 是跨平台软链接管理工具（本 bucket 仅提供 Windows 便携 zip）。
+[symm](https://github.com/835519608/symm) 是跨平台软链接管理工具。manifest 使用 `"checkver": "github"`，**只跟正式 Release**（不含 Pre-release、不含 `v*-test*` tag）。
 
 | 命令 / 文件 | 说明 |
 | ----------- | ---- |
 | `symm` | GUI（`symm.exe`） |
 | `symm-cli` | CLI（`cli/symm-cli.exe`） |
-| `persist/data` | SQLite 库 `symm.db`，环境变量 `SYMM_HOME` 已指向此处 |
+| `persist/data` | SQLite 库 `symm.db`，`SYMM_HOME` 已指向此处 |
 
-若曾用 `scoop bucket add symm https://github.com/835519608/symm` 安装，可改为本 bucket 后重装：
-
-```powershell
-scoop uninstall symm
-scoop bucket rm symm
-scoop bucket add scoop-bucket https://github.com/835519608/scoop-bucket
-scoop install scoop-bucket/symm
-```
-
-数据在 `scoop\persist\symm\data`，重装前可先备份该目录。
+若 GitHub 上尚无正式 Release，`scoop install` 会失败；在 symm 推送正式 tag（如 `v0.2.0`）后，Excavator 或 `scoop checkver symm -u` 会写入正确 version/hash 再安装。
 
 ## 版本与自动更新
+
+**策略**：本 bucket 只跟正式/stable 渠道（PixPin 官网稳定版、GitHub 非 Pre-release），不跟测试 tag 或 Pre-release。
 
 Scoop **安装时**必须知道确切的 `version`、`url`、`hash`（保证可复现、可校验），manifest 里写的版本是「当前已验证的快照」，不是让你每次手改。
 
@@ -113,4 +106,4 @@ scoop update pixpin symm
 | 应用   | 说明                         |
 | ------ | ---------------------------- |
 | pixpin | 截图 / 贴图 / 长截图 / OCR   |
-| symm   | 软链接管理（CLI + GUI）      |
+| symm   | 软链接管理（仅正式 Release） |
