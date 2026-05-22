@@ -18,7 +18,7 @@
     "shortcuts": [
         ["MCP Router.exe", "MCP Router"]
     ],
-    "notes": "数据目录联接到 persist/roaming。安装后注册进程监听：MCP Router 启动约 3 秒后自动关闭开机启动（无需 VBS/CMD 启动器）。直接运行 exe 或开始菜单均可。",
+    "notes": "数据目录联接到 persist/roaming。进程监听（启动后自动关开机启动）需在管理员 PowerShell 中 install/update；普通用户可正常安装使用。",
     "checkver": "github",
     "autoupdate": {
         "architecture": {
@@ -33,7 +33,7 @@
     "post_install": [
         ". (Get-ChildItem (Join-Path $scoopdir 'buckets\\*\\bin\\utils.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1).FullName",
         "Install-PersistDataLinks -Mappings (Get-McpRouterPersistMappings -EnsureTarget) -Log:$true",
-        "try { Install-McpRouterAutostartWatcher; Disable-McpRouterLogonStartup } catch { Write-Warning \"MCP Router autostart watcher failed: $_\"; Disable-McpRouterLogonStartup }",
+        "Initialize-McpRouterAutostartProtection",
         "Remove-McpRouterLaunchArtifacts"
     ],
     "pre_uninstall": [
