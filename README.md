@@ -6,13 +6,31 @@
 
 ```powershell
 scoop bucket add scoop-bucket "$(Resolve-Path .)"
-```
-
-若仓库已推送到 GitHub，也可使用远程地址：
-
-```powershell
+# 或远程
 scoop bucket add scoop-bucket https://github.com/835519608/scoop-bucket
 ```
+
+### 一键添加本机非 main 软件源
+
+仓库根目录 [`buckets.json`](buckets.json) 收录 Windows 宿主机上除 `main` 外的全部 bucket 地址（含 extras、社区 bucket 等）。在 **WSL** 中通过 `win-pwsh` 调用宿主 Scoop：
+
+```bash
+./scripts/add-buckets.sh
+```
+
+或在 Windows PowerShell：
+
+```powershell
+.\scripts\add-buckets.ps1
+```
+
+重新从本机 Scoop 导出源与应用清单：
+
+```bash
+win-pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/export-from-windows.ps1
+```
+
+生成/更新 `buckets.json` 与 [`catalog/installed-non-main.json`](catalog/installed-non-main.json)（已安装且非 `main` 的应用）。
 
 ## 安装应用
 
@@ -103,7 +121,21 @@ scoop update pixpin symm
 
 ## 软件列表
 
+### 本 bucket 自有 manifest（`bucket/`）
+
 | 应用   | 说明                         |
 | ------ | ---------------------------- |
 | pixpin | 截图 / 贴图 / 长截图 / OCR   |
 | symm   | 软链接管理（仅正式 Release） |
+
+### 外部源应用（见 `catalog/installed-non-main.json`）
+
+通过 `buckets.json` 添加对应 bucket 后安装，例如：
+
+```powershell
+scoop install extras/vscode
+scoop install echoiron_echo-scoop/xshellplus
+scoop install cmontage_scoopbucket-soup/uuyc
+```
+
+完整列表以 `catalog/installed-non-main.json` 为准（由 `export-from-windows.ps1` 同步）。

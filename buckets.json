@@ -1,0 +1,12 @@
+{
+  "nerd-fonts": "https://github.com/matthewjberger/scoop-nerd-fonts",
+  "dbx": "https://scoop.201704.xyz/https://github.com/t8y2/scoop-bucket",
+  "echoiron_echo-scoop": "https://github.com/echoiron/echo-scoop",
+  "YewFence_YewNursery": "https://github.com/YewFence/YewNursery",
+  "java": "https://github.com/ScoopInstaller/Java",
+  "cmontage_scoopbucket-soup": "https://github.com/cmontage/scoopbucket-soup",
+  "LaelLuo_scoop": "https://scoop.201704.xyz/https://github.com/LaelLuo/scoop",
+  "nonportable": "https://github.com/ScoopInstaller/Nonportable",
+  "extras": "https://github.com/ScoopInstaller/Extras",
+  "versions": "https://github.com/ScoopInstaller/Versions"
+}

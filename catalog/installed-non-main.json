@@ -1,0 +1,88 @@
+{
+  "generated": "2026-05-22",
+  "scoop_root": "D:\\Program\\Scoop",
+  "note": "本机已安装且 bucket 非 main 的应用；由 scripts/export-from-windows.ps1 生成",
+  "apps": [
+    {
+      "app": "uuyc",
+      "bucket": "cmontage_scoopbucket-soup"
+    },
+    {
+      "app": "dbx",
+      "bucket": "dbx"
+    },
+    {
+      "app": "xshellplus",
+      "bucket": "echoiron_echo-scoop"
+    },
+    {
+      "app": "bulk-crap-uninstaller",
+      "bucket": "extras"
+    },
+    {
+      "app": "ccleaner",
+      "bucket": "extras"
+    },
+    {
+      "app": "clash-verge-rev",
+      "bucket": "extras"
+    },
+    {
+      "app": "cursor",
+      "bucket": "extras"
+    },
+    {
+      "app": "dismplusplus",
+      "bucket": "extras"
+    },
+    {
+      "app": "freedownloadmanager",
+      "bucket": "extras"
+    },
+    {
+      "app": "googlechrome",
+      "bucket": "extras"
+    },
+    {
+      "app": "jetbrains-toolbox",
+      "bucket": "extras"
+    },
+    {
+      "app": "localsend",
+      "bucket": "extras"
+    },
+    {
+      "app": "powertoys",
+      "bucket": "extras"
+    },
+    {
+      "app": "telegram",
+      "bucket": "extras"
+    },
+    {
+      "app": "vscode",
+      "bucket": "extras"
+    },
+    {
+      "app": "wiztree",
+      "bucket": "extras"
+    },
+    {
+      "app": "mcp-router",
+      "bucket": "LaelLuo_scoop"
+    },
+    {
+      "app": "Meslo-NF-Mono",
+      "bucket": "nerd-fonts"
+    },
+    {
+      "app": "symm",
+      "bucket": "symm",
+      "migrate": "scoop-bucket/symm"
+    },
+    {
+      "app": "CLIProxyAPI",
+      "bucket": "YewFence_YewNursery"
+    }
+  ]
+}
