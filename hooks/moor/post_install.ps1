@@ -5,4 +5,3 @@ $moorMappings = @(
     @{ Label = 'local'; Source = 'LocalAppData/com.snowautumn.moor'; Target = '$persist_dir/local'; EnsureTarget = $true }
 )
 Install-PersistDataLinks -Mappings $moorMappings -Log:$true
-Clear-DesktopShortcuts -Filter '*Moor*.lnk'

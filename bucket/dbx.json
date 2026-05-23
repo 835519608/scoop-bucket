@@ -10,15 +10,18 @@
         }
     },
     "bin": "dbx.exe",
+    "shortcuts": [
+        ["dbx.exe", "dbx"]
+    ],
     "innosetup": false,
     "installer": {
-        "args": ["/S", "/D=$dir"]
+        "args": ["/S", "/NS", "/D=$dir"]
     },
     "uninstaller": {
         "file": "uninstall.exe",
         "args": ["/S"]
     },
-    "notes": "Tauri NSIS 静默安装会建开始菜单快捷方式；post_install 仅删桌面 .lnk。%AppData%\\com.dbx.app、%LocalAppData%\\com.dbx.app、%USERPROFILE%\\.dbx 目录联接到 persist。",
+    "notes": "NSIS 使用 /S /NS 不创建快捷方式，开始菜单项由 Scoop shortcuts 写入 Scoop Apps。%AppData%\\com.dbx.app、%LocalAppData%\\com.dbx.app、%USERPROFILE%\\.dbx 联接到 persist。",
     "post_install": "& ((Get-ChildItem (Join-Path $scoopdir 'buckets\\*\\bin\\hook.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1).FullName) 'hooks/dbx/post_install.ps1'",
     "pre_uninstall": "& ((Get-ChildItem (Join-Path $scoopdir 'buckets\\*\\bin\\hook.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1).FullName) 'hooks/dbx/pre_uninstall.ps1'",
     "checkver": "github",
