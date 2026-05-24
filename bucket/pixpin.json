@@ -26,7 +26,7 @@
     ],
     "checkver": {
         "url": "https://pixpin.cn/docs/start/what-is-pixpin.html",
-        "regex": "link\"\\shref=\"/docs/official-log/(\\S+).html"
+        "regex": "\"link\":\"/official-log/(?<version>[\\d.]+)\""
     },
     "autoupdate": {
         "url": "https://download.pixpinapp.com/PixPin_cn_zh-cn_$version.zip",
