@@ -1,25 +1,32 @@
 {
-    "version": "0.5.17",
+    "version": "0.5.19",
     "description": "Open-source database management tool",
     "homepage": "https://github.com/t8y2/dbx",
     "license": "MIT",
     "architecture": {
         "64bit": {
-            "url": "https://github.com/t8y2/dbx/releases/download/v0.5.17/DBX_0.5.17_x64-setup.exe",
-            "hash": "c8c2ff23608c06122d1e16b3e9fdbe030dfe5f5fa69ecd84e22761db579d04fe"
+            "url": "https://github.com/t8y2/dbx/releases/download/v0.5.19/DBX_0.5.19_x64-setup.exe",
+            "hash": "c51fbc6f28a418657cbe11ff410239f8adf3f940598591bdd448c96fa1d6b89c"
         }
     },
     "bin": "dbx.exe",
     "shortcuts": [
-        ["dbx.exe", "dbx"]
+        [
+            "dbx.exe",
+            "dbx"
+        ]
     ],
     "innosetup": false,
     "installer": {
-        "args": ["/S", "/NS", "/D=$dir"]
+        "args": [
+            "/S",
+            "/NS",
+            "/D=$dir"
+        ]
     },
     "uninstaller": {
         "file": "uninstall.exe",
-        "args": ["/S"]
+        "args": "/S"
     },
     "notes": "NSIS 使用 /S /NS 不创建快捷方式，开始菜单项由 Scoop shortcuts 写入 Scoop Apps。%AppData%\\com.dbx.app、%LocalAppData%\\com.dbx.app、%USERPROFILE%\\.dbx 联接到 persist。",
     "post_install": "& ((Get-ChildItem (Join-Path $scoopdir 'buckets\\*\\bin\\hook.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1).FullName) 'hooks/dbx/post_install.ps1'",
