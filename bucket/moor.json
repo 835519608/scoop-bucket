@@ -1,27 +1,37 @@
 {
-    "version": "0.5.3",
+    "version": "0.5.4",
     "description": "本地 MCP 网关：聚合多个 MCP 服务器、按 Profile 过滤工具、审计与托盘常驻。",
     "homepage": "https://github.com/varandrew/moor",
     "license": "Apache-2.0",
     "architecture": {
         "64bit": {
-            "url": "https://github.com/varandrew/moor/releases/download/v0.5.3/Moor_0.5.3_x64-setup.exe",
-            "hash": "ea1743a29d422e7e3644b9a43c82ee3dc4858c63a11ca6c09d78cbbd128cc9da"
+            "url": "https://github.com/varandrew/moor/releases/download/v0.5.4/Moor_0.5.4_x64-setup.exe",
+            "hash": "66c1a17e1a7d221a2fa4f0b77f26910bfe20ec1d9e79d344aea78fa8e0466c4f"
         }
     },
     "bin": [
-        ["Moor.exe", "moor"]
+        [
+            "Moor.exe",
+            "moor"
+        ]
     ],
     "shortcuts": [
-        ["Moor.exe", "Moor"]
+        [
+            "Moor.exe",
+            "Moor"
+        ]
     ],
     "innosetup": false,
     "installer": {
-        "args": ["/S", "/NS", "/D=$dir"]
+        "args": [
+            "/S",
+            "/NS",
+            "/D=$dir"
+        ]
     },
     "uninstaller": {
         "file": "uninstall.exe",
-        "args": ["/S"]
+        "args": "/S"
     },
     "notes": "NSIS 使用 /S /NS 静默安装且不创建开始菜单/桌面快捷方式，由 Scoop shortcuts 写入 Scoop Apps。数据目录见 %AppData%\\com.snowautumn.moor。",
     "post_install": "& ((Get-ChildItem (Join-Path $scoopdir 'buckets\\*\\bin\\hook.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1).FullName) 'hooks/moor/post_install.ps1'",
