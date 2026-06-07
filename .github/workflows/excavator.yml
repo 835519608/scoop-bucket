@@ -19,3 +19,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SKIP_UPDATED: '1'
+      - name: Validate checkver rules
+        shell: pwsh
+        run: .\.github\scripts\assert-checkver.ps1
