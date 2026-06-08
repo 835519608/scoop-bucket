@@ -1,5 +1,5 @@
 {
-    "version": "0.1.0",
+    "version": "0.2.0",
     "description": "跨平台软链接管理（CLI + GUI）",
     "homepage": "https://github.com/835519608/symm",
     "license": "MIT",
@@ -9,17 +9,26 @@
     ],
     "architecture": {
         "64bit": {
-            "url": "https://github.com/835519608/symm/releases/download/v0.1.0/symm-portable-windows-x64.zip",
-            "hash": "2ef30ade130d395b4d9d0d73cdcfa849ef472fa898793abbc768f0359ac8834f",
+            "url": "https://github.com/835519608/symm/releases/download/v0.2.0/symm-portable-windows-x64.zip",
+            "hash": "305cc80da0a2859f755407becd32eac2b7dd18c06f3dcc038802de34824da59d",
             "extract_dir": "symm"
         }
     },
     "bin": [
-        ["symm.exe", "symm"],
-        ["cli/symm-cli.exe", "symm-cli"]
+        [
+            "symm.exe",
+            "symm"
+        ],
+        [
+            "cli/symm-cli.exe",
+            "symm-cli"
+        ]
     ],
     "shortcuts": [
-        ["symm.exe", "symm"]
+        [
+            "symm.exe",
+            "symm"
+        ]
     ],
     "persist": "data",
     "env_set": {
