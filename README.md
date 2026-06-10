@@ -49,7 +49,7 @@ Scoop 的 JSON 不能定义变量，每个 hook 用同一行模板，只改末�
 | CLIProxyAPI | Scoop `persist` + 目录联接：`UserProfile/.cli-proxy-api` → `auth` |
 | mcp-router | 目录联接：`AppData/MCP Router` → `roaming` |
 | moor | 目录联接：`AppData/com.snowautumn.moor`、`LocalAppData/com.snowautumn.moor` |
-| symm | Scoop `persist: data` + `SYMM_HOME`（`symm.db`、`settings.json`） |
+| symm | Scoop `persist: data`（程序默认使用 `$dir/data`，含 `symm.db`、`settings.json`） |
 | uuyc | 目录联接：`LocalAppData/GameViewer`、`ProgramData/Netease/GameViewer` |
 
 `utils.ps1` 提供 `Install-PersistDataLinks`、`Clear-DesktopShortcuts`、`Assert-AdminElevation` 等，详见文件头注释。

@@ -5,7 +5,7 @@
     "license": "MIT",
     "notes": [
         "根目录 symm.exe 为 GUI；CLI 为 cli/symm-cli.exe（命令 symm-cli）。",
-        "数据目录：persist/data（symm.db、settings.json），SYMM_HOME=$dir\\data。"
+        "数据目录：$dir\\data（symm.db、settings.json），由程序自动使用，Scoop persist 持久化。"
     ],
     "architecture": {
         "64bit": {
@@ -31,9 +31,6 @@
         ]
     ],
     "persist": "data",
-    "env_set": {
-        "SYMM_HOME": "$dir\\data"
-    },
     "checkver": "github",
     "autoupdate": {
         "architecture": {
