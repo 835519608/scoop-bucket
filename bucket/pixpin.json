@@ -25,16 +25,7 @@
         "History"
     ],
     "checkver": {
-        "script": [
-            "$last = $null",
-            "foreach ($i in 1..3) {",
-            "    $out = & curl.exe -fsSL --max-time 25 --retry 2 --retry-delay 3 'https://pixpin.cn/download' 2>&1",
-            "    if ($LASTEXITCODE -eq 0 -and $out) { return ($out | Out-String) }",
-            "    $last = \"curl exit $LASTEXITCODE: $out\"",
-            "    Start-Sleep -Seconds 5",
-            "}",
-            "throw $last"
-        ],
+        "url": "https://pixpin.cn/download",
         "regex": "PixPin_win_(?<version>\\d+(?:\\.\\d+)+)\\.zip"
     },
     "autoupdate": {
