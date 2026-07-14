@@ -1,10 +1,10 @@
 {
-    "version": "3.2.3.1",
+    "version": "3.3.5.7",
     "description": "强大且免费的截图、贴图、长截图、OCR 工具",
     "homepage": "https://pixpin.cn/",
     "license": "Unknown",
-    "url": "https://download.pixpinapp.com/PixPin_cn_zh-cn_3.2.3.1.zip",
-    "hash": "52f469aa83d8f6bf8615cb68b9afb95f22d7c766dc513471c8f14bf39801be31",
+    "url": "https://down.pixpin.cn/PixPin_win_3.3.5.7.zip",
+    "hash": "22eedc554a2e4cd1b1e1cdfc350189c797b2b1322d48066051c87c47848eb31b",
     "extract_dir": "PixPin",
     "bin": [
         [
@@ -25,11 +25,11 @@
         "History"
     ],
     "checkver": {
-        "url": "https://pixpin.cn/docs/start/what-is-pixpin.html",
-        "regex": "official-log/(?<version>\\d+(?:\\.\\d+)+)(?:\\.md)?"
+        "url": "https://pixpin.cn/download",
+        "regex": "PixPin_win_(?<version>\\d+(?:\\.\\d+)+)\\.zip"
     },
     "autoupdate": {
-        "url": "https://download.pixpinapp.com/PixPin_cn_zh-cn_$version.zip",
+        "url": "https://down.pixpin.cn/PixPin_win_$version.zip",
         "hash": {
             "mode": "download"
         }

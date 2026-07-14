@@ -18,6 +18,31 @@ function Get-GitHubRepo {
     throw 'cannot infer GitHub repository'
 }
 
+function Invoke-WithRetry {
+    param(
+        [scriptblock]$Action,
+        [int]$Attempts = 3,
+        [int]$DelaySeconds = 5
+    )
+
+    $lastError = $null
+    for ($i = 1; $i -le $Attempts; $i++) {
+        try {
+            return & $Action
+        } catch {
+            $lastError = $_
+            if ($i -eq $Attempts) {
+                throw
+            }
+
+            Write-Warning ("Attempt {0}/{1} failed: {2}. Retrying in {3}s..." -f $i, $Attempts, $_.Exception.Message, $DelaySeconds)
+            Start-Sleep -Seconds $DelaySeconds
+        }
+    }
+
+    throw $lastError
+}
+
 function Invoke-GitHubLatest {
     param([string]$Repo)
 
@@ -30,7 +55,17 @@ function Invoke-GitHubLatest {
         $headers.'X-GitHub-Api-Version' = '2022-11-28'
     }
 
-    Invoke-RestMethod -Headers $headers -Uri "https://api.github.com/repos/$Repo/releases/latest"
+    Invoke-WithRetry -Action {
+        Invoke-RestMethod -Headers $headers -TimeoutSec 30 -Uri "https://api.github.com/repos/$Repo/releases/latest"
+    }
+}
+
+function Invoke-CheckverUrl {
+    param([string]$Uri)
+
+    Invoke-WithRetry -Action {
+        (Invoke-WebRequest -UseBasicParsing -TimeoutSec 30 -Uri $Uri).Content
+    }
 }
 
 function Assert-RegexMatch {
@@ -82,7 +117,7 @@ foreach ($file in Get-ChildItem -Path 'bucket' -Filter '*.json' | Sort-Object Na
         }
 
         if ($checkver.url -and $checkver.regex) {
-            $content = (Invoke-WebRequest -UseBasicParsing -Uri $checkver.url).Content
+            $content = Invoke-CheckverUrl -Uri $checkver.url
             Assert-RegexMatch -App $app -InputText $content -Regex $checkver.regex
             continue
         }
