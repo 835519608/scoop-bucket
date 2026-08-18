@@ -1,12 +1,12 @@
 {
-    "version": "0.7.0",
+    "version": "0.7.1",
     "description": "本地 MCP 网关：聚合多个 MCP 服务器、按 Profile 过滤工具、审计与托盘常驻。",
     "homepage": "https://github.com/varandrew/moor",
     "license": "Apache-2.0",
     "architecture": {
         "64bit": {
-            "url": "https://github.com/varandrew/moor/releases/download/v0.7.0/Moor_0.7.0_x64-setup.exe",
-            "hash": "b6ca0d029352234c75843a0d1ab5101a18b604080664cf4569d32b5cf0a88c47"
+            "url": "https://github.com/varandrew/moor/releases/download/v0.7.1/Moor_0.7.1_x64-setup.exe",
+            "hash": "be445722aecf2efa2ad3febde581dfa6b9f36179f2398e24319906ee1d5c1d8f"
         }
     },
     "bin": [
