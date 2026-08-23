@@ -1,0 +1,41 @@
+{
+    "version": "5.24.2026081301",
+    "description": "DCloud 出品的 HTML5 / uni-app / 多端开发 IDE（Windows 正式版 zip）",
+    "homepage": "https://www.dcloud.io/hbuilderx.html",
+    "license": {
+        "identifier": "Proprietary",
+        "url": "https://www.dcloud.io/hbuilderx.html"
+    },
+    "url": "https://download1.dcloud.net.cn/download/HBuilderX.5.24.2026081301.zip",
+    "hash": "fe70f97966252b917b5b0a624523d01cd2b531e3b1d854eab963ce3502145cc5",
+    "extract_dir": "HBuilderX",
+    "bin": [
+        [
+            "HBuilderX.exe",
+            "hbuilderx"
+        ],
+        [
+            "cli.exe",
+            "hbuilderx-cli"
+        ]
+    ],
+    "shortcuts": [
+        [
+            "HBuilderX.exe",
+            "HBuilderX"
+        ]
+    ],
+    "notes": "用户配置与缓存通过目录联接持久化到 persist/roaming、persist/local（对应 %APPDATA%\\HBuilder X 与 %LOCALAPPDATA%\\HBuilder X）。若 Scoop 装在非 C 盘，数据会随 persist 目录一起迁移。",
+    "post_install": "& ((Get-ChildItem (Join-Path $scoopdir 'buckets\\*\\bin\\hook.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1).FullName) 'hooks/hbuilderx/post_install.ps1'",
+    "pre_uninstall": "& ((Get-ChildItem (Join-Path $scoopdir 'buckets\\*\\bin\\hook.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1).FullName) 'hooks/hbuilderx/pre_uninstall.ps1'",
+    "checkver": {
+        "url": "https://update.dcloud.net.cn/hbuilderx/release.json",
+        "jsonpath": "$.version"
+    },
+    "autoupdate": {
+        "url": "https://download1.dcloud.net.cn/download/HBuilderX.$version.zip",
+        "hash": {
+            "mode": "download"
+        }
+    }
+}

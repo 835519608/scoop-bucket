@@ -21,6 +21,7 @@ scoop update *
 | moor | 本地 MCP 网关（Tauri） | GitHub Release |
 | symm | 跨平台软链接管理（CLI + GUI） | GitHub Release |
 | CLIProxyAPI | 多 CLI 代理为兼容 API 服务 | GitHub Release |
+| hbuilderx | DCloud HTML5 / uni-app IDE | 官方 release.json |
 
 ## 目录结构
 
@@ -50,6 +51,7 @@ Scoop 的 JSON 不能定义变量，每个 hook 用同一行模板，只改末�
 | mcp-router | 目录联接：`AppData/MCP Router` → `roaming` |
 | moor | 目录联接：`AppData/com.snowautumn.moor`、`LocalAppData/com.snowautumn.moor` |
 | symm | Scoop `persist: data`（程序默认使用 `$dir/data`，含 `symm.db`、`settings.json`） |
+| hbuilderx | 目录联接：`AppData/HBuilder X`、`LocalAppData/HBuilder X` → `persist/roaming`、`persist/local` |
 | uuyc | 目录联接：`LocalAppData/GameViewer`、`ProgramData/Netease/GameViewer` |
 
 `utils.ps1` 提供 `Install-PersistDataLinks`、`Clear-DesktopShortcuts`、`Assert-AdminElevation` 等，详见文件头注释。

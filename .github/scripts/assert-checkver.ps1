@@ -68,6 +68,35 @@ function Invoke-CheckverUrl {
     }
 }
 
+function Get-JsonPathValue {
+    param(
+        [object]$Object,
+        [string]$JsonPath
+    )
+
+    $path = $JsonPath -replace '^\$\.?', ''
+    if (-not $path) {
+        throw "unsupported jsonpath '$JsonPath'"
+    }
+
+    $current = $Object
+    foreach ($segment in $path.Split('.')) {
+        if ($null -eq $current) {
+            throw "jsonpath segment '$segment' not found"
+        }
+
+        if ($current -is [System.Collections.IDictionary]) {
+            $current = $current[$segment]
+        } elseif ($current.PSObject.Properties.Name -contains $segment) {
+            $current = $current.$segment
+        } else {
+            throw "jsonpath segment '$segment' not found"
+        }
+    }
+
+    return [string]$current
+}
+
 function Assert-RegexMatch {
     param(
         [string]$App,
@@ -113,6 +142,26 @@ foreach ($file in Get-ChildItem -Path 'bucket' -Filter '*.json' | Sort-Object Na
             }
 
             Write-Output "$app`: github latest $version"
+            continue
+        }
+
+        $jsonPath = $checkver.jsonpath
+        if (-not $jsonPath) {
+            $jsonPath = $checkver.jp
+        }
+
+        if ($checkver.url -and $jsonPath) {
+            $json = Invoke-CheckverUrl -Uri $checkver.url | ConvertFrom-Json
+            $value = Get-JsonPathValue -Object $json -JsonPath $jsonPath
+
+            if ($checkver.regex) {
+                Assert-RegexMatch -App $app -InputText $value -Regex $checkver.regex
+            } elseif ($value) {
+                Write-Output "$app`: jsonpath $jsonPath $value"
+            } else {
+                throw "jsonpath '$jsonPath' returned empty value"
+            }
+
             continue
         }
 
