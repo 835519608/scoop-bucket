@@ -1,12 +1,12 @@
 {
-    "version": "0.6.35",
+    "version": "0.6.37",
     "description": "Open-source database management tool",
     "homepage": "https://github.com/t8y2/dbx",
     "license": "MIT",
     "architecture": {
         "64bit": {
-            "url": "https://github.com/t8y2/dbx/releases/download/v0.6.35/DBX_0.6.35_x64-setup.exe",
-            "hash": "b03af6fd6c84663ad19fb7950f3d8d30b27b9529f79b1611c6cf0da3bbdf1dd6"
+            "url": "https://github.com/t8y2/dbx/releases/download/v0.6.37/DBX_0.6.37_x64-setup.exe",
+            "hash": "4aedc6598c7806abed1e50caf4ff0ffda3ae949ef33b86756be2b8de9ab2c371"
         }
     },
     "bin": "dbx.exe",
