@@ -1,0 +1,48 @@
+{
+    "version": "0.2.7",
+    "description": "原生 SSH 工作台：终端、SFTP、端口转发、VNC/RDP 与 AI 助手同窗（Go + Viva，无 WebView）",
+    "homepage": "https://github.com/t8y2/motty",
+    "license": "Apache-2.0",
+    "notes": [
+        "便携 zip：数据在程序旁 motty-data（主机、设置、known_hosts、密码库），由 Scoop persist 持久化。",
+        "密码库密钥为 motty-data\\vault.key；能拷走该目录即可读出已保存密码。",
+        "便携版不会自我更新，请用 scoop update motty。"
+    ],
+    "architecture": {
+        "64bit": {
+            "url": "https://github.com/t8y2/motty/releases/download/v0.2.7/motty-0.2.7-windows-amd64.zip",
+            "hash": "00bc868d6fb0abfc12f5206b022dccddd4baf53bec33c7c70355e36c46c7ef3a"
+        },
+        "arm64": {
+            "url": "https://github.com/t8y2/motty/releases/download/v0.2.7/motty-0.2.7-windows-arm64.zip",
+            "hash": "41f416b87b26759cdda4933b027b532f57440e7effddb719935aa26eb449c48f"
+        }
+    },
+    "bin": "motty.exe",
+    "shortcuts": [
+        [
+            "motty.exe",
+            "Motty"
+        ]
+    ],
+    "persist": "motty-data",
+    "checkver": "github",
+    "autoupdate": {
+        "architecture": {
+            "64bit": {
+                "url": "https://github.com/t8y2/motty/releases/download/v$version/motty-$version-windows-amd64.zip",
+                "hash": {
+                    "url": "https://github.com/t8y2/motty/releases/download/v$version/SHA256SUMS",
+                    "find": "motty-$version-windows-amd64\\.zip"
+                }
+            },
+            "arm64": {
+                "url": "https://github.com/t8y2/motty/releases/download/v$version/motty-$version-windows-arm64.zip",
+                "hash": {
+                    "url": "https://github.com/t8y2/motty/releases/download/v$version/SHA256SUMS",
+                    "find": "motty-$version-windows-arm64\\.zip"
+                }
+            }
+        }
+    }
+}
