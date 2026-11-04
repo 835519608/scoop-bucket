@@ -4,10 +4,9 @@
     "homepage": "https://github.com/t8y2/motty",
     "license": "Apache-2.0",
     "notes": [
-        "Scoop 的 apps\\motty\\current 是目录联接；Motty 单实例规范化该路径会报 cannot determine on-disk case。",
-        "用 env_set 设置 MOTTY_DATA_DIR=$persist_dir\\motty-data，绕开 current；数据仍由 persist 保留。",
-        "此模式下密码库密钥走 Windows 凭据管理器（不再使用便携 vault.key）。",
-        "安装/更新后若快捷方式仍失败，新开一个终端或注销一次，让 MOTTY_DATA_DIR 生效。"
+        "官方便携 zip 会在 exe 旁带 motty-data；在 Scoop 的 current 联接下会触发单实例路径错误。",
+        "安装后删除旁路 motty-data，改用 %APPDATA%\\motty（联接到 persist/roaming），开始菜单与 AltRun 均可直接启动。",
+        "请重启已打开的 AltRun，再 scoop update / scoop reset motty。"
     ],
     "architecture": {
         "64bit": {
@@ -19,7 +18,6 @@
             "hash": "715a92ac45c7d07f456346aa15286a6d7c231bd1b1100fd46b665acbabc2e925"
         }
     },
-    "pre_install": "New-Item -ItemType Directory -Force -Path \"$persist_dir\\motty-data\" | Out-Null",
     "bin": "motty.exe",
     "shortcuts": [
         [
@@ -27,10 +25,8 @@
             "Motty"
         ]
     ],
-    "persist": "motty-data",
-    "env_set": {
-        "MOTTY_DATA_DIR": "$persist_dir\\motty-data"
-    },
+    "post_install": "& ((Get-ChildItem (Join-Path $scoopdir 'buckets\\*\\bin\\hook.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1).FullName) 'hooks/motty/post_install.ps1'",
+    "pre_uninstall": "& ((Get-ChildItem (Join-Path $scoopdir 'buckets\\*\\bin\\hook.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1).FullName) 'hooks/motty/pre_uninstall.ps1'",
     "checkver": "github",
     "autoupdate": {
         "architecture": {
