@@ -4,9 +4,10 @@
     "homepage": "https://github.com/t8y2/motty",
     "license": "Apache-2.0",
     "notes": [
-        "便携 zip：数据在程序旁 motty-data（主机、设置、known_hosts、密码库），由 Scoop persist 持久化。",
-        "密码库密钥为 motty-data\\vault.key；能拷走该目录即可读出已保存密码。",
-        "便携版不会自我更新，请用 scoop update motty。"
+        "Scoop 的 apps\\motty\\current 是目录联接；Motty 单实例规范化该路径会报 cannot determine on-disk case。",
+        "用 env_set 设置 MOTTY_DATA_DIR=$persist_dir\\motty-data，绕开 current；数据仍由 persist 保留。",
+        "此模式下密码库密钥走 Windows 凭据管理器（不再使用便携 vault.key）。",
+        "安装/更新后若快捷方式仍失败，新开一个终端或注销一次，让 MOTTY_DATA_DIR 生效。"
     ],
     "architecture": {
         "64bit": {
@@ -18,6 +19,7 @@
             "hash": "715a92ac45c7d07f456346aa15286a6d7c231bd1b1100fd46b665acbabc2e925"
         }
     },
+    "pre_install": "New-Item -ItemType Directory -Force -Path \"$persist_dir\\motty-data\" | Out-Null",
     "bin": "motty.exe",
     "shortcuts": [
         [
@@ -26,6 +28,9 @@
         ]
     ],
     "persist": "motty-data",
+    "env_set": {
+        "MOTTY_DATA_DIR": "$persist_dir\\motty-data"
+    },
     "checkver": "github",
     "autoupdate": {
         "architecture": {
