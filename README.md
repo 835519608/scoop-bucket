@@ -17,7 +17,6 @@ scoop update *
 | pixpin | 截图 / 贴图 / OCR | 官网稳定版文档 |
 | uuyc | 网易 UU 远程（安装需管理员 PowerShell） | 网易发布 API |
 | dbx | 开源数据库管理工具 | GitHub Release |
-| mcp-router | MCP 服务器桌面管理 | GitHub Release |
 | moor | 本地 MCP 网关（Tauri） | GitHub Release |
 | symm | 跨平台软链接管理（CLI + GUI） | GitHub Release |
 | CLIProxyAPI | 多 CLI 代理为兼容 API 服务 | GitHub Release |
@@ -49,7 +48,6 @@ Scoop 的 JSON 不能定义变量，每个 hook 用同一行模板，只改末�
 | pixpin | Scoop `persist`：`Config`、`Data`、`History` |
 | dbx | 目录联接：`AppData/com.dbx.app`、`LocalAppData/com.dbx.app`、`UserProfile/.dbx` |
 | CLIProxyAPI | Scoop `persist` + 目录联接：`UserProfile/.cli-proxy-api` → `auth` |
-| mcp-router | 目录联接：`AppData/MCP Router` → `roaming` |
 | moor | 目录联接：`AppData/com.snowautumn.moor`、`LocalAppData/com.snowautumn.moor` |
 | symm | Scoop `persist: data`（程序默认使用 `$dir/data`，含 `symm.db`、`settings.json`） |
 | hbuilderx | 目录联接：`AppData/HBuilder X`、`LocalAppData/HBuilder X` → `persist/roaming`、`persist/local` |
