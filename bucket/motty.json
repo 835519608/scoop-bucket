@@ -1,5 +1,5 @@
 {
-    "version": "0.3.3",
+    "version": "0.3.5",
     "description": "原生 SSH 工作台：终端、SFTP、端口转发、VNC/RDP 与 AI 助手同窗（Go + Viva，无 WebView）",
     "homepage": "https://github.com/t8y2/motty",
     "license": "Apache-2.0",
@@ -10,12 +10,12 @@
     ],
     "architecture": {
         "64bit": {
-            "url": "https://github.com/t8y2/motty/releases/download/v0.3.3/motty-0.3.3-windows-amd64.zip",
-            "hash": "adadd345b05af28bb6cbaf57cab7ad55f965d0d462b4f0539bce4de06931e577"
+            "url": "https://github.com/t8y2/motty/releases/download/v0.3.5/motty-0.3.5-windows-amd64.zip",
+            "hash": "978287360fc2697cc7ba15bc23f58af0a5291bcd90024d96a4dd2412bf197212"
         },
         "arm64": {
-            "url": "https://github.com/t8y2/motty/releases/download/v0.3.3/motty-0.3.3-windows-arm64.zip",
-            "hash": "7b49b2a5d47a8debbb91c123fc419374d4c2f3e44333d33cad12c7b2419a104b"
+            "url": "https://github.com/t8y2/motty/releases/download/v0.3.5/motty-0.3.5-windows-arm64.zip",
+            "hash": "7179573ab7dc9cca452b57293c4d5e0358fa9e075c733dff61d682768b038b17"
         }
     },
     "bin": "motty.exe",
