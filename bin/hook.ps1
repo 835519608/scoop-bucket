@@ -11,6 +11,8 @@ param (
 
 $hookPath = Join-Path (Split-Path $PSScriptRoot -Parent) ($HookRelPath -replace '/', '\')
 if (-not (Test-Path -LiteralPath $hookPath)) {
-    throw "Hook script not found: $hookPath"
+    # 已安装的旧 manifest 仍可能引用已删除的 hook；升级/卸载时跳过，避免整次操作失败。
+    Write-Warning "Hook script not found (skipped): $hookPath"
+    return
 }
 . $hookPath
