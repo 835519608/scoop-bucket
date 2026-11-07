@@ -54,6 +54,6 @@ Scoop 的 JSON 不能定义变量，每个 hook 用同一行模板，只改末�
 | symm | Scoop `persist: data`（程序默认使用 `$dir/data`，含 `symm.db`、`settings.json`） |
 | hbuilderx | 目录联接：`AppData/HBuilder X`、`LocalAppData/HBuilder X` → `persist/roaming`、`persist/local` |
 | uuyc | 目录联接：`LocalAppData/GameViewer`、`ProgramData/Netease/GameViewer` |
-| motty | 目录联接：`AppData/motty` → `persist/roaming`（去掉 exe 旁便携 `motty-data`，避免 `current` 联接踩坑） |
+| motty | Scoop `persist: motty-data`（官方便携目录；≥0.3.2 已兼容 `current` 联接） |
 
 `utils.ps1` 提供 `Install-PersistDataLinks`、`Clear-DesktopShortcuts`、`Assert-AdminElevation` 等，详见文件头注释。

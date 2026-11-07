@@ -1,21 +1,22 @@
 {
-    "version": "0.3.5",
+    "version": "0.3.6",
     "description": "原生 SSH 工作台：终端、SFTP、端口转发、VNC/RDP 与 AI 助手同窗（Go + Viva，无 WebView）",
     "homepage": "https://github.com/t8y2/motty",
     "license": "Apache-2.0",
     "notes": [
-        "官方便携 zip 会在 exe 旁带 motty-data；在 Scoop 的 current 联接下会触发单实例路径错误。",
-        "安装后删除旁路 motty-data，改用 %APPDATA%\\motty（联接到 persist/roaming），开始菜单与 AltRun 均可直接启动。",
-        "请重启已打开的 AltRun，再 scoop update / scoop reset motty。"
+        "便携 zip：数据在程序旁 motty-data（主机、设置、known_hosts、密码库），由 Scoop persist 持久化。",
+        "密码库密钥为 motty-data\\vault.key；能拷走该目录即可读出已保存密码。",
+        "便携版不会自我更新，请用 scoop update motty。",
+        "v0.3.2+ 已修复 Scoop current 联接导致无法启动的问题。"
     ],
     "architecture": {
         "64bit": {
-            "url": "https://github.com/t8y2/motty/releases/download/v0.3.5/motty-0.3.5-windows-amd64.zip",
-            "hash": "978287360fc2697cc7ba15bc23f58af0a5291bcd90024d96a4dd2412bf197212"
+            "url": "https://github.com/t8y2/motty/releases/download/v0.3.6/motty-0.3.6-windows-amd64.zip",
+            "hash": "8b178106c80e85279b3c7acb7e682ad42b57cc910121eedd00dcc1cde9790fe7"
         },
         "arm64": {
-            "url": "https://github.com/t8y2/motty/releases/download/v0.3.5/motty-0.3.5-windows-arm64.zip",
-            "hash": "7179573ab7dc9cca452b57293c4d5e0358fa9e075c733dff61d682768b038b17"
+            "url": "https://github.com/t8y2/motty/releases/download/v0.3.6/motty-0.3.6-windows-arm64.zip",
+            "hash": "78f160153ee97b9afa6a7de7d7ce85d62ca9f007251a6da36b8d8bce74b5405a"
         }
     },
     "bin": "motty.exe",
@@ -25,8 +26,8 @@
             "Motty"
         ]
     ],
+    "persist": "motty-data",
     "post_install": "& ((Get-ChildItem (Join-Path $scoopdir 'buckets\\*\\bin\\hook.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1).FullName) 'hooks/motty/post_install.ps1'",
-    "pre_uninstall": "& ((Get-ChildItem (Join-Path $scoopdir 'buckets\\*\\bin\\hook.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1).FullName) 'hooks/motty/pre_uninstall.ps1'",
     "checkver": "github",
     "autoupdate": {
         "architecture": {

@@ -1,26 +1,21 @@
-# 便携 zip 自带 motty-data；留在 exe 旁会走便携模式，数据路径经过 Scoop current 联接会触发
-# 「cannot determine on-disk case」。删掉旁路目录，改用 %APPDATA%\motty（与官方安装版一致）。
-$portableMarker = Join-Path $dir 'motty-data'
-if (Test-Path -LiteralPath $portableMarker) {
-    Remove-DirectoryLink -LinkPath $portableMarker
-    if (Test-Path -LiteralPath $portableMarker) {
-        Remove-Item -LiteralPath $portableMarker -Recurse -Force -ErrorAction SilentlyContinue
-    }
-}
+# 从旧版 AppData 联接方案迁回官方便携 persist（motty-data）。
+# v0.3.2+ 已修复 Scoop current 联接启动失败，不再需要删旁路目录。
 
-# 旧版 persist\motty-data → persist\roaming
-$legacy = Join-Path $persist_dir 'motty-data'
-$roaming = Join-Path $persist_dir 'roaming'
-if ((Test-Path -LiteralPath $legacy) -and -not (Test-Path -LiteralPath $roaming)) {
-    Rename-Item -LiteralPath $legacy -NewName 'roaming'
-}
-
-$mottyMappings = @(
-    @{ Label = 'roaming'; Source = 'AppData/motty'; Target = '$persist_dir/roaming'; EnsureTarget = $true }
+$legacyMappings = @(
+    @{ Label = 'roaming'; Source = 'AppData/motty'; Target = '$persist_dir/roaming' }
 )
-Install-PersistDataLinks -Mappings $mottyMappings
+Uninstall-PersistDataLinks -Mappings $legacyMappings
 
-# 清掉上一版 env_set 留下的 MOTTY_DATA_DIR，避免与 AppData 方案冲突
+$roaming = Join-Path $persist_dir 'roaming'
+$portable = Join-Path $persist_dir 'motty-data'
+if (Test-Path -LiteralPath $roaming) {
+    New-Item -ItemType Directory -Force -Path $portable | Out-Null
+    Get-ChildItem -LiteralPath $roaming -Force -ErrorAction SilentlyContinue | ForEach-Object {
+        Move-Item -LiteralPath $_.FullName -Destination (Join-Path $portable $_.Name) -Force -ErrorAction SilentlyContinue
+    }
+    Remove-Item -LiteralPath $roaming -Recurse -Force -ErrorAction SilentlyContinue
+}
+
 if ([Environment]::GetEnvironmentVariable('MOTTY_DATA_DIR', 'User')) {
     [Environment]::SetEnvironmentVariable('MOTTY_DATA_DIR', $null, 'User')
 }
