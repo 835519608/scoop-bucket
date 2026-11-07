@@ -27,7 +27,6 @@
         ]
     ],
     "persist": "motty-data",
-    "post_install": "& ((Get-ChildItem (Join-Path $scoopdir 'buckets\\*\\bin\\hook.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1).FullName) 'hooks/motty/post_install.ps1'",
     "checkver": "github",
     "autoupdate": {
         "architecture": {
