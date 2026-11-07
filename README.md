@@ -14,6 +14,7 @@ scoop update *
 
 | 应用 | 说明 | 版本检测 |
 |------|------|----------|
+| altrun | 轻量启动器 AltRun | GitHub Release |
 | pixpin | 截图 / 贴图 / OCR | 官网稳定版文档 |
 | uuyc | 网易 UU 远程（安装需管理员 PowerShell） | 网易发布 API |
 | dbx | 开源数据库管理工具 | GitHub Release |
@@ -45,6 +46,7 @@ Scoop 的 JSON 不能定义变量，每个 hook 用同一行模板，只改末�
 
 | 应用 | 持久化方式 |
 |------|------------|
+| altrun | Scoop `persist: Data`（配置与索引） |
 | pixpin | Scoop `persist`：`Config`、`Data`、`History` |
 | dbx | 目录联接：`AppData/com.dbx.app`、`LocalAppData/com.dbx.app`、`UserProfile/.dbx` |
 | CLIProxyAPI | Scoop `persist` + 目录联接：`UserProfile/.cli-proxy-api` → `auth` |

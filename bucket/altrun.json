@@ -1,0 +1,40 @@
+{
+    "version": "2026.11.03",
+    "description": "轻量高效的启动器（AltRun）",
+    "homepage": "https://github.com/zhugecaomao/ALTRun",
+    "license": "GPL-3.0",
+    "notes": [
+        "配置与索引在程序旁 Data（ALTRun.json、AppIndex.json 等），由 Scoop persist 持久化。",
+        "若从 ourgal_scoop-bucket 迁过来：先退出 AltRun，再把 apps\\altrun\\current\\Data 合并到 persist\\altrun\\Data，然后 scoop uninstall altrun；scoop install scoop-bucket/altrun。"
+    ],
+    "architecture": {
+        "64bit": {
+            "url": "https://github.com/zhugecaomao/ALTRun/releases/download/2026.11.03/ALTRun_v2026.11.03.zip",
+            "hash": "ec0bb1848f799a92ed9a8bbf501bc1488907eaee78dfa1534cc193f6aa9c68b8"
+        }
+    },
+    "bin": [
+        [
+            "ALTRun.exe",
+            "altrun"
+        ]
+    ],
+    "shortcuts": [
+        [
+            "ALTRun.exe",
+            "AltRun"
+        ]
+    ],
+    "persist": "Data",
+    "checkver": "github",
+    "autoupdate": {
+        "architecture": {
+            "64bit": {
+                "url": "https://github.com/zhugecaomao/ALTRun/releases/download/$version/ALTRun_v$version.zip",
+                "hash": {
+                    "mode": "download"
+                }
+            }
+        }
+    }
+}
