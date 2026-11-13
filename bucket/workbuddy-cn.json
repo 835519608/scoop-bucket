@@ -1,0 +1,55 @@
+{
+    "version": "5.9.3.42398134",
+    "description": "腾讯 WorkBuddy 国内版（微信/手机号登录，workbuddy.cn）",
+    "homepage": "https://www.workbuddy.cn",
+    "license": {
+        "identifier": "Proprietary",
+        "url": "https://www.workbuddy.cn/docs"
+    },
+    "architecture": {
+        "64bit": {
+            "url": "https://download.codebuddy.cn/workbuddy/saas/win32-x64-user/WorkBuddy-win32-x64-user-5.9.3.42398134-d4692421.exe#/dl.7z",
+            "hash": "b5edb52bd6c5b6c7296cf2fff697b019c86d11992a8a814c3010d611896852f9"
+        }
+    },
+    "installer": {
+        "script": [
+            "Get-Item \"$dir\\`$PLUGINSDIR\\app*.7z\" | Select-Object -First 1 | Expand-7zipArchive -DestinationPath $dir",
+            "Remove-Item \"$dir\\`$*\", \"$dir\\Uninst*\" -Force -Recurse -ErrorAction Ignore"
+        ]
+    },
+    "bin": [
+        [
+            "WorkBuddy.exe",
+            "workbuddy-cn"
+        ]
+    ],
+    "shortcuts": [
+        [
+            "WorkBuddy.exe",
+            "WorkBuddy"
+        ]
+    ],
+    "notes": [
+        "国内版：登录走 workbuddy.cn（微信/手机号）。不要与 Scoop extras 的国际版 workbuddy（workbuddy.ai / WorkBuddyAI）同机抢同一安装目录。",
+        "安装前请先：scoop uninstall workbuddy",
+        "用户数据联接到 persist：%USERPROFILE%\\.workbuddy、%USERPROFILE%\\.codebuddy、%LOCALAPPDATA%\\CodeBuddyExtension。国际版残留目录 .workbuddy-ai 不会自动迁移。"
+    ],
+    "post_install": "& ((Get-ChildItem (Join-Path $scoopdir 'buckets\\*\\bin\\hook.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1).FullName) 'hooks/workbuddy-cn/post_install.ps1'",
+    "pre_uninstall": "& ((Get-ChildItem (Join-Path $scoopdir 'buckets\\*\\bin\\hook.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1).FullName) 'hooks/workbuddy-cn/pre_uninstall.ps1'",
+    "checkver": {
+        "url": "https://www.workbuddy.cn/v2/update?platform=workbuddy-win32-x64-user",
+        "regex": "WorkBuddy-win32-x64-user-(?<version>\\d+(?:\\.\\d+)+)-(?<sha>[0-9a-f]+)\\.exe"
+    },
+    "autoupdate": {
+        "architecture": {
+            "64bit": {
+                "url": "https://download.codebuddy.cn/workbuddy/saas/win32-x64-user/WorkBuddy-win32-x64-user-$version-$matchSha.exe#/dl.7z",
+                "hash": {
+                    "url": "https://www.workbuddy.cn/v2/update?platform=workbuddy-win32-x64-user",
+                    "jsonpath": "$.sha256hash"
+                }
+            }
+        }
+    }
+}
