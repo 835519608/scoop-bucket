@@ -31,9 +31,9 @@
         ]
     ],
     "notes": [
-        "国内版：登录走 workbuddy.cn（微信/手机号）。不要与 Scoop extras 的国际版 workbuddy（workbuddy.ai / WorkBuddyAI）同机抢同一安装目录。",
-        "安装前请先：scoop uninstall workbuddy",
-        "用户数据联接到 persist：%USERPROFILE%\\.workbuddy、%USERPROFILE%\\.codebuddy、%LOCALAPPDATA%\\CodeBuddyExtension。国际版残留目录 .workbuddy-ai 不会自动迁移。"
+        "国内版办公 Agent：登录走 workbuddy.cn（微信/手机号）。IDE / MCP 请装 scoop-bucket/codebuddy-cn。",
+        "不要与 Scoop extras 的国际版 workbuddy（workbuddy.ai / WorkBuddyAI）同机抢同一安装目录；安装前请先：scoop uninstall workbuddy",
+        "用户数据联接：%USERPROFILE%\\.workbuddy → persist。国际版残留 .workbuddy-ai 不会自动迁移。"
     ],
     "post_install": "& ((Get-ChildItem (Join-Path $scoopdir 'buckets\\*\\bin\\hook.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1).FullName) 'hooks/workbuddy-cn/post_install.ps1'",
     "pre_uninstall": "& ((Get-ChildItem (Join-Path $scoopdir 'buckets\\*\\bin\\hook.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1).FullName) 'hooks/workbuddy-cn/pre_uninstall.ps1'",
