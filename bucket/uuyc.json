@@ -1,13 +1,13 @@
 {
-    "version": "4.45.1.4372",
+    "version": "4.47.1.5286",
     "description": "网易UU远程，提供低延迟远程连接与云游戏体验。",
     "homepage": "https://uuyc.163.com/",
     "license": {
         "identifier": "Proprietary",
         "url": "https://uuyc.163.com/"
     },
-    "url": "https://a56.gdl.netease.com/UURemote_Setup_4.45.1.4372_1030093035_gwqd.exe?key1=c9eb26b6dfaf5b3ad3784978ef5fd6e6&key2=6af85fc0&n=uuyc_4.45.1.exe",
-    "hash": "f7bef4162213b038a246e05e130b40dde98610aeed19b3691e6e9497dc508dc4",
+    "url": "https://a56.gdl.netease.com/UURemote_Setup_4.47.1.5286_1114101745_gwqd.exe?key1=d44275de187e84345fd13ba01a37f9aa&key2=6af9aa09&n=uuyc_4.47.1.exe",
+    "hash": "e095939fc410e7a092b2ccc7b0350cdd8db6ab61f02e215fcb47bd4c8ec3b8bd",
     "installer": {
         "script": "& ((Get-ChildItem (Join-Path $scoopdir 'buckets\\*\\bin\\hook.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1).FullName) 'hooks/uuyc/install.ps1'"
     },
