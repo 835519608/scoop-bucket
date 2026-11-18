@@ -25,6 +25,7 @@ scoop update *
 | motty | 原生 SSH 工作台（终端 / SFTP / 转发 / VNC·RDP / AI） | GitHub Release |
 | workbuddy-cn | 腾讯 WorkBuddy **国内版**（办公 Agent；微信/手机号，`workbuddy.cn`） | 官网 v2/update API |
 | codebuddy-cn | 腾讯云 CodeBuddy IDE **国内版**（含 MCP；`codebuddy.cn`） | 官网 v2/update `ide-win32-x64-user` |
+| cursor | Cursor AI 编辑器（Scoop portable，数据在 persist） | cursor.com download API |
 
 ## 目录结构
 
@@ -59,5 +60,6 @@ Scoop 的 JSON 不能定义变量，每个 hook 用同一行模板，只改末�
 | motty | Scoop `persist: motty-data`（官方便携目录；≥0.3.2 已兼容 `current` 联接） |
 | workbuddy-cn | 目录联接：`UserProfile/.workbuddy` → persist（勿与 extras 国际版 `.workbuddy-ai` 混用） |
 | codebuddy-cn | Scoop `persist: data`（VS Code 系 portable；对应默认 `%APPDATA%\CodeBuddy CN` / `%USERPROFILE%\.codebuddycn`） |
+| cursor | Scoop `persist: data`（去掉 `target:user` 后走 portable；对应默认 `%APPDATA%\Cursor` / `%USERPROFILE%\.cursor`） |
 
 `utils.ps1` 提供 `Install-PersistDataLinks`、`Clear-DesktopShortcuts`、`Assert-AdminElevation` 等，详见文件头注释。
