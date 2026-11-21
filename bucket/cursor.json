@@ -32,6 +32,7 @@
     ],
     "persist": "data",
     "notes": [
+        "最新版（Excavator 会跟官方 stable）。需要 3.27.12：scoop install scoop-bucket/cursor327。",
         "VS Code 系 portable：配置在 persist\\data（user-data / extensions），不走 %APPDATA%\\Cursor。",
         "若已装 extras/cursor：scoop uninstall cursor 后 scoop install scoop-bucket/cursor（同名 persist 会保留）。",
         "请先自行卸载官方安装（如 D:\\Program\\cursor），避免 target=system 继续写 C 盘。"

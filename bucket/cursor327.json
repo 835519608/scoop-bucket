@@ -1,0 +1,41 @@
+{
+    "version": "3.27.12",
+    "description": "Cursor AI 编辑器（钉死 3.27.12；最新版请装 scoop-bucket/cursor）",
+    "homepage": "https://www.cursor.com/",
+    "license": {
+        "identifier": "Proprietary",
+        "url": "https://www.cursor.com/terms-of-service"
+    },
+    "architecture": {
+        "64bit": {
+            "url": "https://downloads.cursor.com/production/df132ffba90dfc15a12e6b8f020ba4e5d026c4be/win32/x64/user-setup/CursorUserSetup-x64-3.27.12.exe",
+            "hash": "bad3c9ef70e6b6330cca960c33741efd3ea50a2c265ebba4f6203fb3806c1e16"
+        },
+        "arm64": {
+            "url": "https://downloads.cursor.com/production/df132ffba90dfc15a12e6b8f020ba4e5d026c4be/win32/arm64/user-setup/CursorUserSetup-arm64-3.27.12.exe",
+            "hash": "8bb1065f46c8869c96b347ac8c2b2cf3c934b814384bc1de30069215d8024df0"
+        }
+    },
+    "innosetup": true,
+    "extract_dir": "{code_GetDestDir}",
+    "bin": [
+        [
+            "resources\\app\\bin\\cursor.cmd",
+            "cursor327"
+        ]
+    ],
+    "shortcuts": [
+        [
+            "Cursor.exe",
+            "Cursor 3.27.12"
+        ]
+    ],
+    "persist": "data",
+    "notes": [
+        "钉死版本，无 checkver，不会被 Excavator 升到最新。",
+        "与 scoop-bucket/cursor（最新）可并存；shim 为 cursor327，快捷方式为「Cursor 3.27.12」。",
+        "各自独立 persist（persist\\cursor327 vs persist\\cursor），配置不共用。",
+        "VS Code 系 portable：配置在 persist\\data（user-data / extensions）。"
+    ],
+    "post_install": "& ((Get-ChildItem (Join-Path $scoopdir 'buckets\\*\\bin\\hook.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1).FullName) 'hooks/cursor/post_install.ps1'"
+}
