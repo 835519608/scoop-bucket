@@ -34,7 +34,7 @@ Windows Registry Editor Version 5.00
 "@ | Set-Content -Path $regFile -Encoding Unicode
 reg.exe import $regFile 2>$null | Out-Null
 
-# Keep only Scoop Start Menu shortcut; strip installer/desktop duplicates
+# Keep only Scoop Start Menu shortcut
 Clear-DesktopShortcuts -Filter 'DingTalk*.lnk'
 Clear-DesktopShortcuts -Filter '*DingDing*.lnk'
 Clear-StartMenuShortcuts -Filter 'DingTalk*.lnk'
@@ -44,5 +44,5 @@ Get-ChildItem -Path @(
     (Join-Path $env:APPDATA 'Microsoft\Windows\Start Menu\Programs')
     (Join-Path $env:ProgramData 'Microsoft\Windows\Start Menu\Programs')
 ) -Filter '*.lnk' -Recurse -ErrorAction SilentlyContinue |
-    Where-Object { $_.BaseName -match '钉钉|DingTalk|DingDing' -and $_.DirectoryName -notmatch '\\Scoop Apps$' } |
+    Where-Object { $_.BaseName -match '钉钉' -and $_.DirectoryName -notmatch '\\Scoop Apps$' } |
     Remove-Item -Force -ErrorAction SilentlyContinue

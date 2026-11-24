@@ -33,11 +33,11 @@
     "persist": "data",
     "notes": [
         "最新版（Excavator 会跟官方 stable）。需要 3.27.12：scoop install scoop-bucket/cursor327。",
-        "VS Code 系 portable：配置在 persist\\data（user-data / extensions），不走 %APPDATA%\\Cursor。",
-        "若已装 extras/cursor：scoop uninstall cursor 后 scoop install scoop-bucket/cursor（同名 persist 会保留）。",
-        "请先自行卸载官方安装（如 D:\\Program\\cursor），避免 target=system 继续写 C 盘。"
+        "portable：persist\\data；另联接 %APPDATA%\\Cursor、%USERPROFILE%\\.cursor → persist。",
+        "与 cursor327 并存时，后安装/升级的一方会接管上述两条 C 盘联接。"
     ],
     "post_install": "& ((Get-ChildItem (Join-Path $scoopdir 'buckets\\*\\bin\\hook.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1).FullName) 'hooks/cursor/post_install.ps1'",
+    "pre_uninstall": "& ((Get-ChildItem (Join-Path $scoopdir 'buckets\\*\\bin\\hook.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1).FullName) 'hooks/cursor/pre_uninstall.ps1'",
     "checkver": {
         "url": "https://www.cursor.com/api/download?platform=win32-x64-user&releaseTrack=stable",
         "regex": "production/(?<Code>[\\w]+)/win32.*-([\\d.]+)\\.exe"

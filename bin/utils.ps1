@@ -1,11 +1,11 @@
 ﻿# scoop-bucket 公共 PowerShell 库（由 bin/hook.ps1 加载）
 #
 # 对外 API:
-#   Install-PersistDataLinks / Uninstall-PersistDataLinks / Link-FolderToPersist
+#   Install-PersistDataLinks / Uninstall-PersistDataLinks
 #   Clear-DesktopShortcuts / Clear-StartMenuShortcuts
 #   Test-AdminElevation / Assert-AdminElevation / Test-AdminElevationOrWarn
 #
-# Mapping: Label, Source, Target, EnsureTarget, TargetType；Strategy 可选（copy = 仅复制）
+# Mapping: Label, Source, Target, EnsureTarget（可选）
 
 #region 底层：目录联接
 
@@ -30,8 +30,7 @@ function New-DirectoryLink {
         [Parameter(Mandatory = $true)]
         [string]$LinkPath,
         [Parameter(Mandatory = $true)]
-        [string]$TargetPath,
-        [switch]$Migrate
+        [string]$TargetPath
     )
     New-Item -Path $TargetPath -ItemType Directory -Force -ErrorAction SilentlyContinue | Out-Null
     if (Test-Path $LinkPath) {
@@ -42,30 +41,10 @@ function New-DirectoryLink {
             }
         }
         else {
-            if ($Migrate) {
-                Get-ChildItem -Path $LinkPath -Force -ErrorAction SilentlyContinue | ForEach-Object {
-                    Move-Item -LiteralPath $_.FullName -Destination $TargetPath -Force -ErrorAction SilentlyContinue | Out-Null
-                }
-            }
             Remove-Item -Path $LinkPath -Force -Recurse -ErrorAction SilentlyContinue
         }
     }
     New-Item -ItemType Junction -Path $LinkPath -Target $TargetPath -Force -ErrorAction Stop | Out-Null
-}
-
-#endregion
-
-#region 单目录联接（简写）
-
-function Link-FolderToPersist {
-    param (
-        [Parameter(Mandatory = $true, Position = 0)]
-        [string]$DataPath,
-        [Parameter(Mandatory = $true, Position = 1)]
-        [string]$PersistPath,
-        [switch]$Migrate
-    )
-    New-DirectoryLink -LinkPath $DataPath -TargetPath $PersistPath -Migrate:$Migrate
 }
 
 #endregion
@@ -136,13 +115,6 @@ ${appName} 安装已中止：${reasonText}
     throw "${appName}: administrator privileges required."
 }
 
-function Require-AdminElevation {
-    param (
-        [string]$Message = '需要管理员 PowerShell，请在提升的终端中重试。'
-    )
-    Assert-AdminElevation -Reason $Message
-}
-
 function Test-AdminElevationOrWarn {
     param ([string]$Message)
     if (Test-AdminElevation) { return $true }
@@ -175,19 +147,19 @@ function Expand-MappingPath {
     if ($Path -match '^UserProfile/(.+)$') {
         return (Join-Path $env:USERPROFILE $matches[1])
     }
-    if ($Path -match '^\$dir(?<rest>[/\\].*)?$') {
-        $suffix = $matches['rest']
-        if ($suffix) {
-            $suffix = ($suffix -replace '^[/\\]+', '') -replace '/', '\'
-        }
-        return (Join-Path $AppDir $suffix)
-    }
     if ($Path -match '^\$persist_dir(?<rest>[/\\].*)?$') {
         $suffix = $matches['rest']
         if ($suffix) {
             $suffix = ($suffix -replace '^[/\\]+', '') -replace '/', '\'
         }
         return (Join-Path $PersistDir $suffix)
+    }
+    if ($Path -match '^\$dir(?<rest>[/\\].*)?$') {
+        $suffix = $matches['rest']
+        if ($suffix) {
+            $suffix = ($suffix -replace '^[/\\]+', '') -replace '/', '\'
+        }
+        return (Join-Path $AppDir $suffix)
     }
     return ($ExecutionContext.InvokeCommand.ExpandString($Path))
 }
@@ -197,27 +169,6 @@ function Ensure-FolderExists {
     if (-not (Test-Path $Path)) {
         New-Item -ItemType Directory -Path $Path -Force | Out-Null
     }
-}
-
-function Ensure-FileExists {
-    param ([Parameter(Mandatory = $true)][string]$Path)
-    $parent = Split-Path -Parent $Path
-    if ($parent) { Ensure-FolderExists -Path $parent }
-    if (-not (Test-Path $Path)) {
-        New-Item -ItemType File -Path $Path -Force | Out-Null
-    }
-}
-
-function Copy-FolderContents {
-    param (
-        [Parameter(Mandatory = $true)]
-        [string]$Source,
-        [Parameter(Mandatory = $true)]
-        [string]$Destination
-    )
-    if (-not (Test-Path $Source)) { return }
-    Ensure-FolderExists -Path $Destination
-    Copy-Item -Path "$Source\*" -Destination $Destination -Force -Recurse -ErrorAction SilentlyContinue
 }
 
 function Move-FolderContentsToPersist {
@@ -230,7 +181,8 @@ function Move-FolderContentsToPersist {
     if (-not (Test-Path $Source)) { return }
     $item = Get-Item -Path $Source -Force -ErrorAction SilentlyContinue
     if ($item.LinkType) { return }
-    Copy-FolderContents -Source $Source -Destination $Destination
+    Ensure-FolderExists -Path $Destination
+    Copy-Item -Path "$Source\*" -Destination $Destination -Force -Recurse -ErrorAction SilentlyContinue
     Remove-Item -Path $Source -Force -Recurse -ErrorAction SilentlyContinue
 }
 
@@ -250,8 +202,6 @@ function Set-PersistDataLinks {
     foreach ($mapping in $Mappings) {
         $sourcePath = Expand-MappingPath -Path $mapping.Source -AppDir $AppDir -PersistDir $PersistDir
         $targetPath = Expand-MappingPath -Path $mapping.Target -AppDir $AppDir -PersistDir $PersistDir
-        $targetType = if ($mapping.TargetType) { $mapping.TargetType } else { 'directory' }
-        $strategy = if ($mapping.Strategy) { $mapping.Strategy.ToLowerInvariant() } else { 'link' }
 
         if ($Mode -eq 'Uninstall') {
             Remove-DirectoryLink -LinkPath $sourcePath -Log:$Log
@@ -259,28 +209,13 @@ function Set-PersistDataLinks {
         }
 
         if ($mapping.EnsureTarget) {
-            if ($targetType -eq 'file') { Ensure-FileExists -Path $targetPath }
-            else { Ensure-FolderExists -Path $targetPath }
+            Ensure-FolderExists -Path $targetPath
         }
 
-        if ($targetType -ne 'file') {
-            Move-FolderContentsToPersist -Source $sourcePath -Destination $targetPath
-        }
-        elseif ((Test-Path $sourcePath) -and -not (Get-Item $sourcePath -ErrorAction SilentlyContinue).LinkType) {
-            Remove-Item -Path $sourcePath -Force -Recurse -ErrorAction SilentlyContinue
-        }
-
-        if ($strategy -eq 'copy') {
-            Copy-FolderContents -Source $sourcePath -Destination $targetPath
-            if ($Log) {
-                info "[Persist] $($mapping.Label): $sourcePath -> $targetPath (copy)"
-            }
-        }
-        else {
-            New-DirectoryLink -LinkPath $sourcePath -TargetPath $targetPath
-            if ($Log) {
-                info "[Persist] $($mapping.Label): $sourcePath -> $targetPath (Junction)"
-            }
+        Move-FolderContentsToPersist -Source $sourcePath -Destination $targetPath
+        New-DirectoryLink -LinkPath $sourcePath -TargetPath $targetPath
+        if ($Log) {
+            info "[Persist] $($mapping.Label): $sourcePath -> $targetPath (Junction)"
         }
     }
 }

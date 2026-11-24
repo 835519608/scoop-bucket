@@ -32,10 +32,10 @@
     ],
     "persist": "data",
     "notes": [
-        "钉死版本，无 checkver，不会被 Excavator 升到最新。",
-        "与 scoop-bucket/cursor（最新）可并存；shim 为 cursor327，快捷方式为「Cursor 3.27.12」。",
-        "各自独立 persist（persist\\cursor327 vs persist\\cursor），配置不共用。",
-        "VS Code 系 portable：配置在 persist\\data（user-data / extensions）。"
+        "钉死版本，无 checkver；与最新版 cursor 可并存（shim=cursor327）。",
+        "portable：persist\\cursor327\\data；另联接 %APPDATA%\\Cursor、%USERPROFILE%\\.cursor。",
+        "与最新版并存时，后安装/升级的一方会接管上述两条 C 盘联接。"
     ],
-    "post_install": "& ((Get-ChildItem (Join-Path $scoopdir 'buckets\\*\\bin\\hook.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1).FullName) 'hooks/cursor/post_install.ps1'"
+    "post_install": "& ((Get-ChildItem (Join-Path $scoopdir 'buckets\\*\\bin\\hook.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1).FullName) 'hooks/cursor/post_install.ps1'",
+    "pre_uninstall": "& ((Get-ChildItem (Join-Path $scoopdir 'buckets\\*\\bin\\hook.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1).FullName) 'hooks/cursor/pre_uninstall.ps1'"
 }

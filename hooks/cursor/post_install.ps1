@@ -1,12 +1,18 @@
-﻿# Cursor：Inno 解包后启用 VS Code 系 portable（data/ 由 Scoop persist）
+﻿# Cursor：portable data/ + 把仍写 C 盘的 AppData/.cursor 联到本应用 persist
 Remove-Item "$dir\`$*", "$dir\Uninst*" -Recurse -Force -ErrorAction SilentlyContinue
 
-if (!(Test-Path "$dir\data\extensions") -and (Test-Path "$env:USERPROFILE\.cursor\extensions")) {
+function Test-RealDirectory([string]$Path) {
+    if (-not (Test-Path $Path)) { return $false }
+    $item = Get-Item $Path -Force -ErrorAction SilentlyContinue
+    return [bool]($item -and -not $item.LinkType -and $item.PSIsContainer)
+}
+
+if (!(Test-Path "$dir\data\extensions") -and (Test-RealDirectory "$env:USERPROFILE\.cursor\extensions")) {
     info '[Portable Mode] Copying extensions from %USERPROFILE%\.cursor ...'
     New-Item -ItemType Directory -Path "$dir\data" -Force | Out-Null
     Copy-Item "$env:USERPROFILE\.cursor\extensions" "$dir\data" -Recurse -Force
 }
-if (!(Test-Path "$dir\data\user-data") -and (Test-Path "$env:APPDATA\Cursor")) {
+if (!(Test-Path "$dir\data\user-data") -and (Test-RealDirectory "$env:APPDATA\Cursor")) {
     info '[Portable Mode] Copying user data from %APPDATA%\Cursor ...'
     New-Item -ItemType Directory -Path "$dir\data" -Force | Out-Null
     Copy-Item "$env:APPDATA\Cursor" "$dir\data\user-data" -Recurse -Force
@@ -35,7 +41,20 @@ if (Test-Path $product_path) {
 $argv_src = "$env:USERPROFILE\.cursor\argv.json"
 $argv_dst = "$dir\data\argv.json"
 if (!(Test-Path $argv_dst) -and (Test-Path $argv_src)) {
-    info '[Portable Mode] Copying argv.json ...'
-    New-Item -ItemType Directory -Path "$dir\data" -Force | Out-Null
-    Copy-Item $argv_src $argv_dst -Force
+    $argvItem = Get-Item $argv_src -Force -ErrorAction SilentlyContinue
+    # 仅当 .cursor 仍是实目录时复制；已是 Junction 则 argv 应已在 persist
+    if ($argvItem -and -not (Get-Item (Split-Path $argv_src -Parent) -Force).LinkType) {
+        info '[Portable Mode] Copying argv.json ...'
+        New-Item -ItemType Directory -Path "$dir\data" -Force | Out-Null
+        Copy-Item $argv_src $argv_dst -Force
+    }
 }
+
+$cursorExtraMappings = @(
+    @{ Label = 'roaming'; Source = 'AppData/Cursor'; Target = '$persist_dir/roaming'; EnsureTarget = $true }
+    @{ Label = 'profile'; Source = 'UserProfile/.cursor'; Target = '$persist_dir/.cursor'; EnsureTarget = $true }
+)
+Install-PersistDataLinks -Mappings $cursorExtraMappings -Log:$true
+
+Clear-DesktopShortcuts -Filter 'Cursor*.lnk'
+Clear-StartMenuShortcuts -Filter 'Cursor*.lnk'
