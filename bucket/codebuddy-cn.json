@@ -33,7 +33,7 @@
     "persist": "data",
     "notes": [
         "国内版 IDE（MCP / Agent 等在此；WorkBuddy 是办公 Agent，能力不同）。登录走 codebuddy.cn（微信/手机号）。",
-        "使用 Scoop portable：配置在 persist\\data（对应默认的 %APPDATA%\\CodeBuddy CN 与 %USERPROFILE%\\.codebuddycn）。",
+        "Scoop portable：主配置在 persist\\data；另联接 %APPDATA%\\CodeBuddy CN、%LOCALAPPDATA%\\CodeBuddy CN、%USERPROFILE%\\.codebuddy。",
         "勿与国际版 codebuddy.ai 安装包混用。"
     ],
     "post_install": "& ((Get-ChildItem (Join-Path $scoopdir 'buckets\\*\\bin\\hook.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1).FullName) 'hooks/codebuddy-cn/post_install.ps1'",

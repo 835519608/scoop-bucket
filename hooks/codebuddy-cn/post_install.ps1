@@ -41,5 +41,13 @@ if (!(Test-Path $argv_dst) -and (Test-Path $argv_src)) {
     Copy-Item $argv_src $argv_dst -Force
 }
 
+# CLI / 诊断日志会写 %USERPROFILE%\.codebuddy（与 IDE portable 的 .codebuddycn 不同）
+$codebuddyExtraMappings = @(
+    @{ Label = 'profile-cli'; Source = 'UserProfile/.codebuddy'; Target = '$persist_dir/.codebuddy'; EnsureTarget = $true }
+    @{ Label = 'roaming'; Source = 'AppData/CodeBuddy CN'; Target = '$persist_dir/roaming'; EnsureTarget = $true }
+    @{ Label = 'local'; Source = 'LocalAppData/CodeBuddy CN'; Target = '$persist_dir/local'; EnsureTarget = $true }
+)
+Install-PersistDataLinks -Mappings $codebuddyExtraMappings -Log:$true
+
 Clear-DesktopShortcuts -Filter 'CodeBuddy*.lnk'
 Clear-StartMenuShortcuts -Filter 'CodeBuddy*.lnk'

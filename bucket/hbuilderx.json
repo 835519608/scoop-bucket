@@ -25,7 +25,11 @@
             "HBuilderX"
         ]
     ],
-    "notes": "用户配置与缓存通过目录联接持久化到 persist/roaming、persist/local（对应 %APPDATA%\\HBuilder X 与 %LOCALAPPDATA%\\HBuilder X）。若 Scoop 装在非 C 盘，数据会随 persist 目录一起迁移。",
+    "persist": "plugins",
+    "notes": [
+        "目录联接：%APPDATA%\\HBuilder X、%LOCALAPPDATA%\\HBuilder X → persist/roaming、persist/local。",
+        "插件目录 plugins 由 Scoop persist；已去掉自带 Updater.exe，请用 scoop update。"
+    ],
     "post_install": "& ((Get-ChildItem (Join-Path $scoopdir 'buckets\\*\\bin\\hook.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1).FullName) 'hooks/hbuilderx/post_install.ps1'",
     "pre_uninstall": "& ((Get-ChildItem (Join-Path $scoopdir 'buckets\\*\\bin\\hook.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1).FullName) 'hooks/hbuilderx/pre_uninstall.ps1'",
     "checkver": {

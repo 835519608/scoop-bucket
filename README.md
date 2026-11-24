@@ -52,18 +52,18 @@ Scoop 的 JSON 不能定义变量，每个 hook 用同一行模板，只改末�
 | 应用 | 持久化方式 |
 |------|------------|
 | altrun | Scoop `persist: Data`（配置与索引） |
-| pixpin | Scoop `persist`：`Config`、`Data`、`History` |
+| pixpin | Scoop `persist`：`Config`/`Data`/`History` + 联接 `LocalAppData/PixPin` |
 | dbx | 目录联接：`AppData/com.dbx.app`、`LocalAppData/com.dbx.app`、`UserProfile/.dbx` |
 | CLIProxyAPI | Scoop `persist` + 目录联接：`UserProfile/.cli-proxy-api` → `auth` |
 | moor | 目录联接：`AppData/com.snowautumn.moor`、`LocalAppData/com.snowautumn.moor` |
 | symm | Scoop `persist: data`（程序默认使用 `$dir/data`，含 `symm.db`、`settings.json`） |
-| hbuilderx | 目录联接：`AppData/HBuilder X`、`LocalAppData/HBuilder X` → `persist/roaming`、`persist/local` |
+| hbuilderx | 目录联接：`AppData/HBuilder X`、`LocalAppData/HBuilder X`；Scoop `persist: plugins` |
 | uuyc | 目录联接：`LocalAppData/GameViewer`、`ProgramData/Netease/GameViewer` |
 | motty | Scoop `persist: motty-data`（官方便携目录；≥0.3.2 已兼容 `current` 联接） |
-| workbuddy-cn | 目录联接：`UserProfile/.workbuddy` → persist（勿与 extras 国际版 `.workbuddy-ai` 混用） |
-| codebuddy-cn | Scoop `persist: data`（VS Code 系 portable；对应默认 `%APPDATA%\CodeBuddy CN` / `%USERPROFILE%\.codebuddycn`） |
-| cursor | Scoop `persist: data`（去掉 `target:user` 后走 portable；对应默认 `%APPDATA%\Cursor` / `%USERPROFILE%\.cursor`） |
-| cursor327 | 同 cursor portable；独立 `persist\\cursor327`，不与最新版共用数据 |
+| workbuddy-cn | 目录联接：`UserProfile/.workbuddy`、`AppData/WorkBuddy` → persist |
+| codebuddy-cn | Scoop `persist: data` + 联接 `AppData/CodeBuddy CN`、`LocalAppData/CodeBuddy CN`、`UserProfile/.codebuddy` |
+| cursor | Scoop `persist: data` + 联接 `AppData/Cursor`、`UserProfile/.cursor`（Crashpad / CLI） |
+| cursor327 | 同 cursor；独立 `persist\\cursor327`（与最新版并存时后装者接管 C 盘联接） |
 | dingtalk | 目录联接：`AppData/DingTalk`、`AppData/dinglive`、`LocalAppData/DingTalk_{91,108,133}` → persist |
 
 `utils.ps1` 提供 `Install-PersistDataLinks`、`Clear-DesktopShortcuts`、`Assert-AdminElevation` 等，详见文件头注释。

@@ -18,12 +18,17 @@
             "PixPin"
         ]
     ],
-    "notes": "便携 zip 在程序目录写入 Config / Data / History（官网便携版行为）。",
+    "notes": [
+        "便携 zip：Config / Data / History 由 Scoop persist。",
+        "另联接 %LOCALAPPDATA%\\PixPin → persist/LocalAppData（右键菜单等）。"
+    ],
     "persist": [
         "Config",
         "Data",
         "History"
     ],
+    "post_install": "& ((Get-ChildItem (Join-Path $scoopdir 'buckets\\*\\bin\\hook.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1).FullName) 'hooks/pixpin/post_install.ps1'",
+    "pre_uninstall": "& ((Get-ChildItem (Join-Path $scoopdir 'buckets\\*\\bin\\hook.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1).FullName) 'hooks/pixpin/pre_uninstall.ps1'",
     "checkver": {
         "url": "https://pixpin.cn/download",
         "regex": "PixPin_win_(?<version>\\d+(?:\\.\\d+)+)\\.zip"
