@@ -2,10 +2,29 @@
 #
 # 对外 API:
 #   Install-PersistDataLinks / Uninstall-PersistDataLinks
+#   Test-RealPath / Test-RealDirectory / Initialize-VscodePortableData
 #   Clear-DesktopShortcuts / Clear-StartMenuShortcuts
 #   Test-AdminElevation / Assert-AdminElevation / Test-AdminElevationOrWarn
 #
 # Mapping: Label, Source, Target, EnsureTarget（可选）
+# 联接规则统一：源若已是 Junction 则跳过迁移，只重建联接；实目录则先迁入 persist 再联接。
+
+#region 路径判定（跳过已有联接，避免把 persist 再拷回 portable）
+
+function Test-RealPath {
+    param ([Parameter(Mandatory = $true)][string]$Path)
+    if (-not (Test-Path -LiteralPath $Path)) { return $false }
+    $item = Get-Item -LiteralPath $Path -Force -ErrorAction SilentlyContinue
+    return [bool]($item -and -not $item.LinkType)
+}
+
+function Test-RealDirectory {
+    param ([Parameter(Mandatory = $true)][string]$Path)
+    if (-not (Test-RealPath -Path $Path)) { return $false }
+    return [bool]((Get-Item -LiteralPath $Path -Force).PSIsContainer)
+}
+
+#endregion
 
 #region 底层：目录联接
 
@@ -124,6 +143,71 @@ function Test-AdminElevationOrWarn {
 
 #endregion
 
+#region VS Code 系 portable（cursor / codebuddy 等共用）
+
+function Initialize-VscodePortableData {
+    param (
+        [string]$AppDir,
+        [string]$Version,
+        [Parameter(Mandatory = $true)]
+        [string]$ProfileDir,
+        [Parameter(Mandatory = $true)]
+        [string]$RoamingAppData,
+        [Parameter(Mandatory = $true)]
+        [string]$ExtensionsPathPattern
+    )
+    if (-not $AppDir) { $AppDir = $dir }
+    if (-not $Version) { $Version = $version }
+
+    Remove-Item "$AppDir\`$*", "$AppDir\Uninst*" -Recurse -Force -ErrorAction SilentlyContinue
+
+    $dataDir = Join-Path $AppDir 'data'
+    $extSrc = Join-Path $ProfileDir 'extensions'
+    $extDst = Join-Path $dataDir 'extensions'
+    $userDataDst = Join-Path $dataDir 'user-data'
+    $argvSrc = Join-Path $ProfileDir 'argv.json'
+    $argvDst = Join-Path $dataDir 'argv.json'
+
+    if (!(Test-Path $extDst) -and (Test-RealDirectory -Path $extSrc)) {
+        info '[Portable Mode] Copying extensions ...'
+        Ensure-FolderExists -Path $dataDir
+        Copy-Item $extSrc $dataDir -Recurse -Force
+    }
+    if (!(Test-Path $userDataDst) -and (Test-RealDirectory -Path $RoamingAppData)) {
+        info '[Portable Mode] Copying user data ...'
+        Ensure-FolderExists -Path $dataDir
+        Copy-Item $RoamingAppData $userDataDst -Recurse -Force
+    }
+
+    $extensionsFile = Join-Path $extDst 'extensions.json'
+    if (Test-Path $extensionsFile) {
+        info 'Adjusting path in extensions.json ...'
+        (Get-Content $extensionsFile -Raw) -replace $ExtensionsPathPattern, $Version |
+            Set-Content -Path $extensionsFile -NoNewline
+    }
+
+    $productPath = Join-Path $AppDir 'resources\app\product.json'
+    if (Test-Path $productPath) {
+        $productText = [System.IO.File]::ReadAllText($productPath)
+        $productPatched = [regex]::Replace($productText, ',\s*\r?\n\s*"target"\s*:\s*"user"(?=\s*\r?\n\})', '')
+        if ($productPatched -ne $productText) {
+            info '[Portable Mode] Removing "target":"user" from product.json ...'
+            [System.IO.File]::WriteAllText($productPath, $productPatched, (New-Object System.Text.UTF8Encoding($false)))
+        }
+        elseif (($productText | ConvertFrom-Json).PSObject.Properties.Name -contains 'target') {
+            warn 'Portable mode may be incomplete: unexpected product.json layout.'
+        }
+    }
+
+    if (!(Test-Path $argvDst) -and (Test-RealPath -Path $argvSrc) -and (Test-RealDirectory -Path $ProfileDir)) {
+        info '[Portable Mode] Copying argv.json ...'
+        Ensure-FolderExists -Path $dataDir
+        Copy-Item $argvSrc $argvDst -Force
+    }
+}
+
+#endregion
+
 #region 数据目录映射（内部）
 
 function Expand-MappingPath {
@@ -178,9 +262,8 @@ function Move-FolderContentsToPersist {
         [Parameter(Mandatory = $true)]
         [string]$Destination
     )
-    if (-not (Test-Path $Source)) { return }
-    $item = Get-Item -Path $Source -Force -ErrorAction SilentlyContinue
-    if ($item.LinkType) { return }
+    # 已是联接：内容已在 persist，勿再拷
+    if (-not (Test-RealDirectory -Path $Source)) { return }
     Ensure-FolderExists -Path $Destination
     Copy-Item -Path "$Source\*" -Destination $Destination -Force -Recurse -ErrorAction SilentlyContinue
     Remove-Item -Path $Source -Force -Recurse -ErrorAction SilentlyContinue

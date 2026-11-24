@@ -66,4 +66,4 @@ Scoop 的 JSON 不能定义变量，每个 hook 用同一行模板，只改末�
 | cursor327 | 同 cursor；独立 `persist\\cursor327`（与最新版并存时后装者接管 C 盘联接） |
 | dingtalk | 目录联接：`AppData/DingTalk`、`AppData/dinglive`、`LocalAppData/DingTalk_{91,108,133}` → persist |
 
-`utils.ps1` 提供 `Install-PersistDataLinks`、`Clear-DesktopShortcuts`、`Assert-AdminElevation` 等。
+`utils.ps1`：`Install-PersistDataLinks`（统一 Junction：实目录先迁移、已是联接则跳过）、`Initialize-VscodePortableData`（cursor/codebuddy）、`Clear-*Shortcuts`、`Assert-AdminElevation`。
