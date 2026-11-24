@@ -1,4 +1,4 @@
-# Cursor：Inno 解包后启用 VS Code 系 portable（data/ 由 Scoop persist）
+﻿# Cursor：Inno 解包后启用 VS Code 系 portable（data/ 由 Scoop persist）
 Remove-Item "$dir\`$*", "$dir\Uninst*" -Recurse -Force -ErrorAction SilentlyContinue
 
 if (!(Test-Path "$dir\data\extensions") -and (Test-Path "$env:USERPROFILE\.cursor\extensions")) {

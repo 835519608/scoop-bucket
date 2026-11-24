@@ -1,4 +1,4 @@
-# scoop-bucket 公共 PowerShell 库（由 bin/hook.ps1 加载）
+﻿# scoop-bucket 公共 PowerShell 库（由 bin/hook.ps1 加载）
 #
 # 对外 API:
 #   Install-PersistDataLinks / Uninstall-PersistDataLinks / Link-FolderToPersist

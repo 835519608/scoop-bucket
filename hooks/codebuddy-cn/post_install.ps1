@@ -1,4 +1,4 @@
-# CodeBuddy CN：Inno 解包后启用 VS Code 系 portable（data/ 由 Scoop persist）
+﻿# CodeBuddy CN：Inno 解包后启用 VS Code 系 portable（data/ 由 Scoop persist）
 Remove-Item "$dir\`$*", "$dir\Uninst*" -Recurse -Force -ErrorAction SilentlyContinue
 
 # 若曾用默认 user 安装，迁移到 portable data

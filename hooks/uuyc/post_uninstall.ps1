@@ -1,4 +1,4 @@
-$uuycMappings = @(
+﻿$uuycMappings = @(
     @{ Label = 'local'; Source = 'LocalAppData/GameViewer'; Target = '$persist_dir/AppData' }
     @{ Label = 'programdata'; Source = 'ProgramData/Netease/GameViewer'; Target = '$persist_dir/ProgramData' }
 )

@@ -27,6 +27,7 @@ scoop update *
 | codebuddy-cn | 腾讯云 CodeBuddy IDE **国内版**（含 MCP；`codebuddy.cn`） | 官网 v2/update `ide-win32-x64-user` |
 | cursor | Cursor AI 编辑器**最新版**（Scoop portable，数据在 persist） | cursor.com download API |
 | cursor327 | Cursor **钉死 3.27.12**（与最新版可并存，shim=`cursor327`） | 无（不自动升） |
+| dingtalk | 钉钉国内版（Scoop 便携；C 盘数据联接 persist） | dtapp-cast 签名 URL（同 sdoog） |
 
 ## 目录结构
 
@@ -63,5 +64,6 @@ Scoop 的 JSON 不能定义变量，每个 hook 用同一行模板，只改末�
 | codebuddy-cn | Scoop `persist: data`（VS Code 系 portable；对应默认 `%APPDATA%\CodeBuddy CN` / `%USERPROFILE%\.codebuddycn`） |
 | cursor | Scoop `persist: data`（去掉 `target:user` 后走 portable；对应默认 `%APPDATA%\Cursor` / `%USERPROFILE%\.cursor`） |
 | cursor327 | 同 cursor portable；独立 `persist\\cursor327`，不与最新版共用数据 |
+| dingtalk | 目录联接：`AppData/DingTalk`、`AppData/dinglive`、`LocalAppData/DingTalk_{91,108,133}` → persist |
 
 `utils.ps1` 提供 `Install-PersistDataLinks`、`Clear-DesktopShortcuts`、`Assert-AdminElevation` 等，详见文件头注释。

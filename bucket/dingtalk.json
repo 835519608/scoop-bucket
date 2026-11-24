@@ -1,0 +1,77 @@
+{
+    "version": "9.0.10.261117008.202612060109",
+    "description": "钉钉，让进步发生（Scoop 便携；C 盘用户数据联接到 persist）",
+    "homepage": "https://www.dingtalk.com/",
+    "license": {
+        "identifier": "Proprietary",
+        "url": "https://tms.dingtalk.com/markets/dingtalk/service-terms-zh"
+    },
+    "url": "https://dtapp-cast.dingtalk.com/202612060109/9fb1ca5f96caf399f175c37c59ced66e/dingtalk-desktop/win_installer/Release/DingTalk_v9.0.10.261117008.exe#/dl.7z",
+    "hash": "md5:fd0443d97ec9196644eb233b9a38850c",
+    "pre_install": "& ((Get-ChildItem (Join-Path $scoopdir 'buckets\\*\\bin\\hook.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1).FullName) 'hooks/dingtalk/pre_install.ps1'",
+    "post_install": "& ((Get-ChildItem (Join-Path $scoopdir 'buckets\\*\\bin\\hook.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1).FullName) 'hooks/dingtalk/post_install.ps1'",
+    "pre_uninstall": "& ((Get-ChildItem (Join-Path $scoopdir 'buckets\\*\\bin\\hook.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1).FullName) 'hooks/dingtalk/pre_uninstall.ps1'",
+    "post_uninstall": "& ((Get-ChildItem (Join-Path $scoopdir 'buckets\\*\\bin\\hook.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1).FullName) 'hooks/dingtalk/post_uninstall.ps1'",
+    "bin": [
+        [
+            "DingTalkLauncher.exe",
+            "dingtalk"
+        ]
+    ],
+    "shortcuts": [
+        [
+            "DingTalkLauncher.exe",
+            "钉钉"
+        ]
+    ],
+    "notes": [
+        "国内版离线包：dtapp-cast 签名 URL（同 sdoog）；Excavator 会刷新签名与版本后缀。",
+        "用户数据联接：%APPDATA%\\DingTalk / dinglive、%LOCALAPPDATA%\\DingTalk_{91,108,133} → persist。",
+        "仅保留 Scoop 开始菜单「钉钉」；已清桌面/多余快捷方式，并去掉自带 Updater。"
+    ],
+    "checkver": {
+        "script": [
+            "$key = 'win-downloader'",
+            "$uuid = '0CE12A2C-3208-DBF7-7577-5C1C0E09A680'",
+            "$ttl = 999999",
+            "$castJson = Invoke-RestMethod 'https://dtapp-cast.dingtalk.com/dingtalk-desktop/win_x64/vista_later_v2.json'",
+            "$castUrl = $castJson.win.install.url_v2",
+            "$buildVer = [regex]::Match($castUrl, 'DingTalk_v([\\d.]+)\\.exe').Groups[1].Value",
+            "$curVer = $expected_ver",
+            "$curBuild = $curVer -replace '\\.\\d{12}$', ''",
+            "$curTs = if ($curVer -match '(\\d{12})$') { $matches[1] } else { '0' }",
+            "$now = [DateTimeOffset]::UtcNow.ToString('yyyyMMddHHmm')",
+            "if ($curBuild -ne $buildVer -or $now -gt $curTs) {",
+            "    $ms = [DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds()",
+            "    $sigStr = \"${castUrl}_${key}_${uuid}_${ms}_${ttl}\"",
+            "    $sha = [System.Security.Cryptography.SHA256]::Create()",
+            "    $hash = $sha.ComputeHash([System.Text.Encoding]::UTF8.GetBytes($sigStr))",
+            "    $sig = -join ($hash | ForEach-Object { $_.ToString('x2') })",
+            "    $h = @{",
+            "        'User-Agent'   = 'Downloader/10.0 Dingtalk/' + $castJson.win.install.version",
+            "        'Url'          = $castUrl",
+            "        'Key'          = $key",
+            "        'TTL'          = $ttl.ToString()",
+            "        'Timestamp'    = $ms.ToString()",
+            "        'Signature'    = $sig",
+            "        'Content-Type' = 'application/x-www-form-urlencoded'",
+            "    }",
+            "    $resp = Invoke-RestMethod -Uri 'https://dtupgrade.dingtalk.com/c/u/sign' -Method Post -Headers $h -Body '' -ErrorAction Stop",
+            "    $signTs = [regex]::Match($resp.signedUrl, '/(\\d{12})/').Groups[1].Value",
+            "    $newVer = \"${buildVer}.${signTs}\"",
+            "    \"${newVer}=====$($resp.signedUrl)\"",
+            "} else {",
+            "    $curUrl = $json.url -replace '#/dl\\.7z$', ''",
+            "    \"${curVer}=====$curUrl\"",
+            "}"
+        ],
+        "regex": "(.*)=====(?<url>.*)"
+    },
+    "autoupdate": {
+        "url": "$matchUrl#/dl.7z",
+        "hash": {
+            "url": "https://dtapp-cast.dingtalk.com/dingtalk-desktop/win_x64/vista_later_v2.json",
+            "jsonpath": "$.win.install.md5"
+        }
+    }
+}

@@ -1,4 +1,4 @@
-# 路径依据 src-tauri/src/lib.rs：app.path().app_data_dir()、app.path().data_dir()
+﻿# 路径依据 src-tauri/src/lib.rs：app.path().app_data_dir()、app.path().data_dir()
 # identifier：src-tauri/tauri.conf.json → com.snowautumn.moor
 $moorMappings = @(
     @{ Label = 'data'; Source = 'AppData/com.snowautumn.moor'; Target = '$persist_dir/data'; EnsureTarget = $true }
