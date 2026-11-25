@@ -28,7 +28,7 @@ scoop update *
 | cursor | Cursor AI 编辑器**最新版**（Scoop portable，数据在 persist） | cursor.com download API |
 | cursor327 | Cursor **钉死 3.27.12**（与最新版可并存，shim=`cursor327`） | 无（不自动升） |
 | dingtalk | 钉钉国内版（Scoop 便携；C 盘数据联接 persist） | dtapp-cast 签名 URL（同 sdoog） |
-| wechat | 微信 4.x / Weixin（C 盘 xwechat 联接 persist） | GitHub wechat-windows-versions |
+| wechat | 微信 4.x / Weixin（腾讯 CDN；C 盘 xwechat 联接 persist） | GitHub wechat-windows-versions（仅版本号） |
 | douyin | 抖音电脑版（C 盘 AppData 联接 persist） | 官网 downloadpage |
 | steam | Steam（steamapps/userdata persist + LocalAppData 联接） | nightly（官方安装包） |
 | uu | 网易 UU 加速器（安装需管理员 PowerShell） | adl.netease 下载页签名 URL |
