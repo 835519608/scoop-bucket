@@ -29,6 +29,7 @@
     ],
     "notes": [
         "安装需管理员：写入 HKLM\\SOFTWARE\\WOW6432Node\\Valve\\Steam（InstallPath + Users 可写），并注册 SteamService；否则会报 registry path not writable。",
+        "开始菜单 Steam.lnk 会写入 AUMID Valve.Steam.Client，避免任务栏显示空白占位图标。",
         "Scoop persist：config / skins / steamapps / userdata（游戏库在 steamapps；登录与库路径在 config）。",
         "%LOCALAPPDATA%\\Steam → persist/LocalAppData（htmlcache 等）。",
         "客户端自身会热更新；manifest 为 nightly，一般不必靠 scoop update 升 Steam。",

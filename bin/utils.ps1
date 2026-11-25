@@ -3,7 +3,7 @@
 # 对外 API:
 #   Install-PersistDataLinks / Uninstall-PersistDataLinks
 #   Test-RealPath / Test-RealDirectory / Initialize-VscodePortableData
-#   Remove-NsisExtractCrumbs
+#   Remove-NsisExtractCrumbs / Set-ShortcutAppUserModelId
 #   Test-AdminElevation / Assert-AdminElevation / Test-AdminElevationOrWarn
 #
 # Mapping: Label, Source, Target, EnsureTarget（可选）
@@ -78,6 +78,155 @@ function Remove-NsisExtractCrumbs {
     )
     if (-not $Path -or -not (Test-Path -LiteralPath $Path)) { return }
     Remove-Item "$Path\`$*", "$Path\Uninst*", "$Path\uninst*" -Force -Recurse -ErrorAction SilentlyContinue
+}
+
+#endregion
+
+#region 快捷方式 AppUserModelID（任务栏图标）
+
+# WScript.Shell 无法写 System.AppUserModel.ID；Steam 等声明显式 AUMID 的应用
+# 若开始菜单 .lnk 没有同名 AUMID，任务栏会落到空白占位图标。
+function Set-ShortcutAppUserModelId {
+    param (
+        [Parameter(Mandatory = $true)]
+        [string]$Path,
+        [Parameter(Mandatory = $true)]
+        [string]$AppUserModelId,
+        [Parameter(Mandatory = $true)]
+        [string]$TargetPath,
+        [string]$Arguments = '',
+        [string]$WorkingDirectory = '',
+        [string]$IconLocation = '',
+        [int]$IconIndex = 0,
+        [string]$Description = ''
+    )
+
+    if (-not ([System.Management.Automation.PSTypeName]'ScoopBucketShell.Lnk').Type) {
+        Add-Type -TypeDefinition @'
+using System;
+using System.Runtime.InteropServices;
+using System.Text;
+
+namespace ScoopBucketShell {
+    [ComImport, Guid("00021401-0000-0000-C000-000000000046")]
+    public class CShellLink {}
+
+    [ComImport, InterfaceType(ComInterfaceType.InterfaceIsIUnknown),
+     Guid("000214F9-0000-0000-C000-000000000046")]
+    public interface IShellLinkW {
+        void GetPath([Out, MarshalAs(UnmanagedType.LPWStr)] StringBuilder f, int cch, IntPtr fd, int flags);
+        void GetIDList(out IntPtr ppidl);
+        void SetIDList(IntPtr pidl);
+        void GetDescription([Out, MarshalAs(UnmanagedType.LPWStr)] StringBuilder n, int cch);
+        void SetDescription([MarshalAs(UnmanagedType.LPWStr)] string n);
+        void GetWorkingDirectory([Out, MarshalAs(UnmanagedType.LPWStr)] StringBuilder d, int cch);
+        void SetWorkingDirectory([MarshalAs(UnmanagedType.LPWStr)] string d);
+        void GetArguments([Out, MarshalAs(UnmanagedType.LPWStr)] StringBuilder a, int cch);
+        void SetArguments([MarshalAs(UnmanagedType.LPWStr)] string a);
+        void GetHotkey(out short w);
+        void SetHotkey(short w);
+        void GetShowCmd(out int c);
+        void SetShowCmd(int c);
+        void GetIconLocation([Out, MarshalAs(UnmanagedType.LPWStr)] StringBuilder p, int cch, out int i);
+        void SetIconLocation([MarshalAs(UnmanagedType.LPWStr)] string p, int i);
+        void SetRelativePath([MarshalAs(UnmanagedType.LPWStr)] string rel, int reserved);
+        void Resolve(IntPtr hwnd, int flags);
+        void SetPath([MarshalAs(UnmanagedType.LPWStr)] string f);
+    }
+
+    [ComImport, InterfaceType(ComInterfaceType.InterfaceIsIUnknown),
+     Guid("0000010b-0000-0000-C000-000000000046")]
+    public interface IPersistFile {
+        void GetClassID(out Guid id);
+        [PreserveSig] int IsDirty();
+        void Load([MarshalAs(UnmanagedType.LPWStr)] string f, int mode);
+        void Save([MarshalAs(UnmanagedType.LPWStr)] string f, [MarshalAs(UnmanagedType.Bool)] bool remember);
+        void SaveCompleted([MarshalAs(UnmanagedType.LPWStr)] string f);
+        void GetCurFile([MarshalAs(UnmanagedType.LPWStr)] out string f);
+    }
+
+    [StructLayout(LayoutKind.Sequential, Pack = 4)]
+    public struct PROPERTYKEY { public Guid fmtid; public uint pid; }
+
+    [StructLayout(LayoutKind.Explicit)]
+    public struct PROPVARIANT {
+        [FieldOffset(0)] public ushort vt;
+        [FieldOffset(8)] public IntPtr p;
+        [FieldOffset(8)] public long forceSize;
+    }
+
+    [ComImport, InterfaceType(ComInterfaceType.InterfaceIsIUnknown),
+     Guid("886d8eeb-8cf2-4446-8d02-cdba1dbdcf99")]
+    public interface IPropertyStore {
+        void GetCount(out uint n);
+        void GetAt(uint i, out PROPERTYKEY key);
+        void GetValue(ref PROPERTYKEY key, out PROPVARIANT pv);
+        void SetValue(ref PROPERTYKEY key, ref PROPVARIANT pv);
+        void Commit();
+    }
+
+    public static class Lnk {
+        [DllImport("ole32.dll")]
+        static extern int PropVariantClear(ref PROPVARIANT pv);
+
+        const ushort VT_LPWSTR = 31;
+
+        static PROPERTYKEY AppUserModelIdKey() {
+            return new PROPERTYKEY {
+                fmtid = new Guid("9F4C2855-9F79-4B39-A8D0-E1D42DE1D5F3"),
+                pid = 5
+            };
+        }
+
+        public static void Write(
+            string lnk, string target, string args, string workdir,
+            string icon, int iconIndex, string desc, string appId
+        ) {
+            var link = (IShellLinkW)new CShellLink();
+            link.SetPath(target);
+            if (!string.IsNullOrEmpty(args)) { link.SetArguments(args); }
+            if (!string.IsNullOrEmpty(workdir)) { link.SetWorkingDirectory(workdir); }
+            if (!string.IsNullOrEmpty(icon)) { link.SetIconLocation(icon, iconIndex); }
+            if (!string.IsNullOrEmpty(desc)) { link.SetDescription(desc); }
+            link.SetShowCmd(1);
+
+            if (!string.IsNullOrEmpty(appId)) {
+                var store = (IPropertyStore)link;
+                var key = AppUserModelIdKey();
+                PROPVARIANT pv = new PROPVARIANT();
+                pv.vt = VT_LPWSTR;
+                pv.p = Marshal.StringToCoTaskMemUni(appId);
+                try {
+                    store.SetValue(ref key, ref pv);
+                    store.Commit();
+                }
+                finally {
+                    PropVariantClear(ref pv);
+                }
+            }
+
+            var dir = System.IO.Path.GetDirectoryName(lnk);
+            if (!string.IsNullOrEmpty(dir) && !System.IO.Directory.Exists(dir)) {
+                System.IO.Directory.CreateDirectory(dir);
+            }
+            ((IPersistFile)link).Save(lnk, true);
+        }
+    }
+}
+'@
+    }
+
+    if (-not $WorkingDirectory) {
+        $WorkingDirectory = [System.IO.Path]::GetDirectoryName($TargetPath)
+    }
+    if (-not $IconLocation) {
+        $IconLocation = $TargetPath
+    }
+
+    [ScoopBucketShell.Lnk]::Write(
+        $Path, $TargetPath, $Arguments, $WorkingDirectory,
+        $IconLocation, $IconIndex, $Description, $AppUserModelId
+    )
 }
 
 #endregion
