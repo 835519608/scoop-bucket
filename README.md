@@ -28,6 +28,10 @@ scoop update *
 | cursor | Cursor AI 编辑器**最新版**（Scoop portable，数据在 persist） | cursor.com download API |
 | cursor327 | Cursor **钉死 3.27.12**（与最新版可并存，shim=`cursor327`） | 无（不自动升） |
 | dingtalk | 钉钉国内版（Scoop 便携；C 盘数据联接 persist） | dtapp-cast 签名 URL（同 sdoog） |
+| wechat | 微信 4.x / Weixin（C 盘 xwechat 联接 persist） | GitHub wechat-windows-versions |
+| douyin | 抖音电脑版（C 盘 AppData 联接 persist） | 官网 downloadpage |
+| steam | Steam（steamapps/userdata persist + LocalAppData 联接） | nightly（官方安装包） |
+| uu | 网易 UU 加速器（安装需管理员 PowerShell） | adl.netease 下载页签名 URL |
 
 ## 目录结构
 
@@ -65,5 +69,9 @@ Scoop 的 JSON 不能定义变量，每个 hook 用同一行模板，只改末�
 | cursor | Scoop `persist: data` + 联接 `AppData/Cursor`、`UserProfile/.cursor`（Crashpad / CLI） |
 | cursor327 | 同 cursor；独立 `persist\\cursor327`（与最新版并存时后装者接管 C 盘联接） |
 | dingtalk | 目录联接：`AppData/DingTalk`、`AppData/dinglive`、`LocalAppData/DingTalk_{91,108,133}` → persist |
+| wechat | 目录联接：`AppData/Tencent/xwechat`；Scoop `persist: xwechat_files`（FileSavePath，已有非 C 盘路径则保留） |
+| douyin | 目录联接：`AppData/douyin`、`douyin_lynx`、`douyin_widget` → persist |
+| steam | Scoop `persist`：`config`/`skins`/`steamapps`/`userdata` + 联接 `LocalAppData/Steam` |
+| uu | 目录联接：`AppData/Netease/UU`、`LocalAppData/Netease/UU`、`ProgramData/Netease/UU` → persist |
 
 `utils.ps1`：`Install-PersistDataLinks`（统一 Junction：实目录先迁移、已是联接则跳过）、`Initialize-VscodePortableData`（cursor/codebuddy）、`Clear-*Shortcuts`、`Assert-AdminElevation`。

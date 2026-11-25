@@ -1,0 +1,36 @@
+{
+    "version": "nightly",
+    "description": "Steam（Scoop 便携；库与用户数据 persist，C 盘 LocalAppData 联接）",
+    "homepage": "https://store.steampowered.com/",
+    "license": {
+        "identifier": "Freeware",
+        "url": "https://store.steampowered.com/legal/"
+    },
+    "url": "https://steamcdn-a.akamaihd.net/client/installer/SteamSetup.exe#/dl.7z",
+    "pre_install": "Remove-Item \"$dir\\`$PLUGINSDIR\" -Force -Recurse -ErrorAction SilentlyContinue",
+    "post_install": "& ((Get-ChildItem (Join-Path $scoopdir 'buckets\\*\\bin\\hook.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1).FullName) 'hooks/steam/post_install.ps1'",
+    "pre_uninstall": "& ((Get-ChildItem (Join-Path $scoopdir 'buckets\\*\\bin\\hook.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1).FullName) 'hooks/steam/pre_uninstall.ps1'",
+    "uninstaller": {
+        "file": "uninstall.exe",
+        "args": "/S"
+    },
+    "bin": "Steam.exe",
+    "shortcuts": [
+        [
+            "Steam.exe",
+            "Steam"
+        ]
+    ],
+    "persist": [
+        "config",
+        "skins",
+        "steamapps",
+        "userdata"
+    ],
+    "notes": [
+        "Scoop persist：config / skins / steamapps / userdata（游戏库在 steamapps；登录与库路径在 config）。",
+        "%LOCALAPPDATA%\\Steam → persist/LocalAppData（htmlcache 等）。",
+        "客户端自身会热更新；manifest 为 nightly，一般不必靠 scoop update 升 Steam。",
+        "若已有 D:\\Program\\Steam：先退出，把 steamapps/userdata/config 迁到 persist\\steam 对应目录后再装，避免重复下载。"
+    ]
+}

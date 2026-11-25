@@ -1,0 +1,53 @@
+{
+    "version": "6.24.0",
+    "description": "网易 UU 加速器（安装需管理员；C 盘用户数据联接到 persist）",
+    "homepage": "https://uu.163.com/",
+    "license": {
+        "identifier": "Proprietary",
+        "url": "https://uu.163.com/"
+    },
+    "url": "https://uu.gdl.netease.com/5257/UU-6.24.0.exe?key1=aa79263c06e8a1bc227d50eee0cc3cf0&key2=6b071c41&n=UU-6.24.0.exe#/UU-6.24.0.exe",
+    "hash": "3f59b0bbdd29bc2512fedc634e277a97e359a1165f78767569f8e9634be13c3e",
+    "installer": {
+        "script": "& ((Get-ChildItem (Join-Path $scoopdir 'buckets\\*\\bin\\hook.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1).FullName) 'hooks/uu/install.ps1'"
+    },
+    "uninstaller": {
+        "script": "& ((Get-ChildItem (Join-Path $scoopdir 'buckets\\*\\bin\\hook.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1).FullName) 'hooks/uu/uninstall.ps1'"
+    },
+    "bin": [
+        [
+            "uu_launcher.exe",
+            "uu"
+        ]
+    ],
+    "shortcuts": [
+        [
+            "uu_launcher.exe",
+            "UU加速器"
+        ]
+    ],
+    "notes": [
+        "静默安装：/silent /install_path（含 TAP/WFP 驱动，需管理员 PowerShell）。",
+        "用户数据联接：%APPDATA%\\Netease\\UU、%LOCALAPPDATA%\\Netease\\UU、%PROGRAMDATA%\\Netease\\UU → persist。",
+        "下载 URL 带签名参数，Excavator 会从 adl 页面刷新；#/UU-x.y.z.exe 避免查询串导致 Scoop 缓存路径非法。"
+    ],
+    "checkver": {
+        "script": [
+            "$html = (Invoke-WebRequest -Uri 'https://adl.netease.com/d/g/uu/c/gw' -UseBasicParsing).Content",
+            "if ($html -match 'https://uu\\.gdl\\.netease\\.com/(?<ch>\\d+)/UU-(?<version>[\\d.]+)\\.exe(?<q>\\?[^\"\\s<>]*)?') {",
+            "    $q = $Matches.q",
+            "    if ($q -and $q -notmatch '[?&]n=') { $q = \"$q&n=UU-$($Matches.version).exe\" }",
+            "    elseif (-not $q) { $q = \"?n=UU-$($Matches.version).exe\" }",
+            "    $url = \"https://uu.gdl.netease.com/$($Matches.ch)/UU-$($Matches.version).exe$q#/UU-$($Matches.version).exe\"",
+            "    \"$($Matches.version)=====$url\"",
+            "}"
+        ],
+        "regex": "(.*)=====(?<url>.*)"
+    },
+    "autoupdate": {
+        "url": "$matchUrl",
+        "hash": {
+            "mode": "download"
+        }
+    }
+}

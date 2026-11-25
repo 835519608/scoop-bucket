@@ -1,0 +1,46 @@
+{
+    "version": "4.2.1.9",
+    "description": "微信 Windows 版（4.x / Weixin；C 盘用户数据联接到 persist）",
+    "homepage": "https://pc.weixin.qq.com/",
+    "license": {
+        "identifier": "Proprietary",
+        "url": "https://weixin.qq.com/cgi-bin/readtemplate?lang=zh_CN&t=weixin_agreement&s=privacy"
+    },
+    "architecture": {
+        "64bit": {
+            "url": "https://github.com/cscnk52/wechat-windows-versions/releases/download/v4.2.1.9/weixin_4.2.1.9.exe#/dl.7z",
+            "hash": "3e9fc1c0f90a9fb964ba47496f0f52a3ba0c4b839f496912e2a1776421417761"
+        }
+    },
+    "installer": {
+        "script": "& ((Get-ChildItem (Join-Path $scoopdir 'buckets\\*\\bin\\hook.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1).FullName) 'hooks/wechat/install.ps1'"
+    },
+    "uninstaller": {
+        "script": "& ((Get-ChildItem (Join-Path $scoopdir 'buckets\\*\\bin\\hook.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1).FullName) 'hooks/wechat/uninstall.ps1'"
+    },
+    "shortcuts": [
+        [
+            "Weixin.exe",
+            "微信"
+        ]
+    ],
+    "persist": "xwechat_files",
+    "notes": [
+        "微信 4.x（Weixin）：%APPDATA%\\Tencent\\xwechat → persist/xwechat（目录联接）。",
+        "聊天文件目录：persist/xwechat_files（注册表 FileSavePath + xwechat config ini）。",
+        "若本机已把文件目录指到其它盘（如 D:\\File\\xwechat_files），安装时会保留原路径，不强制迁入 persist。"
+    ],
+    "checkver": {
+        "github": "https://github.com/cscnk52/wechat-windows-versions"
+    },
+    "autoupdate": {
+        "architecture": {
+            "64bit": {
+                "url": "https://github.com/cscnk52/wechat-windows-versions/releases/download/v$version/weixin_$version.exe#/dl.7z"
+            }
+        },
+        "hash": {
+            "mode": "download"
+        }
+    }
+}
