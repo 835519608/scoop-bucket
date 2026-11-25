@@ -33,6 +33,10 @@ scoop update *
 | steam | Steam（steamapps/userdata persist + LocalAppData 联接） | nightly（官方安装包） |
 | uu | 网易 UU 加速器（安装需管理员 PowerShell） | adl.netease 下载页签名 URL |
 | winshun | Win顺：文件 / 文件夹 / 内容搜索 | GitHub Release |
+| g-helper | ASUS 笔记本轻量控制（替代 Armoury Crate；AppData 联接 persist） | GitHub Release |
+| todesk | ToDesk 远程桌面（需管理员；LocalAppData 联接 persist） | 官网 download 页 |
+| metatrader4 | MetaTrader 4 模板（`/portable`；多开用 `bin/mt-clone.ps1`） | 半手动 |
+| metatrader5 | MetaTrader 5 模板（`/portable`；多开用 `bin/mt-clone.ps1`） | 半手动 |
 
 ## 目录结构
 
@@ -75,5 +79,9 @@ Scoop 的 JSON 不能定义变量，每个 hook 用同一行模板，只改末�
 | steam | Scoop `persist`：`config`/`skins`/`steamapps`/`userdata` + 联接 `LocalAppData/Steam` |
 | uu | 目录联接：`AppData/Netease/UU`、`LocalAppData/Netease/UU`、`ProgramData/Netease/UU` → persist |
 | winshun | Scoop `persist: data` + 联接 `LocalAppData/WinShun` |
+| g-helper | 联接 `AppData/GHelper` → `persist/data` |
+| todesk | Scoop `persist`：`config.ini`/`Logs` + 联接 `LocalAppData/ToDesk`（卸载不保证清 ToDeskAudio 驱动） |
+| metatrader4 | Scoop `persist`：`config`/`history`/`logs`/`MQL4`/`profiles`/`templates`/`tester`；实例在 `persist/metatrader4-instances/<名>` |
+| metatrader5 | Scoop `persist`：`Bases`/`Config`/`logs`/`MQL5`/`Profiles`/`Tester`；实例在 `persist/metatrader5-instances/<名>` |
 
 `utils.ps1`：`Install-PersistDataLinks`（统一 Junction：实目录先迁移、已是联接则跳过）、`Initialize-VscodePortableData`（cursor/codebuddy）、`Remove-NsisExtractCrumbs`、`Set-ShortcutAppUserModelId`（Steam 等任务栏图标）、`Assert-AdminElevation`。各 app 的映射在 `hooks/<app>/persist.ps1`。
