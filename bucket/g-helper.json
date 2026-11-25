@@ -1,0 +1,39 @@
+{
+    "version": "0.291",
+    "description": "Lightweight control tool for Asus laptops（Scoop 便携；AppData 联接 persist）",
+    "homepage": "https://g-helper.com",
+    "license": "MIT",
+    "notes": [
+        "Asus System Control Interface v3+ 与 .NET Desktop Runtime 8 建议已装。",
+        "%APPDATA%\\GHelper → persist/data（目录联接）。"
+    ],
+    "suggest": {
+        ".NET Desktop Runtime 8.0": "versions/windowsdesktop-runtime-8.0"
+    },
+    "architecture": {
+        "64bit": {
+            "url": "https://github.com/seerge/g-helper/releases/download/v0.291/GHelper.zip",
+            "hash": "64492aeb6a02d25d4c64f19b8ef28d13aa4ffad65e28e33e703ada568a6f41ef"
+        }
+    },
+    "post_install": "& ((Get-ChildItem (Join-Path $scoopdir 'buckets\\\\*\\\\bin\\\\hook.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1).FullName) 'hooks/g-helper/post_install.ps1'",
+    "pre_uninstall": "& ((Get-ChildItem (Join-Path $scoopdir 'buckets\\\\*\\\\bin\\\\hook.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1).FullName) 'hooks/g-helper/pre_uninstall.ps1'",
+    "bin": "GHelper.exe",
+    "shortcuts": [
+        [
+            "GHelper.exe",
+            "G-Helper"
+        ]
+    ],
+    "persist": "data",
+    "checkver": {
+        "github": "https://github.com/seerge/g-helper/"
+    },
+    "autoupdate": {
+        "architecture": {
+            "64bit": {
+                "url": "https://github.com/seerge/g-helper/releases/download/v$version/GHelper.zip"
+            }
+        }
+    }
+}
