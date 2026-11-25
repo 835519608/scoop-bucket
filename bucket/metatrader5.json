@@ -1,0 +1,43 @@
+{
+    "version": "5.0.0.6274",
+    "description": "MetaTrader 5 模板包（/portable；多账号用 bin/mt-clone.ps1）",
+    "homepage": "https://www.metatrader5.com/",
+    "license": {
+        "identifier": "Proprietary",
+        "url": "https://www.metatrader5.com/en/terminal/terms"
+    },
+    "url": "https://download.mql5.com/cdn/web/metaquotes.software.corp/mt5/mt5setup.exe#/mt5setup.exe",
+    "installer": {
+        "script": "& ((Get-ChildItem (Join-Path $scoopdir 'buckets\\\\*\\\\bin\\\\hook.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1).FullName) 'hooks/metatrader5/post_install.ps1'"
+    },
+    "pre_uninstall": "& ((Get-ChildItem (Join-Path $scoopdir 'buckets\\\\*\\\\bin\\\\hook.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1).FullName) 'hooks/metatrader5/pre_uninstall.ps1'",
+    "bin": [
+        [
+            "terminal64.exe",
+            "metatrader5",
+            "/portable"
+        ]
+    ],
+    "shortcuts": [
+        [
+            "terminal64.exe",
+            "MetaTrader 5",
+            "/portable"
+        ]
+    ],
+    "persist": [
+        "Bases",
+        "Config",
+        "logs",
+        "MQL5",
+        "Profiles",
+        "Tester"
+    ],
+    "notes": [
+        "快捷方式 / shim 强制 /portable；数据在 persist，勿直接双击 exe。",
+        "安装：优先 mt5setup.exe /auto /path；失败则从 D:\\Program\\MetaTrader\\MetaTrader 5 种子复制。",
+        "多账号：& \"$env:SCOOP\\buckets\\scoop-bucket\\bin\\mt-clone.ps1\" -App metatrader5 -Name <实例名>",
+        "同步程序文件：同上脚本 -SyncBinaries（不覆盖实例数据）。卸载模板不删除 persist\\metatrader5-instances。",
+        "版本半手动（未接 checkver）；官网 CDN 慢时可先 scoop install -s 跳过 hash。"
+    ]
+}
