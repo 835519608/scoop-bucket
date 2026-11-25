@@ -1,13 +1,13 @@
 {
-    "version": "9.0.10.261117008.202612060109",
+    "version": "9.0.10.261123007.202612070145",
     "description": "钉钉，让进步发生（Scoop 便携；C 盘用户数据联接到 persist）",
     "homepage": "https://www.dingtalk.com/",
     "license": {
         "identifier": "Proprietary",
         "url": "https://tms.dingtalk.com/markets/dingtalk/service-terms-zh"
     },
-    "url": "https://dtapp-cast.dingtalk.com/202612060109/9fb1ca5f96caf399f175c37c59ced66e/dingtalk-desktop/win_installer/Release/DingTalk_v9.0.10.261117008.exe#/dl.7z",
-    "hash": "md5:fd0443d97ec9196644eb233b9a38850c",
+    "url": "https://dtapp-cast.dingtalk.com/202612070145/d211da9ae9658822946f49bac454b557/dingtalk-desktop/win_installer/Release/DingTalk_v9.0.10.261123007.exe#/dl.7z",
+    "hash": "md5:438507756a15d61969ebd0438fcaa9be",
     "pre_install": "& ((Get-ChildItem (Join-Path $scoopdir 'buckets\\*\\bin\\hook.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1).FullName) 'hooks/dingtalk/pre_install.ps1'",
     "post_install": "& ((Get-ChildItem (Join-Path $scoopdir 'buckets\\*\\bin\\hook.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1).FullName) 'hooks/dingtalk/post_install.ps1'",
     "pre_uninstall": "& ((Get-ChildItem (Join-Path $scoopdir 'buckets\\*\\bin\\hook.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1).FullName) 'hooks/dingtalk/pre_uninstall.ps1'",
