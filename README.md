@@ -32,6 +32,7 @@ scoop update *
 | douyin | 抖音电脑版（C 盘 AppData 联接 persist） | 官网 downloadpage |
 | steam | Steam（steamapps/userdata persist + LocalAppData 联接） | nightly（官方安装包） |
 | uu | 网易 UU 加速器（安装需管理员 PowerShell） | adl.netease 下载页签名 URL |
+| winshun | Win顺：文件 / 文件夹 / 内容搜索 | GitHub Release |
 
 ## 目录结构
 
@@ -73,5 +74,6 @@ Scoop 的 JSON 不能定义变量，每个 hook 用同一行模板，只改末�
 | douyin | 目录联接：`AppData/douyin`、`douyin_lynx`、`douyin_widget` → persist |
 | steam | Scoop `persist`：`config`/`skins`/`steamapps`/`userdata` + 联接 `LocalAppData/Steam` |
 | uu | 目录联接：`AppData/Netease/UU`、`LocalAppData/Netease/UU`、`ProgramData/Netease/UU` → persist |
+| winshun | Scoop `persist: data` + 联接 `LocalAppData/WinShun` |
 
 `utils.ps1`：`Install-PersistDataLinks`（统一 Junction：实目录先迁移、已是联接则跳过）、`Initialize-VscodePortableData`（cursor/codebuddy）、`Clear-*Shortcuts`、`Assert-AdminElevation`。
