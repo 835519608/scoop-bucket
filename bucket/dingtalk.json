@@ -27,7 +27,7 @@
     "notes": [
         "国内版离线包：dtapp-cast 签名 URL（同 sdoog）；Excavator 会刷新签名与版本后缀。",
         "用户数据联接：%APPDATA%\\DingTalk / dinglive、%LOCALAPPDATA%\\DingTalk_{91,108,133} → persist。",
-        "仅保留 Scoop 开始菜单「钉钉」；已清桌面/多余快捷方式，并去掉自带 Updater。"
+        "开始菜单项由 Scoop shortcuts 写入 Scoop Apps；pre_install 去掉自带 Updater。"
     ],
     "checkver": {
         "script": [

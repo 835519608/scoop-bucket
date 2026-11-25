@@ -76,4 +76,4 @@ Scoop 的 JSON 不能定义变量，每个 hook 用同一行模板，只改末�
 | uu | 目录联接：`AppData/Netease/UU`、`LocalAppData/Netease/UU`、`ProgramData/Netease/UU` → persist |
 | winshun | Scoop `persist: data` + 联接 `LocalAppData/WinShun` |
 
-`utils.ps1`：`Install-PersistDataLinks`（统一 Junction：实目录先迁移、已是联接则跳过）、`Initialize-VscodePortableData`（cursor/codebuddy）、`Clear-*Shortcuts`、`Assert-AdminElevation`。
+`utils.ps1`：`Install-PersistDataLinks`（统一 Junction：实目录先迁移、已是联接则跳过）、`Initialize-VscodePortableData`（cursor/codebuddy）、`Remove-NsisExtractCrumbs`、`Assert-AdminElevation`。各 app 的映射在 `hooks/<app>/persist.ps1`。

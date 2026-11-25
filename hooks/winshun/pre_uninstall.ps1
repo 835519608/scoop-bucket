@@ -15,7 +15,5 @@ if ($cmd -eq 'uninstall') {
 Get-Process -Name 'WinShun', 'WinShunSearch', 'WinShunUpdate', 'WinShunService', 'WinShunPluginHost', 'WinShunExtract', 'WinShunMcp' -ErrorAction SilentlyContinue |
     Stop-Process -Force -ErrorAction SilentlyContinue
 
-$winshunMappings = @(
-    @{ Label = 'local'; Source = 'LocalAppData/WinShun'; Target = '$persist_dir/LocalAppData' }
-)
-Uninstall-PersistDataLinks -Mappings $winshunMappings -Log:$true
+. (Join-Path $PSScriptRoot 'persist.ps1')
+Uninstall-PersistDataLinks -Mappings $persistMappings -Log:$true

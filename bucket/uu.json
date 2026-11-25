@@ -27,7 +27,8 @@
         ]
     ],
     "notes": [
-        "静默安装：/silent /install_path（含 TAP/WFP 驱动，需管理员 PowerShell）。",
+        "静默安装：/silent /install_path /install_createshortcut 0 /install_autorun 0 /no_launch_uu（含 TAP/WFP 驱动，需管理员 PowerShell）。",
+        "安装时不写厂商快捷方式；开始菜单项由 Scoop shortcuts 写入 Scoop Apps。",
         "用户数据联接：%APPDATA%\\Netease\\UU、%LOCALAPPDATA%\\Netease\\UU、%PROGRAMDATA%\\Netease\\UU → persist。",
         "下载 URL 带签名参数，Excavator 会从 adl 页面刷新；#/UU-x.y.z.exe 避免查询串导致 Scoop 缓存路径非法。"
     ],

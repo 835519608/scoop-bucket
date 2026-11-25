@@ -1,2 +1,2 @@
-﻿$cliProxyMappings = @(@{ Label = 'auth'; Source = 'UserProfile/.cli-proxy-api'; Target = '$persist_dir/auth'; EnsureTarget = $true })
-Install-PersistDataLinks -Mappings $cliProxyMappings
+﻿. (Join-Path $PSScriptRoot 'persist.ps1')
+Install-PersistDataLinks -Mappings $persistMappings

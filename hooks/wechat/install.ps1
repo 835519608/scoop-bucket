@@ -1,11 +1,9 @@
 ﻿# WeChat 4.x (Weixin): unpack + redirect C: user data into Scoop persist
 Expand-7zipArchive "$dir\install.7z" "$dir" -Removal
-Remove-Item "$dir\`$*", "$dir\Uninst*" -Force -Recurse -ErrorAction SilentlyContinue
+Remove-NsisExtractCrumbs -Path $dir
 
-$wechatMappings = @(
-    @{ Label = 'xwechat'; Source = 'AppData/Tencent/xwechat'; Target = '$persist_dir/xwechat'; EnsureTarget = $true }
-)
-Install-PersistDataLinks -Mappings $wechatMappings -Log:$true
+. (Join-Path $PSScriptRoot 'persist.ps1')
+Install-PersistDataLinks -Mappings $persistMappings -Log:$true
 
 # File save path: keep existing non-C location; otherwise use persist/xwechat_files
 $filesPersist = Join-Path $persist_dir 'xwechat_files'
@@ -51,10 +49,3 @@ New-ItemProperty -Path $regPath -Name 'InstallPath' -Value $dir -Force | Out-Nul
 $configPath = Join-Path $env:APPDATA 'Tencent\xwechat\config'
 Ensure-FolderExists -Path $configPath
 Set-Content -NoNewline -Path (Join-Path $configPath '51a1fffea11325a1e4104c6b3de47af7.ini') -Value $savePath -Encoding Ascii
-
-Clear-DesktopShortcuts -Filter '*微信*.lnk'
-Clear-DesktopShortcuts -Filter 'Weixin*.lnk'
-Clear-DesktopShortcuts -Filter 'WeChat*.lnk'
-Clear-StartMenuShortcuts -Filter '*微信*.lnk'
-Clear-StartMenuShortcuts -Filter 'Weixin*.lnk'
-Clear-StartMenuShortcuts -Filter 'WeChat*.lnk'

@@ -4,11 +4,5 @@ Initialize-VscodePortableData `
     -RoamingAppData (Join-Path $env:APPDATA 'Cursor') `
     -ExtensionsPathPattern '(?<=cursor(/|\\)).*?(?=(/|\\)data(/|\\)extensions)'
 
-$cursorExtraMappings = @(
-    @{ Label = 'roaming'; Source = 'AppData/Cursor'; Target = '$persist_dir/roaming'; EnsureTarget = $true }
-    @{ Label = 'profile'; Source = 'UserProfile/.cursor'; Target = '$persist_dir/.cursor'; EnsureTarget = $true }
-)
-Install-PersistDataLinks -Mappings $cursorExtraMappings -Log:$true
-
-Clear-DesktopShortcuts -Filter 'Cursor*.lnk'
-Clear-StartMenuShortcuts -Filter 'Cursor*.lnk'
+. (Join-Path $PSScriptRoot 'persist.ps1')
+Install-PersistDataLinks -Mappings $persistMappings -Log:$true

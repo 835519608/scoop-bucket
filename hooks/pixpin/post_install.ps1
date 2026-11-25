@@ -1,8 +1,6 @@
 ﻿# 便携 Config/Data/History 已由 Scoop persist；右键菜单等仍写 %LOCALAPPDATA%\PixPin
-$pixpinMappings = @(
-    @{ Label = 'local'; Source = 'LocalAppData/PixPin'; Target = '$persist_dir/LocalAppData'; EnsureTarget = $true }
-)
-Install-PersistDataLinks -Mappings $pixpinMappings -Log:$true
+. (Join-Path $PSScriptRoot 'persist.ps1')
+Install-PersistDataLinks -Mappings $persistMappings -Log:$true
 
 # 对齐 sdoog：关掉崩溃上报与自动升级（写进 persist Config）
 $configDir = Join-Path $persist_dir 'Config'
@@ -16,6 +14,3 @@ $localStorage = Join-Path $dir 'LocalStorage.data'
 if (!(Test-Path $localStorage) -or !(Get-Item $localStorage).Length) {
     Set-Content -Path $localStorage -Encoding ASCII -Value "[General]`r`nIsFirstRun=false`r`ndevID=$((New-Guid).Guid)"
 }
-
-Clear-DesktopShortcuts -Filter 'PixPin*.lnk'
-Clear-StartMenuShortcuts -Filter 'PixPin*.lnk'

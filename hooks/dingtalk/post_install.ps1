@@ -1,12 +1,6 @@
 ﻿# Redirect default C: user-data folders into Scoop persist
-$dingtalkMappings = @(
-    @{ Label = 'roaming'; Source = 'AppData/DingTalk'; Target = '$persist_dir/AppData'; EnsureTarget = $true }
-    @{ Label = 'dinglive'; Source = 'AppData/dinglive'; Target = '$persist_dir/dinglive'; EnsureTarget = $true }
-    @{ Label = 'local91'; Source = 'LocalAppData/DingTalk_91'; Target = '$persist_dir/DingTalk_91'; EnsureTarget = $true }
-    @{ Label = 'local108'; Source = 'LocalAppData/DingTalk_108'; Target = '$persist_dir/DingTalk_108'; EnsureTarget = $true }
-    @{ Label = 'local133'; Source = 'LocalAppData/DingTalk_133'; Target = '$persist_dir/DingTalk_133'; EnsureTarget = $true }
-)
-Install-PersistDataLinks -Mappings $dingtalkMappings -Log:$true
+. (Join-Path $PSScriptRoot 'persist.ps1')
+Install-PersistDataLinks -Mappings $persistMappings -Log:$true
 
 # URL Protocol / App Paths for dingtalk://
 $registryScope = if ($global) { 'HKEY_LOCAL_MACHINE' } else { 'HKEY_CURRENT_USER' }
@@ -33,16 +27,3 @@ Windows Registry Editor Version 5.00
 "DingTalk"="$schemeReg"
 "@ | Set-Content -Path $regFile -Encoding Unicode
 reg.exe import $regFile 2>$null | Out-Null
-
-# Keep only Scoop Start Menu shortcut
-Clear-DesktopShortcuts -Filter 'DingTalk*.lnk'
-Clear-DesktopShortcuts -Filter '*DingDing*.lnk'
-Clear-StartMenuShortcuts -Filter 'DingTalk*.lnk'
-Get-ChildItem -Path @(
-    (Join-Path $env:USERPROFILE 'Desktop')
-    (Join-Path $env:PUBLIC 'Desktop')
-    (Join-Path $env:APPDATA 'Microsoft\Windows\Start Menu\Programs')
-    (Join-Path $env:ProgramData 'Microsoft\Windows\Start Menu\Programs')
-) -Filter '*.lnk' -Recurse -ErrorAction SilentlyContinue |
-    Where-Object { $_.BaseName -match '钉钉' -and $_.DirectoryName -notmatch '\\Scoop Apps$' } |
-    Remove-Item -Force -ErrorAction SilentlyContinue

@@ -1,5 +1,2 @@
-﻿$hbuilderxMappings = @(
-    @{ Label = 'roaming'; Source = 'AppData/HBuilder X'; Target = '$persist_dir/roaming' }
-    @{ Label = 'local'; Source = 'LocalAppData/HBuilder X'; Target = '$persist_dir/local' }
-)
-Uninstall-PersistDataLinks -Mappings $hbuilderxMappings -Log:$true
+﻿. (Join-Path $PSScriptRoot 'persist.ps1')
+Uninstall-PersistDataLinks -Mappings $persistMappings -Log:$true

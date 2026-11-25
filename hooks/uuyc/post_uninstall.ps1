@@ -1,8 +1,5 @@
-﻿$uuycMappings = @(
-    @{ Label = 'local'; Source = 'LocalAppData/GameViewer'; Target = '$persist_dir/AppData' }
-    @{ Label = 'programdata'; Source = 'ProgramData/Netease/GameViewer'; Target = '$persist_dir/ProgramData' }
-)
-Uninstall-PersistDataLinks -Mappings $uuycMappings
+﻿. (Join-Path $PSScriptRoot 'persist.ps1')
+Uninstall-PersistDataLinks -Mappings $persistMappings
 if (-not (Test-AdminElevationOrWarn 'uuyc 卸载后清理需要管理员权限，已跳过特权清理。')) { return }
 $sidRoots = Get-ChildItem Registry::HKEY_USERS | Where-Object { $_.PSChildName -match '^S-1-5-21-(\d+-){3}\d+$' } | ForEach-Object { $_.PSPath }
 foreach ($sid in $sidRoots) {

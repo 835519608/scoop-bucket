@@ -3,11 +3,12 @@
 # 对外 API:
 #   Install-PersistDataLinks / Uninstall-PersistDataLinks
 #   Test-RealPath / Test-RealDirectory / Initialize-VscodePortableData
-#   Clear-DesktopShortcuts / Clear-StartMenuShortcuts
+#   Remove-NsisExtractCrumbs
 #   Test-AdminElevation / Assert-AdminElevation / Test-AdminElevationOrWarn
 #
 # Mapping: Label, Source, Target, EnsureTarget（可选）
 # 联接规则统一：源若已是 Junction 则跳过迁移，只重建联接；实目录则先迁入 persist 再联接。
+# 各 app 的映射写在 hooks/<app>/persist.ps1（$persistMappings），install/uninstall 共用。
 
 #region 路径判定（跳过已有联接，避免把 persist 再拷回 portable）
 
@@ -68,41 +69,15 @@ function New-DirectoryLink {
 
 #endregion
 
-#region 快捷方式清理
+#region NSIS / 7z 解压残渣
 
-function Clear-ShortcutsInFolders {
+function Remove-NsisExtractCrumbs {
     param (
         [Parameter(Mandatory = $true)]
-        [string[]]$SearchPaths,
-        [Parameter(Mandatory = $true)]
-        [string]$Filter
+        [string]$Path
     )
-    foreach ($searchPath in $SearchPaths) {
-        Get-ChildItem -Path $searchPath -Filter $Filter -ErrorAction SilentlyContinue |
-            Remove-Item -Force -ErrorAction SilentlyContinue
-    }
-}
-
-function Clear-DesktopShortcuts {
-    param (
-        [Parameter(Mandatory = $true)]
-        [string]$Filter
-    )
-    Clear-ShortcutsInFolders -SearchPaths @(
-        (Join-Path $env:USERPROFILE 'Desktop')
-        (Join-Path $env:PUBLIC 'Desktop')
-    ) -Filter $Filter
-}
-
-function Clear-StartMenuShortcuts {
-    param (
-        [Parameter(Mandatory = $true)]
-        [string]$Filter
-    )
-    Clear-ShortcutsInFolders -SearchPaths @(
-        (Join-Path $env:APPDATA 'Microsoft\Windows\Start Menu\Programs')
-        (Join-Path $env:ProgramData 'Microsoft\Windows\Start Menu\Programs')
-    ) -Filter $Filter
+    if (-not $Path -or -not (Test-Path -LiteralPath $Path)) { return }
+    Remove-Item "$Path\`$*", "$Path\Uninst*", "$Path\uninst*" -Force -Recurse -ErrorAction SilentlyContinue
 }
 
 #endregion
@@ -159,7 +134,7 @@ function Initialize-VscodePortableData {
     if (-not $AppDir) { $AppDir = $dir }
     if (-not $Version) { $Version = $version }
 
-    Remove-Item "$AppDir\`$*", "$AppDir\Uninst*" -Recurse -Force -ErrorAction SilentlyContinue
+    Remove-NsisExtractCrumbs -Path $AppDir
 
     $dataDir = Join-Path $AppDir 'data'
     $extSrc = Join-Path $ProfileDir 'extensions'

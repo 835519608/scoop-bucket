@@ -8,12 +8,8 @@ if (Test-Path -LiteralPath $uninstaller) {
     Start-Process -FilePath $uninstaller -ArgumentList '/silent' -Wait -ErrorAction SilentlyContinue
 }
 
-$uuMappings = @(
-    @{ Label = 'roaming'; Source = 'AppData/Netease/UU'; Target = '$persist_dir/AppData' }
-    @{ Label = 'local'; Source = 'LocalAppData/Netease/UU'; Target = '$persist_dir/LocalAppData' }
-    @{ Label = 'programdata'; Source = 'ProgramData/Netease/UU'; Target = '$persist_dir/ProgramData' }
-)
-Uninstall-PersistDataLinks -Mappings $uuMappings -Log:$true
+. (Join-Path $PSScriptRoot 'persist.ps1')
+Uninstall-PersistDataLinks -Mappings $persistMappings -Log:$true
 
 Remove-Item 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\NeteaseGacc' -Recurse -Force -ErrorAction SilentlyContinue
 Remove-ItemProperty 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Run' -Name 'NeteaseGacc' -Force -ErrorAction SilentlyContinue

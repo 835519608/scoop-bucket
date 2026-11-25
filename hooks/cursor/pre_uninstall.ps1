@@ -1,5 +1,2 @@
-﻿$cursorExtraMappings = @(
-    @{ Label = 'roaming'; Source = 'AppData/Cursor'; Target = '$persist_dir/roaming' }
-    @{ Label = 'profile'; Source = 'UserProfile/.cursor'; Target = '$persist_dir/.cursor' }
-)
-Uninstall-PersistDataLinks -Mappings $cursorExtraMappings -Log:$true
+﻿. (Join-Path $PSScriptRoot 'persist.ps1')
+Uninstall-PersistDataLinks -Mappings $persistMappings -Log:$true

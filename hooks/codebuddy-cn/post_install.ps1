@@ -5,12 +5,5 @@ Initialize-VscodePortableData `
     -ExtensionsPathPattern '(?<=codebuddycn(/|\\)).*?(?=(/|\\)data(/|\\)extensions)'
 
 # CLI 写 .codebuddy；IDE 默认还会碰 AppData/Local（portable 之外兜底联接）
-$codebuddyExtraMappings = @(
-    @{ Label = 'profile-cli'; Source = 'UserProfile/.codebuddy'; Target = '$persist_dir/.codebuddy'; EnsureTarget = $true }
-    @{ Label = 'roaming'; Source = 'AppData/CodeBuddy CN'; Target = '$persist_dir/roaming'; EnsureTarget = $true }
-    @{ Label = 'local'; Source = 'LocalAppData/CodeBuddy CN'; Target = '$persist_dir/local'; EnsureTarget = $true }
-)
-Install-PersistDataLinks -Mappings $codebuddyExtraMappings -Log:$true
-
-Clear-DesktopShortcuts -Filter 'CodeBuddy*.lnk'
-Clear-StartMenuShortcuts -Filter 'CodeBuddy*.lnk'
+. (Join-Path $PSScriptRoot 'persist.ps1')
+Install-PersistDataLinks -Mappings $persistMappings -Log:$true
