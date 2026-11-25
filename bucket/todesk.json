@@ -1,0 +1,40 @@
+{
+    "version": "4.9.6.0",
+    "description": "ToDesk 远程桌面（Scoop 解包；LocalAppData 联接 persist）",
+    "homepage": "https://www.todesk.com/",
+    "license": {
+        "identifier": "Proprietary",
+        "url": "https://www.todesk.com/licence.html"
+    },
+    "url": "https://dl.todesk.com/irrigation/ToDesk_4.9.6.0.exe#/setup.7z",
+    "hash": "a535001e00367df8a717b77a0fb3f2d98572cbf37a04bc9642da08db7b68805f",
+    "installer": {
+        "script": "& ((Get-ChildItem (Join-Path $scoopdir 'buckets\\\\*\\\\bin\\\\hook.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1).FullName) 'hooks/todesk/install.ps1'"
+    },
+    "uninstaller": {
+        "script": "& ((Get-ChildItem (Join-Path $scoopdir 'buckets\\\\*\\\\bin\\\\hook.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1).FullName) 'hooks/todesk/uninstall.ps1'"
+    },
+    "shortcuts": [
+        [
+            "ToDesk.exe",
+            "ToDesk"
+        ]
+    ],
+    "persist": [
+        "Logs",
+        "config.ini"
+    ],
+    "notes": [
+        "安装与卸载需管理员 PowerShell（ToDesk_Service）。",
+        "%LOCALAPPDATA%\\ToDesk → persist/LocalAppData；config.ini / Logs 由 Scoop persist。",
+        "不强制安装/卸载 ToDeskAudio.sys；卸载后内核音频驱动可能残留。",
+        "若已有 D:\\Program\\ToDesk\\config.ini，首次安装会迁入 persist。"
+    ],
+    "checkver": {
+        "url": "https://www.todesk.com/download.html",
+        "regex": "dl\\.todesk\\.com(?:/|\\\\u002F)(?<path>[\\w]+)(?:/|\\\\u002F)ToDesk_(?<version>[\\d\\.]+)\\.exe"
+    },
+    "autoupdate": {
+        "url": "https://dl.todesk.com/$matchPath/ToDesk_$version.exe#/setup.7z"
+    }
+}
