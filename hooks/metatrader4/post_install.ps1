@@ -17,6 +17,9 @@ foreach ($name in @('MetaTrader 4', 'MetaTrader 5')) {
     }
 }
 
+# WinShun / Explorer open terminal.exe without args — wrap so /portable is always applied
+Install-MetaTraderPortableWrappers -AppDir $dir -App metatrader4 -Log:$true
+
 $legacy = 'D:\Program\MetaTrader\MetaTrader 4'
 if (Test-Path -LiteralPath $legacy) {
     foreach ($name in @('config', 'history', 'logs', 'MQL4', 'profiles', 'templates', 'tester')) {

@@ -102,6 +102,11 @@ function Write-InstanceShortcut {
     Write-Host "Shortcut: $lnkPath"
 }
 
+# Load bucket utils (portable wrapper helper)
+$utils = Get-ChildItem (Join-Path $env:SCOOP 'buckets\*\bin\utils.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1
+if (-not $utils) { throw 'scoop-bucket bin/utils.ps1 not found' }
+. $utils.FullName
+
 if ($SyncBinaries) {
     if (-not (Test-Path -LiteralPath $instRoot)) {
         Write-Host "No instances under $instRoot"
@@ -111,6 +116,7 @@ if ($SyncBinaries) {
     Get-ChildItem $instRoot -Directory | ForEach-Object {
         Write-Host "SyncBinaries → $($_.FullName)"
         Sync-BinariesTo -Dest $_.FullName
+        Install-MetaTraderPortableWrappers -AppDir $_.FullName -App $App
     }
     Write-Host 'Done. Instance data dirs were not modified.'
     return
@@ -130,6 +136,7 @@ Stop-MtProcesses
 New-Item -ItemType Directory -Path $instRoot -Force | Out-Null
 Write-Host "Cloning $App → $dest"
 Sync-BinariesTo -Dest $dest
+Install-MetaTraderPortableWrappers -AppDir $dest -App $App
 Copy-TemplateData -Dest $dest
 Write-InstanceShortcut -Dest $dest -InstanceName $Name
-Write-Host "Launch with /portable from the new Start Menu shortcut (or: & '$dest\$exeName' /portable)"
+Write-Host "Launch $exeName from the new Start Menu shortcut (wrapper always adds /portable)"

@@ -4,6 +4,7 @@
 #   Install-PersistDataLinks / Uninstall-PersistDataLinks
 #   Test-RealPath / Test-RealDirectory / Initialize-VscodePortableData
 #   Remove-NsisExtractCrumbs / Set-ShortcutAppUserModelId
+#   Install-MetaTraderPortableWrapper
 #   Test-AdminElevation / Assert-AdminElevation / Test-AdminElevationOrWarn
 #
 # Mapping: Label, Source, Target, EnsureTarget（可选）
@@ -227,6 +228,92 @@ namespace ScoopBucketShell {
         $Path, $TargetPath, $Arguments, $WorkingDirectory,
         $IconLocation, $IconIndex, $Description, $AppUserModelId
     )
+}
+
+#endregion
+
+#region MetaTrader：强制 /portable（WinShun 等直接点 exe 也走便携）
+
+function Get-ScoopShimExePath {
+    $roots = @()
+    if ($scoopdir) { $roots += $scoopdir }
+    if ($env:SCOOP) { $roots += $env:SCOOP }
+    foreach ($root in ($roots | Select-Object -Unique)) {
+        $hit = Get-ChildItem (Join-Path $root 'apps\scoop\current\supporting\shims') -Recurse -Filter 'shim.exe' -ErrorAction SilentlyContinue |
+            Select-Object -First 1
+        if ($hit) { return $hit.FullName }
+    }
+    throw 'scoop shim.exe not found (is Scoop installed?)'
+}
+
+function Install-MetaTraderPortableWrapper {
+    <#
+    .SYNOPSIS
+      Replace MetaTrader GUI exe with a Scoop shim that always passes /portable.
+      Real binary kept as <name>-bin.exe beside it. Safe for WinShun / Explorer double-click.
+    #>
+    param (
+        [Parameter(Mandatory = $true)][string]$AppDir,
+        [Parameter(Mandatory = $true)][string]$ExeName,
+        [string]$BinName,
+        [string]$ShortcutName,
+        [switch]$Log
+    )
+    if (-not $BinName) {
+        $BinName = ($ExeName -replace '\.exe$', '') + '-bin.exe'
+    }
+    $exe = Join-Path $AppDir $ExeName
+    $bin = Join-Path $AppDir $BinName
+    $shimSide = Join-Path $AppDir (($ExeName -replace '\.exe$', '') + '.shim')
+    $shimExe = Get-ScoopShimExePath
+
+    if (-not (Test-Path -LiteralPath $exe) -and -not (Test-Path -LiteralPath $bin)) { return }
+
+    if (Test-Path -LiteralPath $exe) {
+        $len = (Get-Item -LiteralPath $exe).Length
+        if ($len -gt 1MB) {
+            if (Test-Path -LiteralPath $bin) { Remove-Item -LiteralPath $bin -Force }
+            Move-Item -LiteralPath $exe -Destination $bin -Force
+            Copy-Item -LiteralPath $shimExe -Destination $exe -Force
+        } elseif (Test-Path -LiteralPath $bin) {
+            Copy-Item -LiteralPath $shimExe -Destination $exe -Force
+        } else {
+            return
+        }
+    } elseif (Test-Path -LiteralPath $bin) {
+        Copy-Item -LiteralPath $shimExe -Destination $exe -Force
+    }
+
+    $binFull = (Resolve-Path -LiteralPath $bin).Path
+    Set-Content -Path $shimSide -Value "path = `"$binFull`"`r`nargs = /portable`r`n" -Encoding Ascii -NoNewline
+    if ($Log) { info "[mt-portable] $ExeName -> $BinName (/portable)" }
+
+    if ($ShortcutName) {
+        $lnkPath = Join-Path $AppDir "$ShortcutName.lnk"
+        $w = New-Object -ComObject WScript.Shell
+        $lnk = $w.CreateShortcut($lnkPath)
+        $lnk.TargetPath = $exe
+        $lnk.Arguments = ''
+        $lnk.WorkingDirectory = $AppDir
+        $lnk.IconLocation = "$binFull,0"
+        $lnk.Description = "$ShortcutName (Scoop portable)"
+        $lnk.Save()
+    }
+}
+
+function Install-MetaTraderPortableWrappers {
+    param (
+        [Parameter(Mandatory = $true)][string]$AppDir,
+        [Parameter(Mandatory = $true)][ValidateSet('metatrader4', 'metatrader5')][string]$App,
+        [switch]$Log
+    )
+    if ($App -eq 'metatrader5') {
+        Install-MetaTraderPortableWrapper -AppDir $AppDir -ExeName 'terminal64.exe' -ShortcutName 'MetaTrader 5' -Log:$Log
+        Install-MetaTraderPortableWrapper -AppDir $AppDir -ExeName 'MetaEditor64.exe' -Log:$Log
+    } else {
+        Install-MetaTraderPortableWrapper -AppDir $AppDir -ExeName 'terminal.exe' -ShortcutName 'MetaTrader 4' -Log:$Log
+        Install-MetaTraderPortableWrapper -AppDir $AppDir -ExeName 'metaeditor.exe' -Log:$Log
+    }
 }
 
 #endregion

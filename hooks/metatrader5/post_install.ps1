@@ -17,6 +17,9 @@ foreach ($name in @('MetaTrader 4', 'MetaTrader 5')) {
     }
 }
 
+# WinShun / Explorer open terminal64.exe without args — wrap so /portable is always applied
+Install-MetaTraderPortableWrappers -AppDir $dir -App metatrader5 -Log:$true
+
 $legacy = 'D:\Program\MetaTrader\MetaTrader 5'
 
 # Optional one-time migration from previous non-Scoop install / AppData hash
