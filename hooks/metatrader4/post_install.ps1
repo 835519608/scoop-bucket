@@ -5,6 +5,17 @@ if (-not (Test-Path -LiteralPath $terminal)) {
 }
 
 Get-ChildItem $dir -Filter '*setup*.exe' -ErrorAction SilentlyContinue | Remove-Item -Force -ErrorAction SilentlyContinue
+# MetaQuotes ships uninstall.exe which re-registers ProgramData Start Menu entries without /portable
+Remove-Item -LiteralPath (Join-Path $dir 'uninstall.exe') -Force -ErrorAction SilentlyContinue
+
+# Drop MetaQuotes / legacy Start Menu clones (Scoop Apps shortcut keeps /portable)
+foreach ($name in @('MetaTrader 4', 'MetaTrader 5')) {
+    $menu = Join-Path $env:ProgramData "Microsoft\Windows\Start Menu\Programs\$name"
+    if (Test-Path -LiteralPath $menu) {
+        info "[metatrader4] Removing duplicate Start Menu folder: $menu"
+        Remove-Item -LiteralPath $menu -Recurse -Force -ErrorAction SilentlyContinue
+    }
+}
 
 $legacy = 'D:\Program\MetaTrader\MetaTrader 4'
 if (Test-Path -LiteralPath $legacy) {

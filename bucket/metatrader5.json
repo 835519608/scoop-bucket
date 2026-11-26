@@ -34,7 +34,8 @@
     ],
     "notes": [
         "从本仓库 GitHub Release 下载纯程序 7z（无账号/图表数据）；换电脑可直接 scoop install。",
-        "快捷方式 / shim 强制 /portable；数据写在 persist。",
+        "快捷方式 / shim 强制 /portable；数据写在 persist。请用 Scoop Apps 里的入口，勿用 ProgramData\\MetaTrader 5（无 /portable）。",
+        "安装时会删除 MetaQuotes 自带 uninstall.exe，并清理 ProgramData 重复开始菜单项。",
         "若本机仍有 D:\\Program\\MetaTrader\\MetaTrader 5，post_install 会可选迁入数据。",
         "多账号：& \"$env:SCOOP\\buckets\\scoop-bucket\\bin\\mt-clone.ps1\" -App metatrader5 -Name <实例名>",
         "同步程序：同上 -SyncBinaries。卸载模板不删除 persist\\metatrader5-instances。"

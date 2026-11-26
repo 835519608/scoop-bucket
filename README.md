@@ -79,7 +79,7 @@ Scoop 的 JSON 不能定义变量，每个 hook 用同一行模板，只改末�
 | douyin | 目录联接：`AppData/douyin`、`douyin_lynx`、`douyin_widget` → persist |
 | steam | Scoop `persist`：`config`/`skins`/`steamapps`/`userdata` + 联接 `LocalAppData/Steam` |
 | uu | 目录联接：`AppData/Netease/UU`、`LocalAppData/Netease/UU`、`ProgramData/Netease/UU` → persist |
-| winshun | Scoop `persist: data` + 联接 `LocalAppData/WinShun` |
+| winshun | Scoop `persist: data`（便携；对齐官方，不再联 LocalAppData） |
 | g-helper | 联接 `AppData/GHelper` → `persist/data` |
 | todesk | Scoop `persist`：`config.ini`/`Logs` + 联接 `LocalAppData/ToDesk`（卸载不保证清 ToDeskAudio 驱动） |
 | metatrader4 | Scoop `persist`：`config`/`history`/`logs`/`MQL4`/`profiles`/`templates`/`tester`；实例在 `persist/metatrader4-instances/<名>` |
