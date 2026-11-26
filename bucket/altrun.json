@@ -1,5 +1,5 @@
 {
-    "version": "2026.11.23",
+    "version": "2026.11.26",
     "description": "轻量高效的启动器（AltRun）",
     "homepage": "https://github.com/zhugecaomao/ALTRun",
     "license": "GPL-3.0",
@@ -9,8 +9,8 @@
     ],
     "architecture": {
         "64bit": {
-            "url": "https://github.com/zhugecaomao/ALTRun/releases/download/2026.11.23/ALTRun_v2026.11.23.zip",
-            "hash": "bd4a781f3bdb48d030794ca17e3eb2a2fee31ef82d81541f0d37e38e59cd5f19"
+            "url": "https://github.com/zhugecaomao/ALTRun/releases/download/2026.11.26/ALTRun_v2026.11.26.zip",
+            "hash": "bc65ef851038ef9fc318cca26e9bf9738241bb71d34afdd4de94f258af1fc609"
         }
     },
     "bin": [
