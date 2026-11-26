@@ -33,11 +33,7 @@
         "Tester"
     ],
     "notes": [
-        "从本仓库 GitHub Release 下载纯程序 7z（无账号/图表数据）；换电脑可直接 scoop install。",
-        "WinShun：收藏命令关键词 mt5（带 /portable + 图标）。不要直接开搜到的 terminal64.exe。",
-        "也可从 Scoop Apps 的 MetaTrader 5.lnk 启动。安装时会清 ProgramData 重复菜单并删 uninstall.exe。",
-        "若本机仍有 D:\\Program\\MetaTrader\\MetaTrader 5，post_install 会可选迁入数据。",
-        "多账号：& \"$env:SCOOP\\buckets\\scoop-bucket\\bin\\mt-clone.ps1\" -App metatrader5 -Name <实例名>",
-        "同步程序：同上 -SyncBinaries。卸载模板不删除 persist\\metatrader5-instances。"
+        "启动：WinShun 输入 mt5，或 Scoop Apps\\MetaTrader 5.lnk（均带 /portable）。勿直接开 terminal64.exe。",
+        "多账号：& \"$env:SCOOP\\buckets\\scoop-bucket\\bin\\mt-clone.ps1\" -App metatrader5 -Name <实例名>（-SyncBinaries 同步程序）。"
     ]
 }

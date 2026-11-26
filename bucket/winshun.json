@@ -16,9 +16,8 @@
     "persist": "data",
     "pre_uninstall": "& ((Get-ChildItem (Join-Path $scoopdir 'buckets\\*\\bin\\hook.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1).FullName) 'hooks/winshun/pre_uninstall.ps1'",
     "notes": [
-        "便携包（同官方 Scoop）：设置/索引在 persist\\winshun\\data（exe 旁 data 联接）。",
-        "不要再联 %LOCALAPPDATA%\\WinShun；那是安装版路径，联上会干扰便携/Scoop 更新。",
-        "全盘索引服务不随 Scoop 安装；可在 设置 > 搜索范围 > 磁盘 > 索引方式 中开启（服务会装到 Program Files\\WinShun Service，属正常）。"
+        "便携包：设置/索引在 persist\\winshun\\data。",
+        "全盘索引服务不随 Scoop 安装；需要时在 设置 > 搜索范围 > 磁盘 > 索引方式 开启。"
     ],
     "checkver": {
         "github": "https://github.com/LingCore/WinShun"

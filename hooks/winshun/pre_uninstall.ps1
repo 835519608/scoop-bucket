@@ -14,9 +14,3 @@ if ($cmd -eq 'uninstall') {
 
 Get-Process -Name 'WinShun', 'WinShunSearch', 'WinShunUpdate', 'WinShunService', 'WinShunPluginHost', 'WinShunExtract', 'WinShunMcp' -ErrorAction SilentlyContinue |
     Stop-Process -Force -ErrorAction SilentlyContinue
-
-# Legacy: older scoop-bucket builds linked LocalAppData; remove junction on uninstall only.
-if ($cmd -eq 'uninstall') {
-    . (Join-Path $PSScriptRoot 'persist.ps1')
-    Uninstall-PersistDataLinks -Mappings $persistMappings -Log:$true
-}

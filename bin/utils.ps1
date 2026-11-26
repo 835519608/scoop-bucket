@@ -4,8 +4,7 @@
 #   Install-PersistDataLinks / Uninstall-PersistDataLinks
 #   Test-RealPath / Test-RealDirectory / Initialize-VscodePortableData
 #   Remove-NsisExtractCrumbs / Set-ShortcutAppUserModelId
-#   Install-MetaTraderPortableShortcut / Restore-MetaTraderPortableWrapper
-#   Install-MetaTraderWinShunFavorite
+#   Install-MetaTraderLaunchers (Scoop .lnk + WinShun mt4/mt5 favorites)
 #   Test-AdminElevation / Assert-AdminElevation / Test-AdminElevationOrWarn
 #
 # Mapping: Label, Source, Target, EnsureTarget（可选）
@@ -233,91 +232,7 @@ namespace ScoopBucketShell {
 
 #endregion
 
-#region MetaTrader：便携入口用 .lnk（保留官方 exe 图标；勿再包 shim）
-
-function Restore-MetaTraderPortableWrapper {
-    <#
-    .SYNOPSIS
-      Undo an older scoop-bucket shim wrap: move *-bin.exe back to the real exe name.
-    #>
-    param (
-        [Parameter(Mandatory = $true)][string]$AppDir,
-        [Parameter(Mandatory = $true)][string]$ExeName,
-        [string]$BinName,
-        [switch]$Log
-    )
-    if (-not $BinName) {
-        $BinName = ($ExeName -replace '\.exe$', '') + '-bin.exe'
-    }
-    $exe = Join-Path $AppDir $ExeName
-    $bin = Join-Path $AppDir $BinName
-    $shimSide = Join-Path $AppDir (($ExeName -replace '\.exe$', '') + '.shim')
-
-    if (Test-Path -LiteralPath $bin) {
-        if (Test-Path -LiteralPath $exe) {
-            $len = (Get-Item -LiteralPath $exe).Length
-            # Small file = former scoop shim stub
-            if ($len -lt 1MB) { Remove-Item -LiteralPath $exe -Force -ErrorAction SilentlyContinue }
-            else { return }
-        }
-        Move-Item -LiteralPath $bin -Destination $exe -Force
-        if ($Log) { info "[mt-portable] restored $ExeName from $BinName" }
-    }
-    Remove-Item -LiteralPath $shimSide -Force -ErrorAction SilentlyContinue
-}
-
-function Install-MetaTraderPortableShortcut {
-    param (
-        [Parameter(Mandatory = $true)][string]$AppDir,
-        [Parameter(Mandatory = $true)][string]$ExeName,
-        [Parameter(Mandatory = $true)][string]$ShortcutName,
-        [switch]$Log
-    )
-    $exe = Join-Path $AppDir $ExeName
-    if (-not (Test-Path -LiteralPath $exe)) { return }
-
-    $exeFull = (Resolve-Path -LiteralPath $exe).Path
-    $lnkPath = Join-Path $AppDir "$ShortcutName.lnk"
-    $w = New-Object -ComObject WScript.Shell
-    $lnk = $w.CreateShortcut($lnkPath)
-    $lnk.TargetPath = $exeFull
-    $lnk.Arguments = '/portable'
-    $lnk.WorkingDirectory = $AppDir
-    $lnk.IconLocation = "$exeFull,0"
-    $lnk.Description = "$ShortcutName (Scoop /portable)"
-    $lnk.Save()
-
-    # Also refresh Scoop Apps start-menu entry if present
-    $scoopLnk = Join-Path $env:APPDATA "Microsoft\Windows\Start Menu\Programs\Scoop Apps\$ShortcutName.lnk"
-    if (Test-Path -LiteralPath (Split-Path $scoopLnk -Parent)) {
-        $lnk2 = $w.CreateShortcut($scoopLnk)
-        $lnk2.TargetPath = $exeFull
-        $lnk2.Arguments = '/portable'
-        $lnk2.WorkingDirectory = $AppDir
-        $lnk2.IconLocation = "$exeFull,0"
-        $lnk2.Description = "$ShortcutName (Scoop /portable)"
-        $lnk2.Save()
-    }
-    if ($Log) { info "[mt-portable] shortcut $ShortcutName.lnk -> $ExeName /portable" }
-}
-
-function Install-MetaTraderPortableShortcuts {
-    param (
-        [Parameter(Mandatory = $true)][string]$AppDir,
-        [Parameter(Mandatory = $true)][ValidateSet('metatrader4', 'metatrader5')][string]$App,
-        [switch]$Log
-    )
-    if ($App -eq 'metatrader5') {
-        Restore-MetaTraderPortableWrapper -AppDir $AppDir -ExeName 'terminal64.exe' -Log:$Log
-        Restore-MetaTraderPortableWrapper -AppDir $AppDir -ExeName 'MetaEditor64.exe' -Log:$Log
-        Install-MetaTraderPortableShortcut -AppDir $AppDir -ExeName 'terminal64.exe' -ShortcutName 'MetaTrader 5' -Log:$Log
-    } else {
-        Restore-MetaTraderPortableWrapper -AppDir $AppDir -ExeName 'terminal.exe' -Log:$Log
-        Restore-MetaTraderPortableWrapper -AppDir $AppDir -ExeName 'metaeditor.exe' -Log:$Log
-        Install-MetaTraderPortableShortcut -AppDir $AppDir -ExeName 'terminal.exe' -ShortcutName 'MetaTrader 4' -Log:$Log
-    }
-    Install-MetaTraderWinShunFavorite -App $App -AppDir $AppDir -Log:$Log
-}
+#region MetaTrader 启动入口（Scoop .lnk + WinShun 收藏命令）
 
 function Get-IconPngDataUrl {
     param ([Parameter(Mandatory = $true)][string]$Path)
@@ -337,59 +252,66 @@ function Get-IconPngDataUrl {
     }
 }
 
-function Install-MetaTraderWinShunFavorite {
+function Install-MetaTraderLaunchers {
     <#
     .SYNOPSIS
-      Register a WinShun Command favorite (keyword mt4/mt5) that launches with /portable.
-      WinShun indexes bare .exe without args and does not surface .lnk well — favorites are the reliable launcher path.
+      Scoop Apps / 应用目录 .lnk（/portable），以及 WinShun 收藏命令 mt4/mt5。
+      WinShun 文件搜索只会打开裸 exe（无参数），不要依赖搜到的 terminal*.exe。
     #>
     param (
+        [Parameter(Mandatory = $true)][string]$AppDir,
         [Parameter(Mandatory = $true)][ValidateSet('metatrader4', 'metatrader5')][string]$App,
-        [string]$AppDir,
         [switch]$Log
     )
-    $scoopRoot = if ($env:SCOOP) { $env:SCOOP } elseif ($scoopdir) { $scoopdir } else { return }
-    $favPath = Join-Path $scoopRoot 'persist\winshun\data\favorites.json'
-    $persistWinshun = Join-Path $scoopRoot 'persist\winshun'
-    if (-not (Test-Path -LiteralPath $persistWinshun)) { return } # WinShun not managed here
 
     $isMt5 = ($App -eq 'metatrader5')
     $exeName = if ($isMt5) { 'terminal64.exe' } else { 'terminal.exe' }
     $label = if ($isMt5) { 'MetaTrader 5' } else { 'MetaTrader 4' }
     $keyword = if ($isMt5) { 'mt5' } else { 'mt4' }
-    $id = if ($isMt5) { 'winshun-command:scoop-metatrader5' } else { 'winshun-command:scoop-metatrader4' }
+    $favId = if ($isMt5) { 'winshun-command:scoop-metatrader5' } else { 'winshun-command:scoop-metatrader4' }
 
-    # Prefer apps\<app>\current so favorites survive version bumps
+    $exe = Join-Path $AppDir $exeName
+    if (-not (Test-Path -LiteralPath $exe)) { return }
+    $exeFull = (Resolve-Path -LiteralPath $exe).Path
+
+    $w = New-Object -ComObject WScript.Shell
+    foreach ($lnkPath in @(
+            (Join-Path $AppDir "$label.lnk")
+            (Join-Path $env:APPDATA "Microsoft\Windows\Start Menu\Programs\Scoop Apps\$label.lnk")
+        )) {
+        $parent = Split-Path $lnkPath -Parent
+        if (-not (Test-Path -LiteralPath $parent)) { continue }
+        $lnk = $w.CreateShortcut($lnkPath)
+        $lnk.TargetPath = $exeFull
+        $lnk.Arguments = '/portable'
+        $lnk.WorkingDirectory = $AppDir
+        $lnk.IconLocation = "$exeFull,0"
+        $lnk.Description = "$label (Scoop /portable)"
+        $lnk.Save()
+    }
+    if ($Log) { info "[mt] shortcut $label.lnk -> $exeName /portable" }
+
+    $scoopRoot = if ($env:SCOOP) { $env:SCOOP } elseif ($scoopdir) { $scoopdir } else { return }
+    $favPath = Join-Path $scoopRoot 'persist\winshun\data\favorites.json'
+    if (-not (Test-Path -LiteralPath (Join-Path $scoopRoot 'persist\winshun'))) { return }
+
     $currentDir = Join-Path $scoopRoot "apps\$App\current"
-    if (-not $AppDir) { $AppDir = $currentDir }
-    $exeCurrent = Join-Path $currentDir $exeName
-    if (-not (Test-Path -LiteralPath $exeCurrent)) {
-        $exeCurrent = Join-Path $AppDir $exeName
-    }
-    if (-not (Test-Path -LiteralPath $exeCurrent)) { return }
-    $exeFull = (Resolve-Path -LiteralPath $exeCurrent).Path
-    # If resolved through junction to version dir, still write current\ path in command
     $exeForCmd = Join-Path $currentDir $exeName
-    if (Test-Path -LiteralPath $exeForCmd) {
-        $exeForCmd = (Get-Item -LiteralPath $exeForCmd).FullName
-    } else {
-        $exeForCmd = $exeFull
-    }
+    if (-not (Test-Path -LiteralPath $exeForCmd)) { $exeForCmd = $exeFull }
+    else { $exeForCmd = (Get-Item -LiteralPath $exeForCmd).FullName }
 
     $ico = Get-ChildItem -LiteralPath $AppDir -Filter '*.ico' -ErrorAction SilentlyContinue |
-        Sort-Object { if ($_.Name -match 'Terminal|terminal') { 0 } else { 1 } }, Name |
+        Sort-Object { if ($_.Name -match '(?i)terminal') { 0 } else { 1 } }, Name |
         Select-Object -First 1
     $iconUrl = if ($ico) { Get-IconPngDataUrl -Path $ico.FullName } else { Get-IconPngDataUrl -Path $exeFull }
 
-    $workDir = if (Test-Path -LiteralPath $currentDir) { (Get-Item -LiteralPath $currentDir).FullName } else { $AppDir }
-
     $newEntry = [ordered]@{
         kind             = 'command'
-        path             = $id
+        path             = $favId
         name             = $label
         keyword          = $keyword
         command          = "`"$exeForCmd`" /portable"
-        workingDirectory = $workDir
+        workingDirectory = $(if (Test-Path -LiteralPath $currentDir) { (Get-Item $currentDir).FullName } else { $AppDir })
     }
     if ($iconUrl) { $newEntry.icon = $iconUrl }
 
@@ -407,23 +329,21 @@ function Install-MetaTraderWinShunFavorite {
                 if ($doc.manualOrder) { $manualOrder = @($doc.manualOrder) }
             }
         } catch {
-            if ($Log) { warn "[mt-portable] favorites.json unreadable, recreating MT entry only" }
             $favorites = @()
         }
     }
 
     $kept = @()
     foreach ($f in $favorites) {
-        if ($f.path -eq $id) { continue }
+        if ($f.path -eq $favId) { continue }
         if ($f.keyword -and ([string]$f.keyword -eq $keyword)) { continue }
         $kept += $f
     }
-    $merged = @($newEntry) + $kept
 
     $out = [ordered]@{
         format    = 'winshun-favorites'
         version   = $(if ($iconUrl) { 3 } else { 2 })
-        favorites = @($merged)
+        favorites = @($newEntry) + $kept
     }
     if ($sort) {
         $out.sort = $sort
@@ -432,9 +352,12 @@ function Install-MetaTraderWinShunFavorite {
     if ($manualOrder) { $out.manualOrder = $manualOrder }
 
     New-Item -ItemType Directory -Path (Split-Path $favPath -Parent) -Force | Out-Null
-    $json = $out | ConvertTo-Json -Depth 8
-    [System.IO.File]::WriteAllText($favPath, $json, (New-Object System.Text.UTF8Encoding $false))
-    if ($Log) { info "[mt-portable] WinShun favorite keyword=$keyword -> $exeForCmd /portable" }
+    [System.IO.File]::WriteAllText(
+        $favPath,
+        ($out | ConvertTo-Json -Depth 8),
+        (New-Object System.Text.UTF8Encoding $false)
+    )
+    if ($Log) { info "[mt] WinShun favorite $keyword -> $exeForCmd /portable" }
 }
 
 #endregion
