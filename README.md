@@ -35,8 +35,8 @@ scoop update *
 | winshun | Win顺：文件 / 文件夹 / 内容搜索 | GitHub Release |
 | g-helper | ASUS 笔记本轻量控制（替代 Armoury Crate；AppData 联接 persist） | GitHub Release |
 | todesk | ToDesk 远程桌面（需管理员；LocalAppData 联接 persist） | 官网 download 页 |
-| metatrader4 | MetaTrader 4 模板（`/portable`；多开用 `bin/mt-clone.ps1`） | 半手动 |
-| metatrader5 | MetaTrader 5 模板（`/portable`；多开用 `bin/mt-clone.ps1`） | 半手动 |
+| metatrader4 | MetaTrader 4 模板（Release 便携 7z + `/portable`；多开 `mt-clone`） | 半手动（Release） |
+| metatrader5 | MetaTrader 5 模板（Release 便携 7z + `/portable`；多开 `mt-clone`） | 半手动（Release） |
 
 ## 目录结构
 

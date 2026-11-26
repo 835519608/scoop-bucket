@@ -1,15 +1,14 @@
 {
     "version": "5.0.0.6274",
-    "description": "MetaTrader 5 模板包（/portable；多账号用 bin/mt-clone.ps1）",
+    "description": "MetaTrader 5 模板包（GitHub Release 便携 7z；/portable；多账号用 bin/mt-clone.ps1）",
     "homepage": "https://www.metatrader5.com/",
     "license": {
         "identifier": "Proprietary",
         "url": "https://www.metatrader5.com/en/terminal/terms"
     },
-    "url": "https://download.mql5.com/cdn/web/metaquotes.software.corp/mt5/mt5setup.exe#/mt5setup.exe",
-    "installer": {
-        "script": "& ((Get-ChildItem (Join-Path $scoopdir 'buckets\\\\*\\\\bin\\\\hook.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1).FullName) 'hooks/metatrader5/post_install.ps1'"
-    },
+    "url": "https://github.com/835519608/scoop-bucket/releases/download/metatrader-portable-2026.11.26/metatrader5-5.0.0.6274-portable.7z",
+    "hash": "83b2318fdd3c4526291a29ce4853beb4c7d71b34e239fd74fab8b5244d0d535d",
+    "post_install": "& ((Get-ChildItem (Join-Path $scoopdir 'buckets\\\\*\\\\bin\\\\hook.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1).FullName) 'hooks/metatrader5/post_install.ps1'",
     "pre_uninstall": "& ((Get-ChildItem (Join-Path $scoopdir 'buckets\\\\*\\\\bin\\\\hook.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1).FullName) 'hooks/metatrader5/pre_uninstall.ps1'",
     "bin": [
         [
@@ -34,10 +33,10 @@
         "Tester"
     ],
     "notes": [
-        "快捷方式 / shim 强制 /portable；数据在 persist，勿直接双击 exe。",
-        "安装：优先从 D:\\Program\\MetaTrader\\MetaTrader 5 种子复制（官方 /auto 仍会弹 EULA，非真静默）。",
+        "从本仓库 GitHub Release 下载纯程序 7z（无账号/图表数据）；换电脑可直接 scoop install。",
+        "快捷方式 / shim 强制 /portable；数据写在 persist。",
+        "若本机仍有 D:\\Program\\MetaTrader\\MetaTrader 5，post_install 会可选迁入数据。",
         "多账号：& \"$env:SCOOP\\buckets\\scoop-bucket\\bin\\mt-clone.ps1\" -App metatrader5 -Name <实例名>",
-        "同步程序文件：同上脚本 -SyncBinaries（不覆盖实例数据）。卸载模板不删除 persist\\metatrader5-instances。",
-        "版本半手动（未接 checkver）；官网 CDN 慢时可先 scoop install -s 跳过 hash。"
+        "同步程序：同上 -SyncBinaries。卸载模板不删除 persist\\metatrader5-instances。"
     ]
 }
