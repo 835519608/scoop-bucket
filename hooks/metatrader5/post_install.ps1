@@ -17,8 +17,8 @@ foreach ($name in @('MetaTrader 4', 'MetaTrader 5')) {
     }
 }
 
-# WinShun / Explorer open terminal64.exe without args — wrap so /portable is always applied
-Install-MetaTraderPortableWrappers -AppDir $dir -App metatrader5 -Log:$true
+# Prefer .lnk with /portable (keeps official MT icon). Do not shim-wrap the exe.
+Install-MetaTraderPortableShortcuts -AppDir $dir -App metatrader5 -Log:$true
 
 $legacy = 'D:\Program\MetaTrader\MetaTrader 5'
 

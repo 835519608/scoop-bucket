@@ -116,7 +116,7 @@ if ($SyncBinaries) {
     Get-ChildItem $instRoot -Directory | ForEach-Object {
         Write-Host "SyncBinaries → $($_.FullName)"
         Sync-BinariesTo -Dest $_.FullName
-        Install-MetaTraderPortableWrappers -AppDir $_.FullName -App $App
+        Install-MetaTraderPortableShortcuts -AppDir $_.FullName -App $App
     }
     Write-Host 'Done. Instance data dirs were not modified.'
     return
@@ -136,7 +136,7 @@ Stop-MtProcesses
 New-Item -ItemType Directory -Path $instRoot -Force | Out-Null
 Write-Host "Cloning $App → $dest"
 Sync-BinariesTo -Dest $dest
-Install-MetaTraderPortableWrappers -AppDir $dest -App $App
+Install-MetaTraderPortableShortcuts -AppDir $dest -App $App
 Copy-TemplateData -Dest $dest
 Write-InstanceShortcut -Dest $dest -InstanceName $Name
-Write-Host "Launch $exeName from the new Start Menu shortcut (wrapper always adds /portable)"
+Write-Host "Launch via the Start Menu / app-dir .lnk (includes /portable). Do not open $exeName bare."
