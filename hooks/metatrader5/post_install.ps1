@@ -1,24 +1,28 @@
-﻿# Official web installer → $dir; on failure seed from legacy D:\Program tree.
-$setup = Get-ChildItem $dir -Filter 'mt5setup.exe' -ErrorAction SilentlyContinue | Select-Object -First 1
-if (-not $setup) {
-    $setup = Get-ChildItem $dir -Filter '*setup*.exe' -ErrorAction SilentlyContinue | Select-Object -First 1
-}
-
+﻿# MetaQuotes /auto is NOT fully silent (still shows EULA). Prefer local seed; never launch setup when seed exists.
 $terminal = Join-Path $dir 'terminal64.exe'
-if (-not (Test-Path -LiteralPath $terminal) -and $setup) {
-    Start-Process -FilePath $setup.FullName -ArgumentList @('/auto', "/path:`"$dir`"") -Wait -ErrorAction SilentlyContinue
-}
+$legacy = 'D:\Program\MetaTrader\MetaTrader 5'
 
 if (-not (Test-Path -LiteralPath $terminal)) {
-    $legacy = 'D:\Program\MetaTrader\MetaTrader 5'
     if (Test-Path -LiteralPath (Join-Path $legacy 'terminal64.exe')) {
-        info '[metatrader5] Seeding program tree from D:\Program\MetaTrader\MetaTrader 5'
+        info '[metatrader5] Seeding program tree from D:\Program\MetaTrader\MetaTrader 5 (skip GUI setup)'
         robocopy $legacy $dir /E /XD Bases Config logs MQL5 Profiles Tester llm-agent /NFL /NDL /NJH /NJS /nc /ns /np | Out-Null
     }
 }
 
+# Only if no seed: try /auto (may still show license UI — last resort)
 if (-not (Test-Path -LiteralPath $terminal)) {
-    throw 'metatrader5: terminal64.exe missing after install/seed'
+    $setup = Get-ChildItem $dir -Filter 'mt5setup.exe' -ErrorAction SilentlyContinue | Select-Object -First 1
+    if (-not $setup) {
+        $setup = Get-ChildItem $dir -Filter '*setup*.exe' -ErrorAction SilentlyContinue | Select-Object -First 1
+    }
+    if ($setup) {
+        warn '[metatrader5] No local seed; launching mt5setup /auto (EULA UI may appear — click through once)'
+        Start-Process -FilePath $setup.FullName -ArgumentList @('/auto', "/path:`"$dir`"") -Wait -ErrorAction SilentlyContinue
+    }
+}
+
+if (-not (Test-Path -LiteralPath $terminal)) {
+    throw 'metatrader5: terminal64.exe missing after seed/install'
 }
 
 Get-ChildItem $dir -Filter '*setup*.exe' -ErrorAction SilentlyContinue | Remove-Item -Force -ErrorAction SilentlyContinue
@@ -43,8 +47,6 @@ if (Test-Path -LiteralPath $metaRoot) {
     }
 }
 
-# Seed persist from legacy portable-ish dirs if still empty
-$legacy = 'D:\Program\MetaTrader\MetaTrader 5'
 foreach ($name in @('Bases', 'Config', 'logs', 'MQL5', 'Profiles', 'Tester', 'llm-agent')) {
     $dst = Join-Path $persist_dir $name
     $src = Join-Path $legacy $name

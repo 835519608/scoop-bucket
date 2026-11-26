@@ -35,7 +35,7 @@
     ],
     "notes": [
         "快捷方式 / shim 强制 /portable；数据在 persist，勿直接双击 exe。",
-        "安装：优先 mt5setup.exe /auto /path；失败则从 D:\\Program\\MetaTrader\\MetaTrader 5 种子复制。",
+        "安装：优先从 D:\\Program\\MetaTrader\\MetaTrader 5 种子复制（官方 /auto 仍会弹 EULA，非真静默）。",
         "多账号：& \"$env:SCOOP\\buckets\\scoop-bucket\\bin\\mt-clone.ps1\" -App metatrader5 -Name <实例名>",
         "同步程序文件：同上脚本 -SyncBinaries（不覆盖实例数据）。卸载模板不删除 persist\\metatrader5-instances。",
         "版本半手动（未接 checkver）；官网 CDN 慢时可先 scoop install -s 跳过 hash。"
