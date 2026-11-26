@@ -37,6 +37,7 @@ scoop update *
 | todesk | ToDesk 远程桌面（需管理员；LocalAppData 联接 persist） | 官网 download 页 |
 | metatrader4 | MetaTrader 4 模板（Release 便携 7z + `/portable`；多开 `mt-clone`） | 半手动（Release） |
 | metatrader5 | MetaTrader 5 模板（Release 便携 7z + `/portable`；多开 `mt-clone`） | 半手动（Release） |
+| wegame | 腾讯 WeGame（解包；游戏库 persist；AppData 联接） | 应用宝详情页 |
 
 ## 目录结构
 
@@ -83,5 +84,6 @@ Scoop 的 JSON 不能定义变量，每个 hook 用同一行模板，只改末�
 | todesk | Scoop `persist`：`config.ini`/`Logs` + 联接 `LocalAppData/ToDesk`（卸载不保证清 ToDeskAudio 驱动） |
 | metatrader4 | Scoop `persist`：`config`/`history`/`logs`/`MQL4`/`profiles`/`templates`/`tester`；实例在 `persist/metatrader4-instances/<名>` |
 | metatrader5 | Scoop `persist`：`Bases`/`Config`/`logs`/`MQL5`/`Profiles`/`Tester`；实例在 `persist/metatrader5-instances/<名>` |
+| wegame | Scoop `persist`：`downloads`/`games`/`data`/`config`/`client_config` + 联接 `AppData/Tencent/WeGame` |
 
 `utils.ps1`：`Install-PersistDataLinks`（统一 Junction：实目录先迁移、已是联接则跳过）、`Initialize-VscodePortableData`（cursor/codebuddy）、`Remove-NsisExtractCrumbs`、`Set-ShortcutAppUserModelId`（Steam 等任务栏图标）、`Assert-AdminElevation`。各 app 的映射在 `hooks/<app>/persist.ps1`。
