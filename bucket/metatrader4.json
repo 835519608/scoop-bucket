@@ -35,8 +35,8 @@
     ],
     "notes": [
         "从本仓库 GitHub Release 下载纯程序 7z（无账号/图表数据）；换电脑可直接 scoop install。",
-        "请用 Scoop Apps / 应用目录里的 MetaTrader 4.lnk（带 /portable + 官方图标）。不要直接开 terminal.exe。",
-        "安装时会删除 MetaQuotes 自带 uninstall.exe，并清理 ProgramData 重复开始菜单项。",
+        "WinShun：收藏命令关键词 mt4（带 /portable + 图标）。不要直接开搜到的 terminal.exe。",
+        "也可从 Scoop Apps 的 MetaTrader 4.lnk 启动。安装时会清 ProgramData 重复菜单并删 uninstall.exe。",
         "若本机仍有 D:\\Program\\MetaTrader\\MetaTrader 4，post_install 会可选迁入数据。",
         "多账号：& \"$env:SCOOP\\buckets\\scoop-bucket\\bin\\mt-clone.ps1\" -App metatrader4 -Name <实例名>",
         "同步程序：同上 -SyncBinaries。卸载模板不删除 persist\\metatrader4-instances。"

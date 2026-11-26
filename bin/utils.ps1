@@ -5,6 +5,7 @@
 #   Test-RealPath / Test-RealDirectory / Initialize-VscodePortableData
 #   Remove-NsisExtractCrumbs / Set-ShortcutAppUserModelId
 #   Install-MetaTraderPortableShortcut / Restore-MetaTraderPortableWrapper
+#   Install-MetaTraderWinShunFavorite
 #   Test-AdminElevation / Assert-AdminElevation / Test-AdminElevationOrWarn
 #
 # Mapping: Label, Source, Target, EnsureTarget（可选）
@@ -315,6 +316,125 @@ function Install-MetaTraderPortableShortcuts {
         Restore-MetaTraderPortableWrapper -AppDir $AppDir -ExeName 'metaeditor.exe' -Log:$Log
         Install-MetaTraderPortableShortcut -AppDir $AppDir -ExeName 'terminal.exe' -ShortcutName 'MetaTrader 4' -Log:$Log
     }
+    Install-MetaTraderWinShunFavorite -App $App -AppDir $AppDir -Log:$Log
+}
+
+function Get-IconPngDataUrl {
+    param ([Parameter(Mandatory = $true)][string]$Path)
+    if (-not (Test-Path -LiteralPath $Path)) { return $null }
+    try {
+        Add-Type -AssemblyName System.Drawing -ErrorAction SilentlyContinue
+        $icon = [System.Drawing.Icon]::ExtractAssociatedIcon($Path)
+        if (-not $icon) { return $null }
+        $bmp = $icon.ToBitmap()
+        $ms = New-Object System.IO.MemoryStream
+        $bmp.Save($ms, [System.Drawing.Imaging.ImageFormat]::Png)
+        $url = 'data:image/png;base64,' + [Convert]::ToBase64String($ms.ToArray())
+        $ms.Dispose(); $bmp.Dispose(); $icon.Dispose()
+        return $url
+    } catch {
+        return $null
+    }
+}
+
+function Install-MetaTraderWinShunFavorite {
+    <#
+    .SYNOPSIS
+      Register a WinShun Command favorite (keyword mt4/mt5) that launches with /portable.
+      WinShun indexes bare .exe without args and does not surface .lnk well — favorites are the reliable launcher path.
+    #>
+    param (
+        [Parameter(Mandatory = $true)][ValidateSet('metatrader4', 'metatrader5')][string]$App,
+        [string]$AppDir,
+        [switch]$Log
+    )
+    $scoopRoot = if ($env:SCOOP) { $env:SCOOP } elseif ($scoopdir) { $scoopdir } else { return }
+    $favPath = Join-Path $scoopRoot 'persist\winshun\data\favorites.json'
+    $persistWinshun = Join-Path $scoopRoot 'persist\winshun'
+    if (-not (Test-Path -LiteralPath $persistWinshun)) { return } # WinShun not managed here
+
+    $isMt5 = ($App -eq 'metatrader5')
+    $exeName = if ($isMt5) { 'terminal64.exe' } else { 'terminal.exe' }
+    $label = if ($isMt5) { 'MetaTrader 5' } else { 'MetaTrader 4' }
+    $keyword = if ($isMt5) { 'mt5' } else { 'mt4' }
+    $id = if ($isMt5) { 'winshun-command:scoop-metatrader5' } else { 'winshun-command:scoop-metatrader4' }
+
+    # Prefer apps\<app>\current so favorites survive version bumps
+    $currentDir = Join-Path $scoopRoot "apps\$App\current"
+    if (-not $AppDir) { $AppDir = $currentDir }
+    $exeCurrent = Join-Path $currentDir $exeName
+    if (-not (Test-Path -LiteralPath $exeCurrent)) {
+        $exeCurrent = Join-Path $AppDir $exeName
+    }
+    if (-not (Test-Path -LiteralPath $exeCurrent)) { return }
+    $exeFull = (Resolve-Path -LiteralPath $exeCurrent).Path
+    # If resolved through junction to version dir, still write current\ path in command
+    $exeForCmd = Join-Path $currentDir $exeName
+    if (Test-Path -LiteralPath $exeForCmd) {
+        $exeForCmd = (Get-Item -LiteralPath $exeForCmd).FullName
+    } else {
+        $exeForCmd = $exeFull
+    }
+
+    $ico = Get-ChildItem -LiteralPath $AppDir -Filter '*.ico' -ErrorAction SilentlyContinue |
+        Sort-Object { if ($_.Name -match 'Terminal|terminal') { 0 } else { 1 } }, Name |
+        Select-Object -First 1
+    $iconUrl = if ($ico) { Get-IconPngDataUrl -Path $ico.FullName } else { Get-IconPngDataUrl -Path $exeFull }
+
+    $workDir = if (Test-Path -LiteralPath $currentDir) { (Get-Item -LiteralPath $currentDir).FullName } else { $AppDir }
+
+    $newEntry = [ordered]@{
+        kind             = 'command'
+        path             = $id
+        name             = $label
+        keyword          = $keyword
+        command          = "`"$exeForCmd`" /portable"
+        workingDirectory = $workDir
+    }
+    if ($iconUrl) { $newEntry.icon = $iconUrl }
+
+    $favorites = @()
+    $sort = $null
+    $descending = $false
+    $manualOrder = $null
+    if (Test-Path -LiteralPath $favPath) {
+        try {
+            $doc = Get-Content -LiteralPath $favPath -Raw -Encoding UTF8 | ConvertFrom-Json
+            if ($doc.format -eq 'winshun-favorites') {
+                $favorites = @($doc.favorites)
+                if ($doc.sort) { $sort = [string]$doc.sort }
+                if ($doc.descending) { $descending = [bool]$doc.descending }
+                if ($doc.manualOrder) { $manualOrder = @($doc.manualOrder) }
+            }
+        } catch {
+            if ($Log) { warn "[mt-portable] favorites.json unreadable, recreating MT entry only" }
+            $favorites = @()
+        }
+    }
+
+    $kept = @()
+    foreach ($f in $favorites) {
+        if ($f.path -eq $id) { continue }
+        if ($f.keyword -and ([string]$f.keyword -eq $keyword)) { continue }
+        $kept += $f
+    }
+    $merged = @($newEntry) + $kept
+
+    $out = [ordered]@{
+        format    = 'winshun-favorites'
+        version   = $(if ($iconUrl) { 3 } else { 2 })
+        favorites = @($merged)
+    }
+    if ($sort) {
+        $out.sort = $sort
+        if ($descending) { $out.descending = $true }
+    }
+    if ($manualOrder) { $out.manualOrder = $manualOrder }
+
+    New-Item -ItemType Directory -Path (Split-Path $favPath -Parent) -Force | Out-Null
+    $json = $out | ConvertTo-Json -Depth 8
+    [System.IO.File]::WriteAllText($favPath, $json, (New-Object System.Text.UTF8Encoding $false))
+    if ($Log) { info "[mt-portable] WinShun favorite keyword=$keyword -> $exeForCmd /portable" }
 }
 
 #endregion
