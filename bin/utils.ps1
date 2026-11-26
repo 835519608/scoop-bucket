@@ -239,7 +239,14 @@ function Get-ScoopShimExePath {
     if ($scoopdir) { $roots += $scoopdir }
     if ($env:SCOOP) { $roots += $env:SCOOP }
     foreach ($root in ($roots | Select-Object -Unique)) {
-        $hit = Get-ChildItem (Join-Path $root 'apps\scoop\current\supporting\shims') -Recurse -Filter 'shim.exe' -ErrorAction SilentlyContinue |
+        $base = Join-Path $root 'apps\scoop\current\supporting\shims'
+        # Prefer kiennq (current Scoop default); avoid older 71/ shim that rejects modern .shim files
+        foreach ($rel in @('kiennq\shim.exe', '71\shim.exe', 'scoopcs\shim.exe')) {
+            $candidate = Join-Path $base $rel
+            if (Test-Path -LiteralPath $candidate) { return $candidate }
+        }
+        $hit = Get-ChildItem $base -Recurse -Filter 'shim.exe' -ErrorAction SilentlyContinue |
+            Sort-Object Length -Descending |
             Select-Object -First 1
         if ($hit) { return $hit.FullName }
     }
