@@ -34,7 +34,7 @@
     ],
     "checkver": {
         "url": "https://pc.qq.com/detail/1/detail_23761.html",
-        "regex": "WeGameSetup(?<version>[\\d.]+)"
+        "regex": "最新(?<version>[\\d.]+)官方正式版WeGame"
     },
     "autoupdate": {
         "url": "https://dldir1.qq.com/tgc/wegame/full/WeGameSetup$version_gjwegame_0_0.exe#/dl.7z"

@@ -128,17 +128,27 @@ foreach ($file in Get-ChildItem -Path 'bucket' -Filter '*.json' | Sort-Object Na
     }
 
     try {
+        # Scoop: "checkver": "github" 或 { "github": "https://github.com/owner/repo" }
+        $githubRepo = $null
         if ($checkver -is [string]) {
             if ($checkver -ne 'github') {
                 throw "unsupported string checkver '$checkver'"
             }
+            $githubRepo = Get-GitHubRepo -Manifest $manifest
+        } elseif ($checkver.PSObject.Properties.Name -contains 'github' -and $checkver.github) {
+            if ($checkver.github -match 'github\.com/(?<owner>[^/]+)/(?<repo>[^/#?]+)') {
+                $githubRepo = "$($Matches.owner)/$($Matches.repo -replace '\.git$', '')"
+            } else {
+                throw "invalid checkver.github '$($checkver.github)'"
+            }
+        }
 
-            $repo = Get-GitHubRepo -Manifest $manifest
-            $release = Invoke-GitHubLatest -Repo $repo
+        if ($githubRepo) {
+            $release = Invoke-GitHubLatest -Repo $githubRepo
             $version = $release.tag_name -replace '^v', ''
 
             if (-not $version) {
-                throw "GitHub latest release for $repo has no tag_name"
+                throw "GitHub latest release for $githubRepo has no tag_name"
             }
 
             Write-Output "$app`: github latest $version"
@@ -172,6 +182,9 @@ foreach ($file in Get-ChildItem -Path 'bucket' -Filter '*.json' | Sort-Object Na
         }
 
         if ($checkver.script -and $checkver.regex) {
+            # Scoop checkver 会注入 $json / $expected_ver；本地校验时补齐避免脚本炸
+            $json = $manifest
+            $expected_ver = [string]$manifest.version
             $script = [scriptblock]::Create(($checkver.script -join "`n"))
             $content = & $script
             Assert-RegexMatch -App $app -InputText $content -Regex $checkver.regex

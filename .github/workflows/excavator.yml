@@ -19,6 +19,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SKIP_UPDATED: '1'
+      # 必须带 token：否则 GitHub releases/latest 走匿名配额，偶发 403 把整 job 标红
+      # （Excavator 本身已能 push 新版本；此步只校验 checkver 规则仍可用）
       - name: Validate checkver rules
         shell: pwsh
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: .\.github\scripts\assert-checkver.ps1
