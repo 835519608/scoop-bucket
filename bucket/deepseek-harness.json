@@ -1,0 +1,58 @@
+{
+    "version": "0.2.2-rc.5",
+    "description": "DeepSeek Harness 桌面端（跟官网 latest；Electron + 内置 dsh 运行时）",
+    "homepage": "https://www.deepseek.com/harness",
+    "license": "MIT",
+    "notes": [
+        "官网 latest：download.deepseek.com/desktop/dsh-latest-windows-x64.exe（当前 RC 通道）。",
+        "安装：NSIS → 解出 $PLUGINSDIR\\app-64.7z 便携包；不跑官方安装向导。",
+        "用户数据：%USERPROFILE%\\.dsh → persist/dsh-home（目录联接）。",
+        "启动：Scoop Apps\\DeepSeek Harness，或 deepseek-harness / dsh。"
+    ],
+    "architecture": {
+        "64bit": {
+            "url": "https://download.deepseek.com/desktop/dsh-latest-windows-x64.exe#/dl.7z",
+            "hash": "6482e4cab56c389c9dfa643a8e1dbc8c051d8e73944c6fca4a649234de4a5a2d"
+        }
+    },
+    "installer": {
+        "script": "& ((Get-ChildItem (Join-Path $scoopdir 'buckets\\*\\bin\\hook.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1).FullName) 'hooks/deepseek-harness/install.ps1'"
+    },
+    "uninstaller": {
+        "script": "& ((Get-ChildItem (Join-Path $scoopdir 'buckets\\*\\bin\\hook.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1).FullName) 'hooks/deepseek-harness/uninstall.ps1'"
+    },
+    "bin": [
+        [
+            "DeepSeek Harness.exe",
+            "deepseek-harness"
+        ],
+        [
+            "DeepSeek Harness.exe",
+            "dsh"
+        ]
+    ],
+    "shortcuts": [
+        [
+            "DeepSeek Harness.exe",
+            "DeepSeek Harness"
+        ]
+    ],
+    "checkver": {
+        "script": [
+            "$h = Invoke-WebRequest -Method Head -Uri 'https://download.deepseek.com/desktop/dsh-latest-windows-x64.exe' -UseBasicParsing",
+            "$cd = [string]($h.Headers['Content-Disposition']); if (-not $cd) { $cd = [string]($h.Headers['content-disposition']) }",
+            "$cd"
+        ],
+        "regex": "deepseek-harness-(?<version>[\\w.-]+)-win-x64\\.exe"
+    },
+    "autoupdate": {
+        "architecture": {
+            "64bit": {
+                "url": "https://download.deepseek.com/desktop/dsh-latest-windows-x64.exe#/dl.7z",
+                "hash": {
+                    "mode": "download"
+                }
+            }
+        }
+    }
+}
