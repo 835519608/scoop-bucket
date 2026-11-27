@@ -1,10 +1,10 @@
 {
-    "version": "0.48.0",
+    "version": "0.50.0",
     "description": "Win顺 (WinShun)：文件 / 文件夹 / 内容搜索",
     "homepage": "https://github.com/LingCore/WinShun",
     "license": "MIT",
-    "url": "https://github.com/LingCore/WinShun/releases/download/v0.48.0/WinShun-0.48.0-x64-portable.zip",
-    "hash": "15951b539fb4d6e3f2a7526d67b3a78948119866d13f38ba5893ec449747d4e3",
+    "url": "https://github.com/LingCore/WinShun/releases/download/v0.50.0/WinShun-0.50.0-x64-portable.zip",
+    "hash": "83af83018f6dddc4321523b1a318487251552d61f422d0b348ac592bfb4634d8",
     "extract_dir": "WinShun",
     "bin": "bin\\ws.exe",
     "shortcuts": [
