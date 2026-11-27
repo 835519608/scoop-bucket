@@ -7,6 +7,14 @@ param (
     [string]$HookRelPath
 )
 
+# Scoop 安装上下文已有 info/warn；直接 . hook 调试时补齐，避免 "info not recognized"
+if (-not (Get-Command -Name info -ErrorAction SilentlyContinue)) {
+    function script:info([string]$msg) { Write-Host "INFO  $msg" -ForegroundColor DarkGray }
+}
+if (-not (Get-Command -Name warn -ErrorAction SilentlyContinue)) {
+    function script:warn([string]$msg) { Write-Host "WARN  $msg" -ForegroundColor DarkYellow }
+}
+
 . (Join-Path $PSScriptRoot 'utils.ps1')
 
 $hookPath = Join-Path (Split-Path $PSScriptRoot -Parent) ($HookRelPath -replace '/', '\')

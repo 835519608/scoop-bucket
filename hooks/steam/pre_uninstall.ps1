@@ -1,5 +1,4 @@
-﻿Get-Process -Name 'steam', 'steamwebhelper', 'steamservice' -ErrorAction SilentlyContinue |
-    Stop-Process -Force -ErrorAction SilentlyContinue
+﻿Stop-ScoopAppProcesses -ProcessNames @('steam', 'steamwebhelper', 'steamservice')
 
 . (Join-Path $PSScriptRoot 'persist.ps1')
 Uninstall-PersistDataLinks -Mappings $persistMappings -Log:$true

@@ -25,8 +25,9 @@
         "config.ini"
     ],
     "notes": [
-        "安装与卸载需管理员 PowerShell（ToDesk_Service）。",
+        "Scoop 解压便携包，不主动注册 ToDesk_Service（与 dorado 一致；包内无独立服务安装器）。",
         "%LOCALAPPDATA%\\ToDesk → persist/LocalAppData；config.ini / Logs 由 Scoop persist。",
+        "若本机已有 ToDesk_Service，卸载时需管理员 PowerShell 才能删掉。",
         "不强制安装/卸载 ToDeskAudio.sys；卸载后内核音频驱动可能残留。",
         "若已有 D:\\Program\\ToDesk\\config.ini，首次安装会迁入 persist。"
     ],

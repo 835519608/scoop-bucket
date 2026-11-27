@@ -66,9 +66,17 @@ Steam 需要写入 HKLM\SOFTWARE\WOW6432Node\Valve\Steam（InstallPath + Users �
         info "[steam] Registry $regPath InstallPath=$installDir (Users FullControl)"
     }
 
-    $svc = Join-Path $installDir 'bin\SteamService.exe'
-    if (Test-Path -LiteralPath $svc) {
-        Start-Process -FilePath $svc -ArgumentList '/Install' -Wait -WindowStyle Hidden -ErrorAction SilentlyContinue
+    # Steam 官方把服务装到 Common Files；已存在则不必每次 scoop update 再 /Install。
+    $svcExe = Join-Path $installDir 'bin\SteamService.exe'
+    $commonSvc = "${env:ProgramFiles(x86)}\Common Files\Steam\SteamService.exe"
+    $existing = Get-Service -Name 'Steam Client Service' -ErrorAction SilentlyContinue
+    if (-not (Test-Path -LiteralPath $svcExe)) {
+        Write-Warning '[steam] bin\SteamService.exe missing, skip /Install'
+    } elseif ($existing -and (Test-Path -LiteralPath $commonSvc)) {
+        info '[steam] Steam Client Service already present, skip /Install'
+    } else {
+        Start-Process -FilePath $svcExe -ArgumentList '/Install' -Wait -WindowStyle Hidden -ErrorAction SilentlyContinue
+        info '[steam] Ran SteamService.exe /Install'
     }
     return $true
 }

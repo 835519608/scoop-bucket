@@ -1,11 +1,13 @@
 ﻿# scoop-bucket 公共 PowerShell 库（由 bin/hook.ps1 加载）
 #
 # 对外 API:
-#   Install-PersistDataLinks / Uninstall-PersistDataLinks
+#   Install-PersistDataLinks / Uninstall-PersistDataLinks / Ensure-FolderExists
 #   Test-RealPath / Test-RealDirectory / Initialize-VscodePortableData
 #   Remove-NsisExtractCrumbs / Set-ShortcutAppUserModelId
-#   Install-MetaTraderLaunchers (Scoop .lnk + WinShun mt4/mt5 favorites)
+#   Install-MetaTraderPortable / Install-MetaTraderLaunchers
 #   Test-AdminElevation / Assert-AdminElevation / Test-AdminElevationOrWarn
+#   Stop-ScoopAppProcesses / Stop-ScoopService / Start-ScoopService
+#   Remove-ScoopService / Set-ScoopServiceBinPath
 #
 # Mapping: Label, Source, Target, EnsureTarget（可选）
 # 联接规则统一：源若已是 Junction 则跳过迁移，只重建联接；实目录则先迁入 persist 再联接。
@@ -232,7 +234,39 @@ namespace ScoopBucketShell {
 
 #endregion
 
-#region MetaTrader 启动入口（Scoop .lnk + WinShun 收藏命令）
+#region MetaTrader（便携收尾 + Scoop .lnk + WinShun 收藏）
+
+function Install-MetaTraderPortable {
+    <#
+    .SYNOPSIS
+      MT4/MT5 共用 post_install：校验 exe、清 setup/uninstall、去重开始菜单、写启动入口。
+    #>
+    param (
+        [Parameter(Mandatory = $true)][string]$AppDir,
+        [Parameter(Mandatory = $true)][ValidateSet('metatrader4', 'metatrader5')][string]$App,
+        [switch]$Log
+    )
+
+    $exeName = if ($App -eq 'metatrader5') { 'terminal64.exe' } else { 'terminal.exe' }
+    $terminal = Join-Path $AppDir $exeName
+    if (-not (Test-Path -LiteralPath $terminal)) {
+        throw "${App}: $exeName missing — portable zip extract failed"
+    }
+
+    Get-ChildItem $AppDir -Filter '*setup*.exe' -ErrorAction SilentlyContinue |
+        Remove-Item -Force -ErrorAction SilentlyContinue
+    Remove-Item -LiteralPath (Join-Path $AppDir 'uninstall.exe') -Force -ErrorAction SilentlyContinue
+
+    foreach ($name in @('MetaTrader 4', 'MetaTrader 5')) {
+        $menu = Join-Path $env:ProgramData "Microsoft\Windows\Start Menu\Programs\$name"
+        if (Test-Path -LiteralPath $menu) {
+            if ($Log) { info "[$App] Removing duplicate Start Menu folder: $menu" }
+            Remove-Item -LiteralPath $menu -Recurse -Force -ErrorAction SilentlyContinue
+        }
+    }
+
+    Install-MetaTraderLaunchers -AppDir $AppDir -App $App -Log:$Log
+}
 
 function Get-IconPngDataUrl {
     param ([Parameter(Mandatory = $true)][string]$Path)
@@ -394,6 +428,165 @@ function Test-AdminElevationOrWarn {
     if (Test-AdminElevation) { return $true }
     Write-Warning $Message
     return $false
+}
+
+#endregion
+
+#region Windows 服务 / 进程
+
+function Stop-ScoopAppProcesses {
+    param ([string[]]$ProcessNames = @())
+    if (-not $ProcessNames -or $ProcessNames.Count -eq 0) { return }
+    Get-Process -Name $ProcessNames -ErrorAction SilentlyContinue |
+        Stop-Process -Force -ErrorAction SilentlyContinue
+}
+
+function Stop-ScoopService {
+    <#
+    .SYNOPSIS
+      停服务（可选顺带停相关进程）。不删除服务。
+    #>
+    param (
+        [Parameter(Mandatory = $true)][string]$ServiceName,
+        [string[]]$ProcessNames = @(),
+        [int]$WaitSeconds = 30
+    )
+
+    Stop-ScoopAppProcesses -ProcessNames $ProcessNames
+
+    $svc = Get-Service -Name $ServiceName -ErrorAction SilentlyContinue
+    if (-not $svc) { return $true }
+    if ($svc.Status -eq 'Stopped') { return $true }
+
+    Stop-Service -Name $ServiceName -Force -ErrorAction SilentlyContinue
+    for ($i = 0; $i -lt $WaitSeconds; $i++) {
+        if ((Get-Service -Name $ServiceName -ErrorAction SilentlyContinue).Status -eq 'Stopped') {
+            return $true
+        }
+        Start-Sleep -Seconds 1
+    }
+    return ((Get-Service -Name $ServiceName -ErrorAction SilentlyContinue).Status -eq 'Stopped')
+}
+
+function Start-ScoopService {
+    param (
+        [Parameter(Mandatory = $true)][string]$ServiceName,
+        [int]$SettleSeconds = 2
+    )
+
+    $svc = Get-Service -Name $ServiceName -ErrorAction SilentlyContinue
+    if (-not $svc) { return $false }
+    if ($svc.Status -eq 'Running') { return $true }
+
+    Start-Service -Name $ServiceName -ErrorAction SilentlyContinue
+    Start-Sleep -Seconds $SettleSeconds
+    if ((Get-Service -Name $ServiceName).Status -ne 'Running') {
+        & sc.exe start $ServiceName | Out-Null
+        Start-Sleep -Seconds $SettleSeconds
+    }
+    return ((Get-Service -Name $ServiceName -ErrorAction SilentlyContinue).Status -eq 'Running')
+}
+
+function Remove-ScoopService {
+    <#
+    .SYNOPSIS
+      停止并 sc delete 服务。无服务时视为成功；无管理员时警告并返回 false。
+    #>
+    param (
+        [Parameter(Mandatory = $true)][string]$ServiceName,
+        [string[]]$ProcessNames = @(),
+        [switch]$Log
+    )
+
+    [void](Stop-ScoopService -ServiceName $ServiceName -ProcessNames $ProcessNames)
+
+    if (-not (Get-Service -Name $ServiceName -ErrorAction SilentlyContinue)) {
+        return $true
+    }
+
+    if (-not (Test-AdminElevationOrWarn "[service] $ServiceName`: delete needs admin, skipped")) {
+        return $false
+    }
+
+    & sc.exe delete $ServiceName 2>$null | Out-Null
+    Start-Sleep -Seconds 1
+    $gone = -not (Get-Service -Name $ServiceName -ErrorAction SilentlyContinue)
+    if ($Log -and $gone) { info "[service] removed $ServiceName" }
+    return $gone
+}
+
+function Set-ScoopServiceBinPath {
+    <#
+    .SYNOPSIS
+      将已有服务 BinPath 指到可执行文件（通常为 Scoop current Junction 下路径）。
+      本机实测：GameViewerService + current Junction 可正常启动。
+      已指向目标时不改配置（非管理员重跑也不告警）。
+    #>
+    param (
+        [Parameter(Mandatory = $true)][string]$ServiceName,
+        [Parameter(Mandatory = $true)][string]$ExecutablePath,
+        [string]$Arguments = '',
+        [switch]$Start,
+        [switch]$Log
+    )
+
+    $exe = $ExecutablePath
+    if (-not (Test-Path -LiteralPath $exe)) {
+        Write-Warning "[service] $ServiceName`: exe missing: $exe"
+        return $false
+    }
+
+    $svc = Get-Service -Name $ServiceName -ErrorAction SilentlyContinue
+    if (-not $svc) {
+        if ($Log) { info "[service] $ServiceName not installed, skip BinPath bind" }
+        return $false
+    }
+
+    $binPath = if ($Arguments) { "`"$exe`" $Arguments" } else { "`"$exe`"" }
+    $cim = Get-CimInstance Win32_Service -Filter "Name='$ServiceName'" -ErrorAction SilentlyContinue
+    $pathOk = $cim -and ([string]$cim.PathName -eq $binPath)
+
+    if ($pathOk) {
+        if ($Start -and $svc.Status -ne 'Running') {
+            if (-not (Test-AdminElevationOrWarn "[service] $ServiceName`: start needs admin, skipped")) {
+                return $false
+            }
+            $ok = Start-ScoopService -ServiceName $ServiceName
+            if ($Log) {
+                if ($ok) { info "[service] $ServiceName started (BinPath already ok)" }
+                else { Write-Warning "[service] $ServiceName start failed" }
+            }
+            return $ok
+        }
+
+        if ($Log) { info "[service] $ServiceName BinPath ok ($binPath)" }
+        return $true
+    }
+
+    if (-not (Test-AdminElevationOrWarn "[service] $ServiceName`: set BinPath needs admin, skipped")) {
+        return $false
+    }
+
+    [void](Stop-ScoopService -ServiceName $ServiceName)
+
+    & sc.exe config $ServiceName binPath= $binPath | Out-Null
+    if ($LASTEXITCODE -ne 0) {
+        Write-Warning "[service] $ServiceName`: sc config failed (exit $LASTEXITCODE)"
+        return $false
+    }
+
+    if ($Start) {
+        $ok = Start-ScoopService -ServiceName $ServiceName
+        if ($Log) {
+            $pathNow = (Get-CimInstance Win32_Service -Filter "Name='$ServiceName'").PathName
+            if ($ok) { info "[service] $ServiceName Running binPath=$pathNow" }
+            else { Write-Warning "[service] $ServiceName failed to start after BinPath bind" }
+        }
+        return $ok
+    }
+
+    if ($Log) { info "[service] $ServiceName BinPath set: $binPath" }
+    return $true
 }
 
 #endregion

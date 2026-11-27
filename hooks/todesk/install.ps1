@@ -1,4 +1,5 @@
-﻿Assert-AdminElevation -Reason 'ToDesk 安装需要管理员 PowerShell（服务）。' -InstallHint 'scoop install scoop-bucket/todesk'
+﻿# 与 dorado 一致：Scoop 只解压便携包，不注册 ToDesk_Service（包内也无独立 Service 安装器）。
+# 若用户日后自行装了服务，卸载脚本会尝试清理。
 
 $app64 = Join-Path $dir 'app64.7z'
 if (Test-Path -LiteralPath $app64) {

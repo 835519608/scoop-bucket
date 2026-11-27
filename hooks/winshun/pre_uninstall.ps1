@@ -12,5 +12,7 @@ if ($cmd -eq 'uninstall') {
     }
 }
 
-Get-Process -Name 'WinShun', 'WinShunSearch', 'WinShunUpdate', 'WinShunService', 'WinShunPluginHost', 'WinShunExtract', 'WinShunMcp' -ErrorAction SilentlyContinue |
-    Stop-Process -Force -ErrorAction SilentlyContinue
+Stop-ScoopAppProcesses -ProcessNames @(
+    'WinShun', 'WinShunSearch', 'WinShunUpdate', 'WinShunService',
+    'WinShunPluginHost', 'WinShunExtract', 'WinShunMcp'
+)
