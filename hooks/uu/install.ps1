@@ -26,3 +26,4 @@ Start-Process -FilePath $installer.FullName -ArgumentList @(
 Get-ChildItem "$dir\UU-*.exe" -ErrorAction SilentlyContinue | Remove-Item -Force -ErrorAction SilentlyContinue
 
 Remove-ItemProperty 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Run' -Name 'NeteaseGacc' -Force -ErrorAction SilentlyContinue
+Remove-VendorShortcuts -Names @('UU加速器', '网易UU', 'UU') -TargetPathContains @('\apps\uu\') -Log

@@ -43,7 +43,7 @@
         }
     },
     "notes": [
-        "NSIS 静默：/S /NS /D=（/NS 安装时不写桌面/开始菜单快捷方式）；图标由 Scoop shortcuts 写入 Scoop Apps。",
+        "NSIS 静默：/S /NS /D=；网易安装器常忽略 /NS，post_install 会清掉非 Scoop Apps 的厂商快捷方式。",
         "GameViewerService 在 post_install 改绑到 apps\\uuyc\\current\\...（Junction，升级不拆服务名）。",
         "运行时：%LOCALAPPDATA%\\GameViewer → persist/AppData；%PROGRAMDATA%\\Netease\\GameViewer → persist/ProgramData（目录联接）。",
         "安装与卸载清理需管理员 PowerShell。"

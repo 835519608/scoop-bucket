@@ -3,7 +3,7 @@
 # 对外 API:
 #   Install-PersistDataLinks / Uninstall-PersistDataLinks / Ensure-FolderExists
 #   Test-RealPath / Test-RealDirectory / Initialize-VscodePortableData
-#   Remove-NsisExtractCrumbs / Set-ShortcutAppUserModelId
+#   Remove-NsisExtractCrumbs / Remove-VendorShortcuts / Set-ShortcutAppUserModelId
 #   Install-MetaTraderPortable / Install-MetaTraderLaunchers
 #   Test-AdminElevation / Assert-AdminElevation / Test-AdminElevationOrWarn
 #   Stop-ScoopAppProcesses / Stop-ScoopService / Start-ScoopService
@@ -81,6 +81,70 @@ function Remove-NsisExtractCrumbs {
     )
     if (-not $Path -or -not (Test-Path -LiteralPath $Path)) { return }
     Remove-Item "$Path\`$*", "$Path\Uninst*", "$Path\uninst*" -Force -Recurse -ErrorAction SilentlyContinue
+}
+
+function Remove-VendorShortcuts {
+    <#
+    .SYNOPSIS
+      删除桌面/开始菜单里「非 Scoop Apps」的厂商 .lnk。
+      静默参数（如 NSIS /NS）经常被国产安装器忽略；安装后再清一次才可靠。
+      永不触碰 ...\Start Menu\Programs\Scoop Apps\ 下的快捷方式。
+    #>
+    param (
+        [string[]]$Names = @(),
+        [string[]]$TargetPathContains = @(),
+        [switch]$Log
+    )
+
+    if (($Names.Count -eq 0) -and ($TargetPathContains.Count -eq 0)) { return }
+
+    $roots = @(
+        [Environment]::GetFolderPath('Desktop')
+        (Join-Path $env:PUBLIC 'Desktop')
+        (Join-Path $env:APPDATA 'Microsoft\Windows\Start Menu\Programs')
+        (Join-Path $env:ProgramData 'Microsoft\Windows\Start Menu\Programs')
+    ) | Where-Object { $_ -and (Test-Path -LiteralPath $_) }
+
+    $shell = $null
+    if ($TargetPathContains.Count -gt 0) {
+        $shell = New-Object -ComObject WScript.Shell
+    }
+
+    $wantNames = @(
+        foreach ($n in $Names) {
+            ($n -replace '\.lnk$', '').Trim()
+        }
+    ) | Where-Object { $_ }
+
+    foreach ($root in $roots) {
+        Get-ChildItem -LiteralPath $root -Filter '*.lnk' -Recurse -ErrorAction SilentlyContinue |
+            Where-Object { $_.FullName -notmatch '[\\/]Scoop Apps[\\/]' } |
+            ForEach-Object {
+                $lnk = $_
+                $base = [System.IO.Path]::GetFileNameWithoutExtension($lnk.Name)
+                $hit = $false
+
+                foreach ($want in $wantNames) {
+                    if ($base -eq $want) { $hit = $true; break }
+                }
+
+                if (-not $hit -and $shell -and $TargetPathContains.Count -gt 0) {
+                    try {
+                        $target = [string]$shell.CreateShortcut($lnk.FullName).TargetPath
+                        foreach ($frag in $TargetPathContains) {
+                            if ($target -and $target.IndexOf($frag, [StringComparison]::OrdinalIgnoreCase) -ge 0) {
+                                $hit = $true
+                                break
+                            }
+                        }
+                    } catch {}
+                }
+
+                if (-not $hit) { return } # ForEach-Object: next item
+                if ($Log) { info "[shortcut] remove $($lnk.FullName)" }
+                Remove-Item -LiteralPath $lnk.FullName -Force -ErrorAction SilentlyContinue
+            }
+    }
 }
 
 #endregion
