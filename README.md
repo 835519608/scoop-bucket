@@ -75,7 +75,7 @@ Scoop 的 JSON 不能定义变量，每个 hook 用同一行模板，只改末�
 | cursor | Scoop `persist: data` + 联接 `AppData/Cursor`、`UserProfile/.cursor`（Crashpad / CLI） |
 | cursor327 | 同 cursor；独立 `persist\\cursor327`（与最新版并存时后装者接管 C 盘联接） |
 | dingtalk | 目录联接：`AppData/DingTalk`、`AppData/dinglive`、`LocalAppData/DingTalk_{91,108,133}` → persist |
-| wechat | 目录联接：`AppData/Tencent/xwechat`；FileSavePath 写父目录（如 `D:\File`，微信自拼 `xwechat_files`） |
+| wechat | 目录联接：`AppData/Tencent/xwechat`；FileSavePath 写父目录（保留已有非 C / 否则 persist，微信自拼 `xwechat_files`） |
 | douyin | 目录联接：`AppData/douyin`、`douyin_lynx`、`douyin_widget` → persist |
 | steam | Scoop `persist`：`config`/`skins`/`steamapps`/`userdata` + 联接 `LocalAppData/Steam` |
 | uu | 目录联接：`AppData/Netease/UU`、`LocalAppData/Netease/UU`、`ProgramData/Netease/UU` → persist |
