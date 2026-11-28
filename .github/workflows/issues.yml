@@ -1,0 +1,21 @@
+# scoop update 报 hash check failed 时会引导开 issue；
+# 本 workflow 自动跑 checkhashes 并修 hash / 开 PR（Scoop 官方 Issues action）。
+name: Issues
+
+on:
+  issues:
+    types: [opened, labeled]
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  issueHandler:
+    name: Issue Handler
+    if: github.event.action == 'opened' || (github.event.action == 'labeled' && contains(github.event.issue.labels.*.name, 'verify'))
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Run Issue Handler
+        uses: ScoopInstaller/GithubActions@main
