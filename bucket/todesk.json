@@ -7,7 +7,7 @@
         "url": "https://www.todesk.com/licence.html"
     },
     "url": "https://dl.todesk.com/irrigation/ToDesk_5.4.0.0.exe#/setup.7z",
-    "hash": "a44825a62c34fc2748f2abd12c1039e48fb091ba4286dd7707c2123ba4b5efed",
+    "hash": "b66693fbab4fb45733f4aa051f2b32a6d8cb8825acd4221376bcaddc0096bc43",
     "installer": {
         "script": "& ((Get-ChildItem (Join-Path $scoopdir 'buckets\\\\*\\\\bin\\\\hook.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1).FullName) 'hooks/todesk/install.ps1'"
     },
