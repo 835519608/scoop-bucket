@@ -27,8 +27,8 @@
     "notes": [
         "安装包走腾讯 CDN（dldir1v6），与 GitHub 镜像同哈希；版本号取自构建（如 4.2.1.9），CDN 文件名为 WeChatWin_4.2.1.exe。",
         "微信 4.x（Weixin）：%APPDATA%\\Tencent\\xwechat → persist/xwechat（目录联接）。",
-        "聊天文件目录：persist/xwechat_files（注册表 FileSavePath + xwechat config ini）。",
-        "若本机已把文件目录指到其它盘（如 D:\\File\\xwechat_files），安装时会保留原路径，不强制迁入 persist。",
+        "FileSavePath / ini 写父目录（如 D:\\File）；微信自行拼 xwechat_files。",
+        "已有非 C 盘父目录会保留；否则默认 Scoop persist\\wechat（下为 xwechat_files）。",
         "manifest 为 nightly（无 hash）；官网 CDN 可能同址换包，与 dorado todesk / steam 同策略。"
     ]
 }
