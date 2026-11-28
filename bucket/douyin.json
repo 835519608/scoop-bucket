@@ -1,10 +1,9 @@
 {
-    "version": "8.8.0",
+    "version": "nightly",
     "description": "抖音电脑版（Scoop 便携；C 盘用户数据联接到 persist）",
     "homepage": "https://www.douyin.com/",
     "license": "Proprietary",
     "url": "https://www.douyin.com/download/pc/obj/douyin-pc-web/douyin-pc-client/7044145585217083655/releases/540056698/8.8.0/win32-ia32/douyin-v8.8.0-win32-ia32-douyin.exe#/dl.7z",
-    "hash": "f05cf9c2f8e1ef24f81f7f9855daf631ac943737f89224d11538d763a2f62037",
     "installer": {
         "script": "& ((Get-ChildItem (Join-Path $scoopdir 'buckets\\*\\bin\\hook.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1).FullName) 'hooks/douyin/install.ps1'"
     },
@@ -17,16 +16,7 @@
     ],
     "notes": [
         "安装包内 app.7z 解压到版本目录；桌面入口为根目录 douyin.exe（backup 拷贝）。",
-        "用户数据联接：%APPDATA%\\douyin / douyin_lynx / douyin_widget → persist。"
-    ],
-    "checkver": {
-        "url": "https://www.douyin.com/downloadpage/pc",
-        "regex": "/douyin-pc-client/(?<id>\\d+)/releases/(?<build>\\d+)/([\\d.]+)/win32-ia32/"
-    },
-    "autoupdate": {
-        "url": "https://www.douyin.com/download/pc/obj/douyin-pc-web/douyin-pc-client/$matchId/releases/$matchBuild/$version/win32-ia32/douyin-v$version-win32-ia32-douyin.exe#/dl.7z",
-        "hash": {
-            "mode": "download"
-        }
-    }
+        "用户数据联接：%APPDATA%\\douyin / douyin_lynx / douyin_widget → persist。",
+        "manifest 为 nightly（无 hash）；官网 CDN 可能同址换包，与 dorado todesk / steam 同策略。"
+    ]
 }

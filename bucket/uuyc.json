@@ -1,5 +1,5 @@
 {
-    "version": "4.49.0.6162",
+    "version": "nightly",
     "description": "网易UU远程，提供低延迟远程连接与云游戏体验。",
     "homepage": "https://uuyc.163.com/",
     "license": {
@@ -7,7 +7,6 @@
         "url": "https://uuyc.163.com/"
     },
     "url": "https://a56.gdl.netease.com/UURemote_Setup_4.49.0.6162_1126083648_gwqd.exe?key1=a8089da39b6f5877c5af3961d2c0233d&key2=6b0999a0&n=uuyc_4.49.0.exe",
-    "hash": "6466c6b00a7bff54bed8ff25486e5e120f80f741c9f8070d566a14c713325d3f",
     "installer": {
         "script": "& ((Get-ChildItem (Join-Path $scoopdir 'buckets\\*\\bin\\hook.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1).FullName) 'hooks/uuyc/install.ps1'"
     },
@@ -24,28 +23,11 @@
             "UU远程"
         ]
     ],
-    "checkver": {
-        "script": [
-            "$url = 'https://api.nrd.nie.163.com/api/v1/release/dl/1?channel=gwqd'",
-            "$request = [System.Net.HttpWebRequest]::Create($url)",
-            "$request.AllowAutoRedirect = $false",
-            "$response = $request.GetResponse()",
-            "$location = $response.Headers['Location']",
-            "$response.Close()",
-            "return $location"
-        ],
-        "regex": "(?<url>https://a56\\.gdl\\.netease\\.com/UURemote_Setup_(?<version>[\\d.]+)_[^?]+\\.exe\\?.*)"
-    },
-    "autoupdate": {
-        "url": "$matchUrl",
-        "hash": {
-            "mode": "download"
-        }
-    },
     "notes": [
         "NSIS 静默：/S /NS /D=；网易安装器常忽略 /NS，post_install 会清掉非 Scoop Apps 的厂商快捷方式。",
         "GameViewerService 在 post_install 改绑到 apps\\uuyc\\current\\...（Junction，升级不拆服务名）。",
         "运行时：%LOCALAPPDATA%\\GameViewer → persist/AppData；%PROGRAMDATA%\\Netease\\GameViewer → persist/ProgramData（目录联接）。",
-        "安装与卸载清理需管理员 PowerShell。"
+        "安装与卸载清理需管理员 PowerShell。",
+        "manifest 为 nightly（无 hash）；官网 CDN 可能同址换包，与 dorado todesk / steam 同策略。"
     ]
 }

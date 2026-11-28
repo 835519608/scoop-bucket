@@ -1,10 +1,9 @@
 {
-    "version": "3.6.6.0",
+    "version": "nightly",
     "description": "强大且免费的截图、贴图、长截图、OCR 工具",
     "homepage": "https://pixpin.cn/",
     "license": "Unknown",
     "url": "https://down.pixpin.cn/PixPin_win_3.6.6.0.zip",
-    "hash": "cc49fbdd8e8d2cd98aeba5e749f2f9828517ecd06d201ca5ce1d4e2efd9ecc8e",
     "extract_dir": "PixPin",
     "bin": [
         [
@@ -20,7 +19,8 @@
     ],
     "notes": [
         "便携 zip：Config / Data / History 由 Scoop persist。",
-        "另联接 %LOCALAPPDATA%\\PixPin → persist/LocalAppData（右键菜单等）。"
+        "另联接 %LOCALAPPDATA%\\PixPin → persist/LocalAppData（右键菜单等）。",
+        "manifest 为 nightly（无 hash）；官网 CDN 可能同址换包，与 dorado todesk / steam 同策略。"
     ],
     "persist": [
         "Config",
@@ -28,15 +28,5 @@
         "History"
     ],
     "post_install": "& ((Get-ChildItem (Join-Path $scoopdir 'buckets\\*\\bin\\hook.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1).FullName) 'hooks/pixpin/post_install.ps1'",
-    "pre_uninstall": "& ((Get-ChildItem (Join-Path $scoopdir 'buckets\\*\\bin\\hook.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1).FullName) 'hooks/pixpin/pre_uninstall.ps1'",
-    "checkver": {
-        "url": "https://pixpin.cn/download",
-        "regex": "PixPin_win_(?<version>\\d+(?:\\.\\d+)+)\\.zip"
-    },
-    "autoupdate": {
-        "url": "https://down.pixpin.cn/PixPin_win_$version.zip",
-        "hash": {
-            "mode": "download"
-        }
-    }
+    "pre_uninstall": "& ((Get-ChildItem (Join-Path $scoopdir 'buckets\\*\\bin\\hook.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1).FullName) 'hooks/pixpin/pre_uninstall.ps1'"
 }

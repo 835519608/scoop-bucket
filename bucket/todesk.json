@@ -1,13 +1,12 @@
 {
-    "version": "5.4.0.0",
+    "version": "nightly",
     "description": "ToDesk 远程桌面（Scoop 解包；LocalAppData 联接 persist）",
     "homepage": "https://www.todesk.com/",
     "license": {
         "identifier": "Proprietary",
         "url": "https://www.todesk.com/licence.html"
     },
-    "url": "https://dl.todesk.com/irrigation/ToDesk_5.4.0.0.exe#/setup.7z",
-    "hash": "b66693fbab4fb45733f4aa051f2b32a6d8cb8825acd4221376bcaddc0096bc43",
+    "url": "https://dl.todesk.com/windows/ToDesk_Setup.exe#/dl.7z",
     "installer": {
         "script": "& ((Get-ChildItem (Join-Path $scoopdir 'buckets\\\\*\\\\bin\\\\hook.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1).FullName) 'hooks/todesk/install.ps1'"
     },
@@ -29,13 +28,7 @@
         "%LOCALAPPDATA%\\ToDesk → persist/LocalAppData；config.ini / Logs 由 Scoop persist。",
         "若本机已有 ToDesk_Service，卸载时需管理员 PowerShell 才能删掉。",
         "不强制安装/卸载 ToDeskAudio.sys；卸载后内核音频驱动可能残留。",
-        "若已有 D:\\Program\\ToDesk\\config.ini，首次安装会迁入 persist。"
-    ],
-    "checkver": {
-        "url": "https://www.todesk.com/download.html",
-        "regex": "dl\\.todesk\\.com(?:/|\\\\u002F)(?<path>[\\w]+)(?:/|\\\\u002F)ToDesk_(?<version>[\\d\\.]+)\\.exe"
-    },
-    "autoupdate": {
-        "url": "https://dl.todesk.com/$matchPath/ToDesk_$version.exe#/setup.7z"
-    }
+        "若已有 D:\\Program\\ToDesk\\config.ini，首次安装会迁入 persist。",
+        "manifest 为 nightly（无 hash）；官网 CDN 可能同址换包，与 dorado todesk / steam 同策略。"
+    ]
 }

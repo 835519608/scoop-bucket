@@ -1,5 +1,5 @@
 {
-    "version": "5.34.2026102909",
+    "version": "nightly",
     "description": "DCloud 出品的 HTML5 / uni-app / 多端开发 IDE（Windows 正式版 zip）",
     "homepage": "https://www.dcloud.io/hbuilderx.html",
     "license": {
@@ -7,7 +7,6 @@
         "url": "https://www.dcloud.io/hbuilderx.html"
     },
     "url": "https://download1.dcloud.net.cn/download/HBuilderX.5.34.2026102909.zip",
-    "hash": "5ddef1fe3d61f9f11bd8f390b633f204eec00bd2c04fff270cbba21727c6eff4",
     "extract_dir": "HBuilderX",
     "bin": [
         [
@@ -28,18 +27,9 @@
     "persist": "plugins",
     "notes": [
         "目录联接：%APPDATA%\\HBuilder X、%LOCALAPPDATA%\\HBuilder X → persist/roaming、persist/local。",
-        "插件目录 plugins 由 Scoop persist；已去掉自带 Updater.exe，请用 scoop update。"
+        "插件目录 plugins 由 Scoop persist；已去掉自带 Updater.exe，请用 scoop update。",
+        "manifest 为 nightly（无 hash）；官网 CDN 可能同址换包，与 dorado todesk / steam 同策略。"
     ],
     "post_install": "& ((Get-ChildItem (Join-Path $scoopdir 'buckets\\*\\bin\\hook.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1).FullName) 'hooks/hbuilderx/post_install.ps1'",
-    "pre_uninstall": "& ((Get-ChildItem (Join-Path $scoopdir 'buckets\\*\\bin\\hook.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1).FullName) 'hooks/hbuilderx/pre_uninstall.ps1'",
-    "checkver": {
-        "url": "https://update.dcloud.net.cn/hbuilderx/release.json",
-        "jsonpath": "$.version"
-    },
-    "autoupdate": {
-        "url": "https://download1.dcloud.net.cn/download/HBuilderX.$version.zip",
-        "hash": {
-            "mode": "download"
-        }
-    }
+    "pre_uninstall": "& ((Get-ChildItem (Join-Path $scoopdir 'buckets\\*\\bin\\hook.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1).FullName) 'hooks/hbuilderx/pre_uninstall.ps1'"
 }

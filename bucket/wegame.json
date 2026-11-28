@@ -1,5 +1,5 @@
 {
-    "version": "6.3.0.1042",
+    "version": "nightly",
     "description": "WeGame 腾讯游戏平台（Scoop 解包；游戏库 persist；C 盘 AppData 联接）",
     "homepage": "https://www.wegame.com.cn/",
     "license": {
@@ -7,7 +7,6 @@
         "url": "https://www.wegame.com.cn/contract"
     },
     "url": "https://dldir1.qq.com/tgc/wegame/full/WeGameSetup6.3.0.1042_gjwegame_0_0.exe#/dl.7z",
-    "hash": "996c3dfaa0e34851a116c9d44e263ca808de5af30e2e8d06c4f25cd944093fad",
     "pre_install": "& ((Get-ChildItem (Join-Path $scoopdir 'buckets\\\\*\\\\bin\\\\hook.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1).FullName) 'hooks/wegame/pre_install.ps1'",
     "post_install": "& ((Get-ChildItem (Join-Path $scoopdir 'buckets\\\\*\\\\bin\\\\hook.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1).FullName) 'hooks/wegame/post_install.ps1'",
     "pre_uninstall": "& ((Get-ChildItem (Join-Path $scoopdir 'buckets\\\\*\\\\bin\\\\hook.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1).FullName) 'hooks/wegame/pre_uninstall.ps1'",
@@ -30,13 +29,7 @@
         "Scoop persist：downloads / games / data / config / client_config（游戏库升级不丢）。",
         "%APPDATA%\\Tencent\\WeGame → persist/AppData。",
         "客户端会自更新，Scoop 版本号可能落后；日常以客户端热更为主。",
-        "若已有 D:\\Program\\WeGame，首次安装会把 data/config 等迁入 persist。"
-    ],
-    "checkver": {
-        "url": "https://pc.qq.com/detail/1/detail_23761.html",
-        "regex": "最新(?<version>[\\d.]+)官方正式版WeGame"
-    },
-    "autoupdate": {
-        "url": "https://dldir1.qq.com/tgc/wegame/full/WeGameSetup$version_gjwegame_0_0.exe#/dl.7z"
-    }
+        "若已有 D:\\Program\\WeGame，首次安装会把 data/config 等迁入 persist。",
+        "manifest 为 nightly（无 hash）；官网 CDN 可能同址换包，与 dorado todesk / steam 同策略。"
+    ]
 }
