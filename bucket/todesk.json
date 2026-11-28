@@ -1,13 +1,13 @@
 {
-    "version": "5.3.4.0",
+    "version": "5.4.0.0",
     "description": "ToDesk 远程桌面（Scoop 解包；LocalAppData 联接 persist）",
     "homepage": "https://www.todesk.com/",
     "license": {
         "identifier": "Proprietary",
         "url": "https://www.todesk.com/licence.html"
     },
-    "url": "https://dl.todesk.com/irrigation/ToDesk_5.3.4.0.exe#/setup.7z",
-    "hash": "95d43fc9d7d48d408a82c91424869034a5806fe943f4b1ee713639b0b91ad2e0",
+    "url": "https://dl.todesk.com/irrigation/ToDesk_5.4.0.0.exe#/setup.7z",
+    "hash": "a44825a62c34fc2748f2abd12c1039e48fb091ba4286dd7707c2123ba4b5efed",
     "installer": {
         "script": "& ((Get-ChildItem (Join-Path $scoopdir 'buckets\\\\*\\\\bin\\\\hook.ps1') -ErrorAction SilentlyContinue | Select-Object -First 1).FullName) 'hooks/todesk/install.ps1'"
     },
